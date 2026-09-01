@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Docente | NovaSYS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+    <link rel="icon" href="img/logo.png" type="image/png">
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+
+    <style>
+        /* Reutiliza las mismas variables/clases del portal alumno */
+        .sidebar {
+            background: linear-gradient(180deg, #1a3a5c 0%, #0d2137 100%);
+        }
+        .nav-link {
+            color: rgba(255,255,255,0.75);
+            font-size: 0.9rem;
+            padding: 0.6rem 1.5rem;
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            transition: background 0.2s, color 0.2s;
+        }
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .navbar-dashboard {
+            border-bottom: 1px solid #e9ecef;
+        }
+        .card-dash {
+            border-radius: 12px;
+        }
+        /* Badge accent docente — color diferenciador respecto al alumno */
+        .badge-docente {
+            background-color: #e8f0fe;
+            color: #1a56db;
+            border: 1px solid #c3d7fa;
+        }
+    </style>
+</head>
+<body class="bg-light pt-0 m-0">
+
+<div class="container-fluid p-0">
+    <div class="row g-0">
+
+        <!-- Sidebar -->
+        <aside class="col-md-2 d-none d-md-block sidebar p-0 vh-100 position-sticky top-0">
+            <div class="p-4 text-center">
+                <img src="img/logo.png" width="50" class="mb-2 bg-white rounded-circle p-1" alt="Logo NovaSYS">
+                <h5 id="txtNombreSidebar" class="text-white mb-0">Docente</h5>
+                <small class="text-white-50">Portal Académico</small>
+            </div>
+            <ul class="nav flex-column mt-3">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#" data-section="materias">
+                        <span class="material-symbols-outlined me-2">menu_book</span> Mis Materias
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-section="alumnos">
+                        <span class="material-symbols-outlined me-2">groups</span> Alumnos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-section="calificaciones">
+                        <span class="material-symbols-outlined me-2">grading</span> Calificaciones
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html">
+                        <span class="material-symbols-outlined me-2">dashboard</span> Dashboard Admin
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Contenido principal -->
+        <main class="col-md-10 main-content p-0">
+
+            <!-- Navbar superior -->
+            <nav class="navbar-dashboard bg-white shadow-sm px-4 py-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <span class="badge badge-docente px-3 py-2 rounded-pill">
+                        <span class="material-symbols-outlined fs-6 align-middle me-1">calendar_today</span> Ciclo Lectivo Actual
+                    </span>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-2 border-start ps-3">
+                        <span class="material-symbols-outlined fs-3 text-secondary">account_circle</span>
+                        <span id="navNombreDocente" class="fw-bold small text-dark d-none d-sm-inline">Cargando...</span>
+                    </div>
+                    <button id="btnCerrarSesionTop" class="btn btn-outline-danger btn-sm rounded-pill fw-bold ms-2">Cerrar Portal</button>
+                </div>
+            </nav>
+
+            <!-- Cuerpo -->
+            <div class="p-4 p-md-5">
+
+                <header class="mb-5">
+                    <h1 id="txtBienvenida" class="h3 fw-bold mb-1">Bienvenido, Prof.</h1>
+                    <p class="text-muted mb-0">Panel de gestión académica — materias, alumnos y calificaciones.</p>
+                </header>
+
+                <!-- ===== SECCIÓN: Mis Materias ===== -->
+                <section id="seccionMaterias">
+                    <div class="row g-4">
+
+                        <!-- Tabla de materias asignadas -->
+                        <div class="col-lg-8">
+                            <div class="card card-dash p-4 bg-white shadow-sm border-0 h-100">
+                                <h5 class="fw-bold text-dark mb-4 d-flex align-items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary">menu_book</span> Materias Asignadas
+                                </h5>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Código</th>
+                                                <th>Nombre de la Materia</th>
+                                                <th>Carga Horaria</th>
+                                                <th>Alumnos</th>
+                                                <th>Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tablaMaterias">
+                                            <tr>
+                                                <td><code>M001</code></td>
+                                                <td class="fw-bold">Programación I</td>
+                                                <td>80 Horas</td>
+                                                <td>28</td>
+                                                <td><span class="badge bg-success-subtle text-success border border-success-subtle">Activa</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>M003</code></td>
+                                                <td class="fw-bold">Programación II</td>
+                                                <td>80 Horas</td>
+                                                <td>22</td>
+                                                <td><span class="badge bg-success-subtle text-success border border-success-subtle">Activa</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Perfil del docente -->
+                        <div class="col-lg-4">
+                            <div class="card card-dash p-4 bg-white shadow-sm border-0 h-100">
+                                <h6 class="text-muted text-uppercase small fw-bold mb-3">Información del Perfil</h6>
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <span class="material-symbols-outlined display-6 text-primary">account_circle</span>
+                                    <div>
+                                        <h6 id="perfilNombreCompleto" class="fw-bold mb-0">Cargando...</h6>
+                                        <small id="perfilRol" class="text-muted">Nivel Académico</small>
+                                    </div>
+                                </div>
+                                <hr class="text-muted my-3">
+                                <div class="d-flex justify-content-between small mb-2">
+                                    <span>Legajo Docente:</span>
+                                    <span class="fw-bold text-dark">D001</span>
+                                </div>
+                                <div class="d-flex justify-content-between small mb-2">
+                                    <span>Materias Activas:</span>
+                                    <span class="fw-bold text-dark">2</span>
+                                </div>
+                                <div class="d-flex justify-content-between small">
+                                    <span>Condición:</span>
+                                    <span class="badge bg-primary">Titular</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- ===== SECCIÓN: Alumnos ===== -->
+                <section id="seccionAlumnos" class="mt-5">
+                    <div class="card card-dash p-4 bg-white shadow-sm border-0">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">groups</span> Listado de Alumnos
+                            </h5>
+                            <!-- Filtro por materia -->
+                            <select id="filtroMateria" class="form-select form-select-sm w-auto">
+                                <option value="">Todas las materias</option>
+                                <option value="M001">Programación I</option>
+                                <option value="M003">Programación II</option>
+                            </select>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Legajo</th>
+                                        <th>Nombre Completo</th>
+                                        <th>Materia</th>
+                                        <th>Condición</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaAlumnos">
+                                    <tr data-materia="M001">
+                                        <td><code>A001</code></td>
+                                        <td class="fw-bold">García, Lucía</td>
+                                        <td>Programación I</td>
+                                        <td><span class="badge bg-success-subtle text-success border border-success-subtle">Regular</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="verCalificaciones('A001')">
+                                                <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">grading</span> Notas
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr data-materia="M001">
+                                        <td><code>A002</code></td>
+                                        <td class="fw-bold">López, Martín</td>
+                                        <td>Programación I</td>
+                                        <td><span class="badge bg-warning-subtle text-warning border border-warning-subtle">Condicional</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="verCalificaciones('A002')">
+                                                <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">grading</span> Notas
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr data-materia="M003">
+                                        <td><code>A003</code></td>
+                                        <td class="fw-bold">Romero, Sofía</td>
+                                        <td>Programación II</td>
+                                        <td><span class="badge bg-success-subtle text-success border border-success-subtle">Regular</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="verCalificaciones('A003')">
+                                                <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">grading</span> Notas
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== SECCIÓN: Calificaciones ===== -->
+                <section id="seccionCalificaciones" class="mt-5">
+                    <div class="card card-dash p-4 bg-white shadow-sm border-0">
+                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">grading</span> Gestión de Calificaciones
+                            </h5>
+                            <button class="btn btn-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#modalNota">
+                                <span class="material-symbols-outlined align-middle me-1" style="font-size:16px">add</span> Cargar Nota
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Legajo</th>
+                                        <th>Alumno</th>
+                                        <th>Materia</th>
+                                        <th>Parcial 1</th>
+                                        <th>Parcial 2</th>
+                                        <th>Final</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaCalificaciones">
+                                    <tr>
+                                        <td><code>A001</code></td>
+                                        <td class="fw-bold">García, Lucía</td>
+                                        <td>Programación I</td>
+                                        <td>8</td>
+                                        <td>9</td>
+                                        <td>—</td>
+                                        <td><span class="badge bg-success-subtle text-success border border-success-subtle">Regular</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>A002</code></td>
+                                        <td class="fw-bold">López, Martín</td>
+                                        <td>Programación I</td>
+                                        <td>4</td>
+                                        <td>6</td>
+                                        <td>—</td>
+                                        <td><span class="badge bg-warning-subtle text-warning border border-warning-subtle">Condicional</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>A003</code></td>
+                                        <td class="fw-bold">Romero, Sofía</td>
+                                        <td>Programación II</td>
+                                        <td>10</td>
+                                        <td>9</td>
+                                        <td>—</td>
+                                        <td><span class="badge bg-success-subtle text-success border border-success-subtle">Regular</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </div><!-- /p-4 p-md-5 -->
+        </main>
+    </div>
+</div>
+
+<!-- ===== MODAL: Cargar Nota ===== -->
+<div class="modal fade" id="modalNota" tabindex="-1" aria-labelledby="modalNotaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="modalNotaLabel">
+                    <span class="material-symbols-outlined align-middle me-1 text-primary">grading</span> Cargar Calificación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Alumno</label>
+                    <select class="form-select" id="modalAlumno">
+                        <option value="A001">A001 — García, Lucía</option>
+                        <option value="A002">A002 — López, Martín</option>
+                        <option value="A003">A003 — Romero, Sofía</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Materia</label>
+                    <select class="form-select" id="modalMateriaSelect">
+                        <option value="M001">Programación I</option>
+                        <option value="M003">Programación II</option>
+                    </select>
+                </div>
+                <div class="row g-3">
+                    <div class="col">
+                        <label class="form-label small fw-bold">Parcial 1</label>
+                        <input type="number" class="form-control" id="modalParcial1" min="1" max="10" placeholder="1–10">
+                    </div>
+                    <div class="col">
+                        <label class="form-label small fw-bold">Parcial 2</label>
+                        <input type="number" class="form-control" id="modalParcial2" min="1" max="10" placeholder="1–10">
+                    </div>
+                    <div class="col">
+                        <label class="form-label small fw-bold">Final</label>
+                        <input type="number" class="form-control" id="modalFinal" min="1" max="10" placeholder="1–10">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary btn-sm rounded-pill" id="btnGuardarNota">Guardar Nota</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+<script>
+    // --- Sesión ---
+    const usuario = JSON.parse(localStorage.getItem('usuario'));
+    if (!usuario) {
+        window.location.href = 'login.html';
+    } else {
+        document.getElementById('txtBienvenida').innerText = `Bienvenido, Prof. ${usuario.nombre}`;
+        document.getElementById('txtNombreSidebar').innerText = usuario.nombre;
+        document.getElementById('navNombreDocente').innerText = usuario.nombre;
+        document.getElementById('perfilNombreCompleto').innerText = usuario.nombre;
+        document.getElementById('perfilRol').innerText = `Rol verificado: ${usuario.rol.toUpperCase()}`;
+    }
+
+    document.getElementById('btnCerrarSesionTop').addEventListener('click', () => window.cerrarSesion());
+
+    // --- Filtro de alumnos por materia ---
+    document.getElementById('filtroMateria').addEventListener('change', function () {
+        const valor = this.value;
+        document.querySelectorAll('#tablaAlumnos tr').forEach(tr => {
+            tr.style.display = (!valor || tr.dataset.materia === valor) ? '' : 'none';
+        });
+    });
+
+    // --- Ver calificaciones (placeholder) ---
+    function verCalificaciones(legajo) {
+        alert(`Calificaciones del alumno ${legajo} — funcionalidad en desarrollo.`);
+    }
+
+    // --- Guardar nota desde el modal ---
+    document.getElementById('btnGuardarNota').addEventListener('click', () => {
+        const alumno  = document.getElementById('modalAlumno').value;
+        const p1      = document.getElementById('modalParcial1').value;
+        const p2      = document.getElementById('modalParcial2').value;
+        const final   = document.getElementById('modalFinal').value;
+
+        // Actualiza la fila correspondiente en la tabla de calificaciones
+        const filas = document.querySelectorAll('#tablaCalificaciones tr');
+        filas.forEach(fila => {
+            if (fila.querySelector('td:first-child')?.innerText === alumno) {
+                if (p1)    fila.cells[3].innerText = p1;
+                if (p2)    fila.cells[4].innerText = p2;
+                if (final) fila.cells[5].innerText = final;
+
+                // Recalcula estado simple
+                const promedio = ((+p1 || 0) + (+p2 || 0)) / 2;
+                const badge    = fila.cells[6].querySelector('.badge');
+                if (promedio >= 6) {
+                    badge.className = 'badge bg-success-subtle text-success border border-success-subtle';
+                    badge.innerText = 'Regular';
+                } else if (promedio >= 4) {
+                    badge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle';
+                    badge.innerText = 'Condicional';
+                } else {
+                    badge.className = 'badge bg-danger-subtle text-danger border border-danger-subtle';
+                    badge.innerText = 'Libre';
+                }
+            }
+        });
+
+        bootstrap.Modal.getInstance(document.getElementById('modalNota')).hide();
+    });
+</script>
+
+<script type="module" src="js/auth-guard.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

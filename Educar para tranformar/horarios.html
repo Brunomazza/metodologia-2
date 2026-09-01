@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horarios | NovaSYS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+    <link rel="icon" href="img/logo.png" type="image/png">
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body class="bg-light pt-0 m-0">
+
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <aside class="col-md-2 d-none d-md-block sidebar p-0 vh-100 position-sticky top-0">
+            <div class="p-4 text-center">
+                <img src="img/logo.png" width="50" class="mb-2 bg-white rounded-circle p-1" alt="Logo NovaSYS">
+                <h5 id="txtNombreSidebar" class="text-white mb-0">Alumno</h5>
+                <small class="text-white-50">Portal Académico</small>
+            </div>
+            <ul class="nav flex-column mt-3">
+                <li class="nav-item"><a class="nav-link" href="dashboard-alumno.html"><span class="material-symbols-outlined me-2">school</span> Mis Materias</a></li>
+                <li class="nav-item"><a class="nav-link" href="calificaciones.html"><span class="material-symbols-outlined me-2">task_alt</span> Calificaciones</a></li>
+                <li class="nav-item"><a class="nav-link active" href="horarios.html"><span class="material-symbols-outlined me-2">calendar_month</span> Horarios y Fechas</a></li>
+            </ul>
+        </aside>
+
+        <main class="col-md-10 main-content p-0">
+            <nav class="navbar-dashboard bg-white shadow-sm px-4 py-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill">
+                        <span class="material-symbols-outlined fs-6 align-middle me-1">schedule</span> Cursada Presencial
+                    </span>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-2 border-start ps-3">
+                        <span class="material-symbols-outlined fs-3 text-secondary">account_circle</span>
+                        <span id="navNombreAlumno" class="fw-bold small text-dark d-none d-sm-inline">Cargando...</span>
+                    </div>
+                    <button id="btnCerrarSesionTop" class="btn btn-outline-danger btn-sm rounded-pill fw-bold ms-2">Cerrar Portal</button>
+                </div>
+            </nav>
+
+            <div class="p-4 p-md-5">
+                <header class="mb-5">
+                    <h1 class="h3 fw-bold mb-1">Horario Semanal</h1>
+                    <p class="text-muted mb-0">Grilla de cursada de materias y actividades extracurriculares.</p>
+                </header>
+
+                <div class="card card-dash p-4 bg-white shadow-sm border-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle text-center mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Horario</th>
+                                    <th>Lunes</th>
+                                    <th>Martes</th>
+                                    <th>Miércoles</th>
+                                    <th>Jueves</th>
+                                    <th>Viernes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="fw-bold text-muted bg-light">08:00 - 09:30</td>
+                                    <td>
+                                        <div class="fw-bold">Matemática I</div>
+                                        <small class="text-muted">Aula 102</small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-primary">Inglés</div>
+                                        <small class="text-muted">Lab. Idiomas</small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">Matemática I</div>
+                                        <small class="text-muted">Aula 102</small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">Geografía</div>
+                                        <small class="text-muted">Aula 104</small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">Ciencias Biológicas</div>
+                                        <small class="text-muted">Laboratorio 1</small>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-muted bg-light">09:45 - 11:15</td>
+                                    <td>
+                                        <div class="fw-bold">Prácticas del Lenguaje</div>
+                                        <small class="text-muted">Aula 105</small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">Ciencias Biológicas</div>
+                                        <small class="text-muted">Laboratorio 1</small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">Prácticas del Lenguaje</div>
+                                        <small class="text-muted">Aula 105</small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-primary">Inglés</div>
+                                        <small class="text-muted">Lab. Idiomas</small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">Geografía</div>
+                                        <small class="text-muted">Aula 104</small>
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td class="fw-bold text-muted bg-light">11:15 - 12:00</td>
+                                    <td colspan="5" class="bg-warning-subtle text-warning-emphasis fw-bold">
+                                        <span class="material-symbols-outlined align-middle me-1">restaurant</span> Receso y Comedor Nutricional
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td class="fw-bold text-muted bg-light">12:00 - 13:30</td>
+                                    <td>
+                                        <div class="fw-bold text-success">Educación Física</div>
+                                        <small class="text-muted">Predio Deportivo</small>
+                                    </td>
+                                    <td><span class="text-muted">Libre</span></td>
+                                    <td>
+                                        <div class="fw-bold text-success">Educación Física</div>
+                                        <small class="text-muted">Predio Deportivo</small>
+                                    </td>
+                                    <td><span class="text-muted">Libre</span></td>
+                                    <td>
+                                        <div class="fw-bold">Ed. Tecnológica</div>
+                                        <small class="text-muted">Sala de Computación</small>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    // Conexión de seguridad
+    const usuario = JSON.parse(localStorage.getItem('usuario'));
+    if (!usuario) {
+        window.location.href = 'login.html';
+    } else {
+        document.getElementById('txtNombreSidebar').innerText = usuario.nombre;
+        document.getElementById('navNombreAlumno').innerText = usuario.nombre;
+    }
+    document.getElementById('btnCerrarSesionTop').addEventListener('click', () => {
+        localStorage.removeItem('usuario');
+        window.location.href = 'login.html';
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

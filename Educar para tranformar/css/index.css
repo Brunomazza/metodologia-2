@@ -1,0 +1,385 @@
+/* Estilos globales y de la página principal (index.css) */
+
+/* ----------------------------------------------------------
+   Variables Globales (Paleta de colores, sombras, transiciones)
+   ---------------------------------------------------------- */
+:root {
+    --logo-primario: #0B2545;
+    --logo-acento: #F97316;
+    --logo-terciario: #14B8A6;
+    --logo-docente: #6d28d9;
+    --logo-acento2: #0ea5e9;
+    --bg-light: #f8fafc;
+    --text-dark: #1e293b;
+    --text-muted: #64748b;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ----------------------------------------------------------
+   Estilos Base y Globales
+   ---------------------------------------------------------- */
+body {
+    /* font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; */
+    font-family: 'Inter', sans-serif;
+    color: var(--text-dark);
+    background-color: #f8fafc; /* Unificado desde dos declaraciones previas */
+    padding-top: 88px;
+    overflow-x: hidden;
+}
+
+.material-symbols-outlined { 
+    vertical-align: middle; 
+}
+
+/* ----------------------------------------------------------
+   Componentes Globales (Navbar, Botones, Footer)
+   ---------------------------------------------------------- */
+
+/* Navegación */
+#mainNavbar {
+    transition: transform 0.35s ease-in-out, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+.navbar { 
+    transition: var(--transition); 
+}
+.navbar-nav .nav-link {
+    color: var(--text-dark) !important;
+    font-weight: 500;
+    position: relative;
+    padding: 0.5rem 0;
+    margin: 0 1rem;
+    transition: var(--transition);
+}
+.navbar-nav .nav-link:hover { 
+    color: var(--logo-acento) !important; 
+}
+.navbar-nav .nav-link::after {
+    content: ''; 
+    position: absolute; 
+    width: 0; 
+    height: 3px; 
+    bottom: -2px; 
+    left: 50%;
+    background-color: var(--logo-acento); 
+    transition: var(--transition); 
+    transform: translateX(-50%); 
+    border-radius: 2px;
+}
+.navbar-nav .nav-link:hover::after { 
+    width: 100%; 
+}
+
+/* Menú Desplegable (Dropdown) */
+.dropdown-menu {
+    border: 1px solid rgba(14, 184, 166, 0.15);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-lg);
+    padding: 0.5rem;
+}
+.dropdown-item {
+    border-radius: 0.5rem;
+    transition: var(--transition);
+    color: var(--text-dark);
+    font-weight: 500;
+}
+.dropdown-item:hover {
+    background-color: rgba(20, 184, 166, 0.1);
+    color: var(--logo-primario);
+    font-weight: 600;
+    transform: translateX(3px);
+}
+
+/* Botones */
+.btn-primary {
+    background-image: linear-gradient(135deg, var(--logo-primario), #13346a) !important;
+    border-color: transparent !important;
+    transition: var(--transition);
+    color: white !important;
+}
+.btn-warning {
+    background-image: linear-gradient(135deg, var(--logo-acento), #fb8c23) !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+    transition: var(--transition);
+}
+.btn-outline-primary { 
+    color: var(--logo-primario); 
+    border-color: var(--logo-primario); 
+}
+.btn-outline-primary:hover { 
+    background-color: var(--logo-primario); 
+    color: white; 
+}
+.custom-btn-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md) !important;
+    filter: brightness(1.08);
+}
+
+/* Footer */
+.site-footer { 
+    background: var(--logo-primario); 
+    color: #ffffff; 
+}
+.site-footer a { 
+    color: rgba(255, 255, 255, 0.9); 
+    text-decoration: none; 
+}
+.site-footer a:hover { 
+    color: #ffffff; 
+}
+.site-footer .social-icon { 
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center; 
+    width: 44px; 
+    height: 44px; 
+    border-radius: 50%; 
+    background-color: rgba(255, 255, 255, 0.16); 
+    transition: var(--transition); 
+    overflow: hidden; 
+}
+.site-footer .social-icon:hover { 
+    background-color: var(--logo-acento); 
+    color: #ffffff; 
+    transform: translateY(-4px) scale(1.1); 
+    box-shadow: 0 5px 15px rgba(249, 115, 22, 0.4); 
+}
+
+/* Botón flotante de WhatsApp */
+.whatsapp-float { 
+    position: fixed; 
+    bottom: 22px; 
+    right: 22px; 
+    width: 56px; 
+    height: 56px; 
+    background-color: #25d366; 
+    color: #ffffff; 
+    border-radius: 50%; 
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center; 
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18); 
+    z-index: 1050; 
+    transition: transform 0.2s ease; 
+    text-decoration: none; 
+}
+.whatsapp-float:hover { 
+    transform: translateY(-3px); 
+    box-shadow: 0 18px 38px rgba(0, 0, 0, 0.22); 
+    color: white; 
+}
+.whatsapp-float i { 
+    font-size: 1.5rem; 
+}
+
+/* ----------------------------------------------------------
+   Clases de Utilidad (Colores, Fondos, Animaciones)
+   ---------------------------------------------------------- */
+
+/* Utilidades de Color */
+.text-primary { color: var(--logo-primario) !important; }
+.bg-primary { background-color: var(--logo-primario) !important; }
+.text-warning { color: var(--logo-acento) !important; }
+.bg-warning { background-color: var(--logo-acento) !important; }
+.text-info { color: var(--logo-terciario) !important; }
+
+/* Fondos de sección */
+.bg-light { 
+    background-color: #f8fbff !important; 
+}
+.bg-soft-blue {
+    background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%) !important;
+}
+.bg-soft-orange {
+    background: linear-gradient(135deg, #fffdf8 0%, #fff0dc 100%) !important;
+}
+.bg-deep-blue {
+    background-color: #051224 !important; /* Más oscuro que el footer */
+}
+
+/* Utilidades de animación */
+.hidden-nav {
+    transform: translateY(-100%);
+}
+.reveal { 
+    opacity: 0; 
+    transform: translateY(40px); 
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out; 
+}
+.reveal.active { 
+    opacity: 1; 
+    transform: translateY(0); 
+}
+.delay-100 { transition-delay: 100ms; }
+.delay-200 { transition-delay: 200ms; }
+.delay-300 { transition-delay: 300ms; }
+.delay-400 { transition-delay: 400ms; }
+
+/* ----------------------------------------------------------
+   Estilos Específicos de la Página Principal (Index)
+   ---------------------------------------------------------- */
+
+/* Encabezado de sección */
+.section-heading { 
+    position: relative; 
+}
+.section-heading::after {
+    content: ''; 
+    width: 90px; 
+    height: 4px; 
+    display: block; 
+    margin: 1rem auto 0;
+    border-radius: 999px; 
+    background: linear-gradient(90deg, var(--logo-acento), var(--logo-terciario));
+}
+
+/* Sección Hero */
+.hero-section { 
+    background: radial-gradient(circle at top left, rgba(249, 115, 22, 0.08), transparent 40%), #ffffff; 
+}
+.hero-image-wrapper { 
+    border: 2px solid rgba(20, 184, 166, 0.18); 
+}
+
+/* Tarjetas personalizadas */
+.custom-hover-card {
+    background: #ffffff;
+    border: 1px solid rgba(14, 184, 166, 0.15) !important;
+    border-radius: 1.2rem !important;
+    transition: var(--transition);
+}
+.custom-hover-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg) !important;
+    border-color: rgba(20, 184, 166, 0.4) !important;
+}
+.custom-card-img { 
+    height: 220px; 
+    object-fit: cover; 
+}
+
+/* Carrusel de Instalaciones */
+#carouselInstalaciones { 
+    border-radius: 1.5rem; 
+    overflow: hidden; 
+    box-shadow: var(--shadow-lg); 
+}
+.filter-darken { 
+    filter: brightness(0.65); 
+    transition: transform 0.5s ease; 
+}
+.carousel-item:hover .filter-darken { 
+    transform: scale(1.02); 
+}
+
+/* Tarjetas de Deportes (Sección Instalaciones) */
+#instalaciones .sport-card {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 1.5rem !important;
+    transition: var(--transition);
+    border: 2px solid transparent;
+    cursor: pointer;
+    background-color: #ffffff;
+}
+#instalaciones .sport-card .material-symbols-outlined { 
+    font-size: 3rem !important; 
+    margin-bottom: 0.5rem; 
+    transition: transform 0.3s ease; 
+}
+#instalaciones .sport-card:hover { 
+    transform: translateY(-8px); 
+    box-shadow: 0 15px 30px rgba(11, 37, 69, 0.12); 
+}
+#instalaciones .sport-card:hover .material-symbols-outlined { 
+    transform: scale(1.15); 
+}
+
+/* Colores interactivos por deporte */
+#instalaciones .sport-card.sport-atletismo:hover { background-color: rgba(14, 184, 233, 0.08); border-color: rgba(14, 184, 233, 0.3); color: var(--logo-acento2); }
+#instalaciones .sport-card.sport-natacion:hover { background-color: rgba(255, 193, 7, 0.08); border-color: rgba(255, 193, 7, 0.3); color: #b76d00; }
+#instalaciones .sport-card.sport-futbol:hover { background-color: rgba(25, 135, 84, 0.08); border-color: rgba(25, 135, 84, 0.3); color: #1f7a58; }
+#instalaciones .sport-card.sport-artes:hover { background-color: rgba(109, 40, 217, 0.08); border-color: rgba(109, 40, 217, 0.3); color: var(--logo-docente); }
+#instalaciones .sport-card.sport-voleibol:hover { background-color: rgba(13, 110, 253, 0.08); border-color: rgba(13, 110, 253, 0.3); color: #0d6efd; }
+#instalaciones .sport-card.sport-danza:hover { background-color: rgba(20, 184, 166, 0.08); border-color: rgba(20, 184, 166, 0.3); color: var(--logo-terciario); }
+#instalaciones .sport-card.sport-basquet:hover { background-color: rgba(249, 115, 22, 0.08); border-color: rgba(249, 115, 22, 0.3); color: var(--logo-acento); }
+#instalaciones .sport-card.sport-ajedrez:hover { background-color: rgba(11, 37, 69, 0.05); border-color: rgba(11, 37, 69, 0.2); color: var(--logo-primario); }
+
+/* ----------------------------------------------------------
+   Animación de Burbujas (Fondo)
+   ---------------------------------------------------------- */
+.bubble-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0; /* Detrás del contenido */
+    pointer-events: none; /* No interfiere con los clicks */
+}
+.bubble {
+    position: absolute;
+    bottom: -50px;
+    background: rgba(20, 184, 166, 0.35);
+    border-radius: 50%;
+    backdrop-filter: blur(2px);
+    animation: rise linear infinite;
+}
+@keyframes rise {
+    0% { transform: translateY(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-1500px); opacity: 0; }
+}
+
+
+
+/* - ---------------------------------------------------------
+   Ajuste para portada index.html (Hero Section)
+   ---------------------------------------------------------- */
+
+   /* =========================================
+   NUEVA PORTADA PRINCIPAL (SPLIT HERO)
+   ========================================= */
+
+/* =========================================
+   NUEVA PORTADA PRINCIPAL (SPLIT HERO MEJORADO)
+   ========================================= */
+/* =========================================
+   NUEVA PORTADA PRINCIPAL (FORMATO LIMITADO Y MÁXIMO CONTRASTE)
+   ========================================= */
+.hero-section-split {
+    position: relative;
+    min-height: 65vh; /* Altura más limitada y elegante (no ocupa toda la pantalla) */
+    display: flex;
+    align-items: center;
+    padding-top: 80px; /* Margen superior para respetar el Navbar fijo */
+    /* Gradiente optimizado: Máxima opacidad en las letras (0.98) y caída limpia hacia la derecha */
+    background: linear-gradient(to right, 
+        rgba(248, 249, 250, 0.98) 0%,   /* Casi sólido blanco/gris para que resalten las letras */
+        rgba(248, 249, 250, 0.92) 45%,  /* Mantiene un fondo limpio y ultra legible bajo el texto */
+        rgba(248, 249, 250, 0.30) 65%,  /* Transición rápida de difuminado */
+        rgba(248, 249, 250, 0) 100%    /* Mitad derecha 100% descubierta para la foto */
+    ), url('../img/portada1.jpg') center/cover no-repeat;
+    border-bottom: 1px solid rgba(0,0,0,0.05); /* Línea sutil de cierre */
+}
+
+/* Ajuste para pantallas chicas (Celulares) */
+@media (max-width: 991.98px) {
+    .hero-section-split {
+        min-height: 55vh;
+        background: linear-gradient(to bottom, 
+            rgba(248, 249, 250, 0.98) 0%,   /* Protege el texto arriba */
+            rgba(248, 249, 250, 0.85) 60%,  
+            rgba(248, 249, 250, 0) 100%    /* Deja ver la foto abajo */
+        ), url('../img/portada1.jpg') center/cover no-repeat;
+    }
+}
+

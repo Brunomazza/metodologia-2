@@ -1,0 +1,12 @@
+# dependencias
+node_modules/
+
+# logs
+npm-debug.log*
+pnpm-debug.log*
+
+# variables de entorno
+.env
+
+# sistema
+.DS_Store

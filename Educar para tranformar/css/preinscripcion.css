@@ -1,0 +1,18 @@
+/* Estilos para el formulario de preinscripción (preinscripcion.css) */
+
+/* Estilos de los inputs del formulario global */
+.form-control, .form-select { 
+    background-color: rgba(248, 250, 252, 0.95); 
+    border: 1px solid rgba(14, 184, 166, 0.15); 
+}
+
+.form-control:focus, .form-select:focus { 
+    border-color: rgba(20, 184, 166, 0.45); 
+    box-shadow: 0 0 0 0.2rem rgba(20, 184, 166, 0.14); 
+}
+
+/* Caja de alerta amarilla/naranja (Información Importante) */
+.alert-warning { 
+    background-image: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(251, 146, 60, 0.18)); 
+    border-color: rgba(251, 146, 60, 0.25); 
+}

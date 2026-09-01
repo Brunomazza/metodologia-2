@@ -1,0 +1,67 @@
+/* Dashboard Layout */
+.sidebar {
+    min-height: 100vh;
+    background: var(--logo-primario);
+    color: white;
+}
+.sidebar .nav-link {
+    color: rgba(255,255,255,0.7);
+    padding: 1rem 1.5rem;
+    transition: var(--transition);
+}
+.sidebar .nav-link:hover, .sidebar .nav-link.active {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border-left: 4px solid var(--logo-acento);
+}
+.main-content {
+    background: #f8fafc;
+    min-height: 100vh;
+}
+.card-dash {
+    border-radius: 1.5rem !important; /* Esquinas gorditas */
+    border: none;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+}
+.card-dash:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+
+/* =========================================
+   ESTILOS PARA EL PORTAL DE FAMILIAS
+   ========================================= */
+.sidebar-heading {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    padding-left: 1.5rem;
+    font-weight: 700;
+}
+
+.avatar-hijo {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Animaciones de entrada en cascada para los datos */
+.dash-reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: dashFadeUp 0.6s ease forwards;
+}
+
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+
+@keyframes dashFadeUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

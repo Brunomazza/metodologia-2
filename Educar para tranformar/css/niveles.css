@@ -1,0 +1,91 @@
+/*
+  Estilos para las páginas de niveles educativos (niveles.css). 
+  Se comparten entre inicial, primaria y secundaria para mantener consistencia.
+*/
+
+body {
+    background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 50%, #e2e8f0 100%) !important;
+}
+
+/* Hero Banner específico para las páginas internas */
+.level-hero {
+    position: relative;
+    padding: 120px 0 80px;
+    background-size: cover;
+    background-position: center 30%;
+    background-repeat: no-repeat;
+    color: white;
+    margin-top: -88px; /* Compensa el padding del body global */
+}
+
+.level-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(11, 37, 69, 0.95) 0%, rgba(11, 37, 69, 0.7) 100%);
+    z-index: 1;
+}
+
+.level-hero > .container {
+    position: relative;
+    z-index: 2;
+}
+
+/* Tarjetas de Beneficios/Pilares */
+.benefit-card {
+    background: white;
+    border-radius: 1.5rem;
+    padding: 2rem;
+    height: 100%;
+    border: 1px solid rgba(14, 184, 166, 0.15);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+}
+
+.benefit-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(20, 184, 166, 0.4);
+}
+
+.benefit-icon {
+    width: 60px;
+    height: 60px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 2rem;
+}
+
+/* Tarjetas de Orientaciones (Secundaria) */
+.orientation-card {
+    border: none;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.orientation-card img {
+    height: 200px;
+    object-fit: cover;
+}
+
+.orientation-card .card-body {
+    padding: 2rem;
+    background: white;
+}
+
+.orientation-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+}
+
+.orientation-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 2;
+    box-shadow: var(--shadow-sm);
+}
