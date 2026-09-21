@@ -5,11 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. SMART NAVBAR (Ocultar al bajar, mostrar al subir) ---
     let lastScrollTop = 0;
     const navbar = document.getElementById('mainNavbar');
-    
+
     if (navbar) {
         window.addEventListener('scroll', () => {
             let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            
+
             // Solo aplica el efecto si hemos bajado más de 100px
             if (scrollTop > 100) {
                 if (scrollTop > lastScrollTop) {
@@ -28,13 +28,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 2. ANIMACIONES DE SCROLL (Efecto aparecer hacia arriba) ---
     const reveals = document.querySelectorAll('.reveal');
-    
+
     const revealOptions = {
         threshold: 0.15, // Activa la animación cuando el 15% del elemento es visible
         rootMargin: "0px 0px -50px 0px" // Dispara un poco antes de llegar al borde inferior
     };
 
-    const revealOnScroll = new IntersectionObserver(function(entries, observer) {
+    const revealOnScroll = new IntersectionObserver(function (entries, observer) {
         entries.forEach(entry => {
             if (!entry.isIntersecting) {
                 return;
@@ -60,20 +60,20 @@ document.addEventListener('DOMContentLoaded', () => {
         roleSelectors.forEach(radio => {
             radio.addEventListener('change', (e) => {
                 const selectedRole = e.target.value;
-                
+
                 if (selectedRole === 'alumno') {
                     if (subRoleContainer) subRoleContainer.style.display = 'flex';
-                    if (imagePanel) imagePanel.style.backgroundImage = "linear-gradient(rgba(11, 37, 69, 0.85), rgba(11, 37, 69, 0.75)), url('img/ninosEstudiando.jpg')";
+                    if (imagePanel) imagePanel.style.backgroundImage = "linear-gradient(rgba(11, 37, 69, 0.85), rgba(11, 37, 69, 0.75)), url('../img/ninosEstudiando.jpg')";
                     if (loginTitle) loginTitle.innerText = "Portal del Alumno";
                     if (loginDesc) loginDesc.innerText = "Accede a tus calificaciones, material de estudio y comunicados docentes.";
                 } else if (selectedRole === 'docente') {
                     if (subRoleContainer) subRoleContainer.style.display = 'flex';
-                    if (imagePanel) imagePanel.style.backgroundImage = "linear-gradient(rgba(11, 37, 69, 0.85), rgba(11, 37, 69, 0.75)), url('img/docente.jpg')";
+                    if (imagePanel) imagePanel.style.backgroundImage = "linear-gradient(rgba(11, 37, 69, 0.85), rgba(11, 37, 69, 0.75)), url('../img/docente.jpg')";
                     if (loginTitle) loginTitle.innerText = "Portal Docente";
                     if (loginDesc) loginDesc.innerText = "Gestiona tus clases, asistencias, planeaciones y comunicación con las familias.";
                 } else if (selectedRole === 'familia') {
                     if (subRoleContainer) subRoleContainer.style.display = 'none';
-                    if (imagePanel) imagePanel.style.backgroundImage = "linear-gradient(rgba(11, 37, 69, 0.85), rgba(11, 37, 69, 0.75)), url('img/tutores.jpg')";
+                    if (imagePanel) imagePanel.style.backgroundImage = "linear-gradient(rgba(11, 37, 69, 0.85), rgba(11, 37, 69, 0.75)), url('../img/tutores.jpg')";
                     if (loginTitle) loginTitle.innerText = "Portal Familia";
                     if (loginDesc) loginDesc.innerText = "Acompaña el progreso académico, revisa reportes y autorizaciones.";
                 }
@@ -81,11 +81,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-// --- 4. ENVÍO DEL FORMULARIO DE LOGIN (Conexión a la API) ---
-    const loginForm = document.getElementById('loginForm'); 
+    // --- 4. ENVÍO DEL FORMULARIO DE LOGIN (Conexión a la API) ---
+    const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault(); 
+            e.preventDefault();
 
             // Capturamos los datos. Usamos la variable 'dni' porque es lo que espera tu backend
             const dni = document.getElementById('email').value; // Mantenemos el ID de tu input HTML
@@ -131,11 +131,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 5. FONDO DE BURBUJAS (Más pequeñas y confinadas) ---
     const container = document.getElementById('bubbleContainer');
     if (container) {
-        const cantidad = 50; 
+        const cantidad = 50;
         for (let i = 0; i < cantidad; i++) {
             const bubble = document.createElement('div');
             bubble.classList.add('bubble');
-            
+
             const size = Math.random() * 17 + 8; // Tamaños entre 8px y 25px
             bubble.style.width = `${size}px`;
             bubble.style.height = `${size}px`;
@@ -146,5 +146,5 @@ document.addEventListener('DOMContentLoaded', () => {
             container.appendChild(bubble);
         }
     }
-    
+
 });

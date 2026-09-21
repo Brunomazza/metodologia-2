@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - Educar para Transformar</title>
-    <link rel="icon" href="img/logo.png" type="image/png">
+    <link rel="icon" href="../img/logo.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
-    <link rel="stylesheet" href="css/index.css">
-    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/login.css">
 </head>
 <body class="login-body">
 
     <nav id="mainNavbar" class="navbar navbar-expand-lg bg-white fixed-top shadow-sm py-3">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="index.html">
-                <img src="img/logo.png" alt="Logo Fundación" width="46" height="46" class="img-fluid object-fit-contain">
+                <img src="../img/logo.png" alt="Logo Fundación" width="46" height="46" class="img-fluid object-fit-contain">
                 <span class="text-primary fs-5 d-none d-sm-inline">Educar para <span class="text-warning">Transformar</span></span>
             </a>
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -124,10 +124,10 @@
             </div>
             
             <div id="loginImagePanel" class="col-lg-6 login-brand-side d-none d-lg-flex align-items-center justify-content-center" 
-                style="background: linear-gradient(rgba(11, 37, 69, 0.85), rgba(11, 37, 69, 0.75)), url('img/ninosEstudiando.jpg') center/cover no-repeat;">
+                style="background: linear-gradient(rgba(11, 37, 69, 0.85), rgba(11, 37, 69, 0.75)), url('../img/ninosEstudiando.jpg') center/cover no-repeat;">
                 
                 <div class="text-center p-5 z-2" style="max-width: 500px;">
-                    <img src="img/logo.png" alt="Ilustración" class="img-fluid mb-4 bg-white rounded-circle p-2" style="max-height: 120px;">
+                    <img src="../img/logo.png" alt="Ilustración" class="img-fluid mb-4 bg-white rounded-circle p-2" style="max-height: 120px;">
                     <h2 id="loginTitle" class="display-6 fw-bold text-white mb-3">Portal del Alumno</h2>
                     <p id="loginDesc" class="text-white-50 fs-5 mb-0">Accede a tus calificaciones, material de estudio y comunicados docentes.</p>
                 </div>
@@ -151,17 +151,17 @@
                 
                 if (selectedRole === 'alumno') {
                     subRoleContainer.style.display = 'flex';
-                    imagePanel.style.backgroundImage = "linear-gradient(rgba(11, 37, 69, 0.85), rgba(11, 37, 69, 0.75)), url('img/ninosEstudiando.jpg')";
+                    imagePanel.style.backgroundImage = "linear-gradient(rgba(11, 37, 69, 0.85), rgba(11, 37, 69, 0.75)), url('../img/ninosEstudiando.jpg')";
                     loginTitle.innerText = "Portal del Alumno";
                     loginDesc.innerText = "Accede a tus calificaciones, material de estudio y comunicados docentes.";
                 } else if (selectedRole === 'docente') {
                     subRoleContainer.style.display = 'flex';
-                    imagePanel.style.backgroundImage = "linear-gradient(rgba(11, 37, 69, 0.85), rgba(11, 37, 69, 0.75)), url('img/docente.jpg')";
+                    imagePanel.style.backgroundImage = "linear-gradient(rgba(11, 37, 69, 0.85), rgba(11, 37, 69, 0.75)), url('../img/docente.jpg')";
                     loginTitle.innerText = "Portal Docente";
                     loginDesc.innerText = "Gestiona tus clases, asistencias, planeaciones y comunicación con las familias.";
                 } else if (selectedRole === 'familia') {
                     subRoleContainer.style.display = 'none'; // Familia no necesita elegir nivel
-                    imagePanel.style.backgroundImage = "linear-gradient(rgba(11, 37, 69, 0.85), rgba(11, 37, 69, 0.75)), url('img/tutores.jpg')";
+                    imagePanel.style.backgroundImage = "linear-gradient(rgba(11, 37, 69, 0.85), rgba(11, 37, 69, 0.75)), url('../img/tutores.jpg')";
                     loginTitle.innerText = "Portal Familia";
                     loginDesc.innerText = "Acompaña el progreso académico, revisa reportes y autorizaciones.";
                 }
@@ -170,7 +170,7 @@
     </script>
 
     <script type="module">
-        import { auth, db } from './js/firebase-config.js';
+        import { auth, db } from '../js/firebase-config.js';
         import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
         import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -195,6 +195,12 @@
             const btn = document.querySelector('[type="submit"]');
             btn.disabled = true;
             btn.textContent = 'Ingresando...';
+
+            const USUARIOS_LOCALES = [
+                { dni: '12345678', password: ['1234', '123456'], nombre: 'Lucas', apellido: 'Fernández', rol: 'alumno', nivel: 'primaria' },
+                { dni: '87654321', password: ['1234', '123456'], nombre: 'Ana', apellido: 'López', rol: 'docente', nivel: 'secundaria' },
+                { dni: '11111111', password: ['1234', '123456'], nombre: 'Jose', apellido: '', rol: 'familia', nivel: null }
+            ];
 
             try {
                 const cred = await signInWithEmailAndPassword(auth, email, password);
@@ -227,8 +233,39 @@
                 if (rol === 'familia') window.location.href = 'dashboard-familia.html';
 
             } catch (err) {
-                alert(MENSAJES_ERROR[err.code] || 'Error al iniciar sesión.');
-                console.error(err);
+                console.warn('Firebase login falló, intentando modo de prueba local:', err.message);
+
+                // Verificamos si las credenciales coinciden con algún usuario de prueba local
+                const userLocal = USUARIOS_LOCALES.find(u => u.dni === dni && u.password.includes(password));
+
+                if (userLocal) {
+                    if (userLocal.rol !== rol) {
+                        alert('El rol seleccionado no corresponde a este usuario.');
+                        return;
+                    }
+                    if (rol !== 'familia' && userLocal.nivel !== nivel) {
+                        alert('El nivel seleccionado no corresponde a este usuario.');
+                        return;
+                    }
+
+                    const perfilLocal = {
+                        uid: 'local-' + userLocal.dni,
+                        dni: userLocal.dni,
+                        nombre: userLocal.nombre,
+                        apellido: userLocal.apellido,
+                        rol: userLocal.rol,
+                        nivel: userLocal.nivel
+                    };
+
+                    localStorage.setItem('usuario', JSON.stringify(perfilLocal));
+
+                    if (rol === 'alumno')  window.location.href = 'dashboard-alumno.html';
+                    if (rol === 'docente') window.location.href = 'dashboard-docente.html';
+                    if (rol === 'familia') window.location.href = 'dashboard-familia.html';
+                    return;
+                }
+
+                alert(MENSAJES_ERROR[err.code] || 'DNI o contraseña incorrectos.');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Iniciar Sesión';

@@ -6,29 +6,30 @@ const PORT = process.env.PORT || 3000 || 5500;
 
 // Configuración robusta de CORS
 app.use(cors({
-    origin: '*', // Permite peticiones desde cualquier lugar
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+  origin: '*', // Permite peticiones desde cualquier lugar
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 app.use(express.static('../'));
+app.get('/', (req, res) => res.redirect('/html/index.html'));
 
 // ─── DATOS DE EJEMPLO EN MEMORIA ────────────────────────────────────────────
 
 let alumnos = [
   { id: 1, legajo: "A001", nombre: "Lucas", apellido: "Fernández", email: "lucas.fernandez@mail.com", estado: "activo" },
-  { id: 2, legajo: "A002", nombre: "Camila", apellido: "Romero",    email: "camila.romero@mail.com",    estado: "activo" },
-  { id: 3, legajo: "A003", nombre: "Mateo",  apellido: "García",    email: "mateo.garcia@mail.com",     estado: "inactivo" },
+  { id: 2, legajo: "A002", nombre: "Camila", apellido: "Romero", email: "camila.romero@mail.com", estado: "activo" },
+  { id: 3, legajo: "A003", nombre: "Mateo", apellido: "García", email: "mateo.garcia@mail.com", estado: "inactivo" },
 ];
 
 let docentes = [
-  { id: 1, legajo: "D001", nombre: "Ana",    apellido: "López",    email: "ana.lopez@mail.com",    materiasACargo: [1, 2], estado: "activo" },
-  { id: 2, legajo: "D002", nombre: "Carlos", apellido: "Martínez", email: "carlos.martinez@mail.com", materiasACargo: [3],    estado: "activo" },
+  { id: 1, legajo: "D001", nombre: "Ana", apellido: "López", email: "ana.lopez@mail.com", materiasACargo: [1, 2], estado: "activo" },
+  { id: 2, legajo: "D002", nombre: "Carlos", apellido: "Martínez", email: "carlos.martinez@mail.com", materiasACargo: [3], estado: "activo" },
 ];
 
 let materias = [
-  { id: 1, codigo: "M001", nombre: "Programación I",   cargaHoraria: 80, cicloLectivo: 2025, docenteId: 1 },
-  { id: 2, codigo: "M002", nombre: "Base de Datos I",  cargaHoraria: 64, cicloLectivo: 2025, docenteId: 1 },
+  { id: 1, codigo: "M001", nombre: "Programación I", cargaHoraria: 80, cicloLectivo: 2025, docenteId: 1 },
+  { id: 2, codigo: "M002", nombre: "Base de Datos I", cargaHoraria: 64, cicloLectivo: 2025, docenteId: 1 },
   { id: 3, codigo: "M003", nombre: "Programación III", cargaHoraria: 96, cicloLectivo: 2025, docenteId: 2 },
 ];
 
@@ -43,18 +44,18 @@ const nextId = (arr) => (arr.length === 0 ? 1 : Math.max(...arr.map((x) => x.id)
 
 // ─── HELPER RESPUESTA ───────────────────────────────────────────────────────
 
-const ok   = (res, data, status = 200) => res.status(status).json({ ok: true,  data });
-const fail = (res, msg,  status = 400) => res.status(status).json({ ok: false, error: msg });
+const ok = (res, data, status = 200) => res.status(status).json({ ok: true, data });
+const fail = (res, msg, status = 400) => res.status(status).json({ ok: false, error: msg });
 
 // ─── DASHBOARD ──────────────────────────────────────────────────────────────
 
 app.get("/api/dashboard", (req, res) => {
   const cicloActual = 2025;
   ok(res, {
-    alumnosActivos:         alumnos.filter((a) => a.estado === "activo").length,
-    docentesRegistrados:    docentes.length,
-    materiasDisponibles:    materias.length,
-    inscripcionesPeriodo:   inscripciones.filter((i) => i.cicloLectivo === cicloActual).length,
+    alumnosActivos: alumnos.filter((a) => a.estado === "activo").length,
+    docentesRegistrados: docentes.length,
+    materiasDisponibles: materias.length,
+    inscripcionesPeriodo: inscripciones.filter((i) => i.cicloLectivo === cicloActual).length,
   });
 });
 
@@ -251,7 +252,7 @@ const sesionesActivas = new Set();
 const usuarios = [
   { id: 1, dni: "12345678", password: "1234", rol: "alumno", nivel: "primaria", nombre: "Lucas" },
   { id: 2, dni: "87654321", password: "1234", rol: "docente", nivel: "secundaria", nombre: "Ana" },
-  { id: 3, dni: "11111111", password: "1234", rol: "familia",  nombre: "Jose" }
+  { id: 3, dni: "11111111", password: "1234", rol: "familia", nombre: "Jose" }
 ];
 
 app.post("/api/auth/login", (req, res) => {
