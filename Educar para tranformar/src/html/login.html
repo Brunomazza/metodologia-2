@@ -196,31 +196,12 @@
             btn.disabled = true;
             btn.textContent = 'Ingresando...';
 
-            const USUARIOS_LOCALES = [
+            // Usuarios de prueba, solo como respaldo si Firebase no responde (sin conexión, etc.)
+            const listaUsuarios = [
                 { dni: '12345678', password: ['1234', '123456'], nombre: 'Lucas', apellido: 'Fernández', rol: 'alumno', nivel: 'primaria' },
                 { dni: '87654321', password: ['1234', '123456'], nombre: 'Ana', apellido: 'López', rol: 'docente', nivel: 'secundaria' },
                 { dni: '11111111', password: ['1234', '123456'], nombre: 'Jose', apellido: '', rol: 'familia', nivel: null }
             ];
-
-            // Cargar usuarios creados desde Gestión de Usuarios en el Admin
-            let listaUsuarios = [...USUARIOS_LOCALES];
-            try {
-                const reg = JSON.parse(localStorage.getItem('usuarios_registrados'));
-                if (Array.isArray(reg)) {
-                    reg.forEach(u => {
-                        listaUsuarios.push({
-                            dni: u.dni,
-                            password: [u.password, '1234', '123456'],
-                            nombre: u.nombre,
-                            apellido: u.apellido || '',
-                            rol: u.rol,
-                            nivel: u.nivel === 'general' ? null : u.nivel
-                        });
-                    });
-                }
-            } catch (e) {
-                console.warn('Error leyendo usuarios_registrados:', e);
-            }
 
             try {
                 const cred = await signInWithEmailAndPassword(auth, email, password);

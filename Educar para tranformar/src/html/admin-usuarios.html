@@ -223,43 +223,35 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module" src="../js/auth-guard.js"></script>
 
-<script>
-    // --- LÓGICA DE GESTIÓN DE USUARIOS LOCALSTORAGE ---
-    const KEY_USUARIOS = 'usuarios_registrados';
+<script type="module">
+    // --- LÓGICA DE GESTIÓN DE USUARIOS (FIREBASE AUTH + FIRESTORE) ---
+    import { auth, db } from '../js/firebase-config.js';
+    import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-    // Usuarios iniciales de prueba (se inicializan si la lista está vacía)
-    const USUARIOS_INICIALES = [
-        { dni: '12345678', nombre: 'Lucas', apellido: 'Fernández', rol: 'alumno', nivel: 'primaria', estado: 'Activo' },
-        { dni: '87654321', nombre: 'Ana', apellido: 'López', rol: 'docente', nivel: 'secundaria', estado: 'Activo' },
-        { dni: '11111111', nombre: 'Jose', apellido: 'Gómez', rol: 'familia', nivel: 'general', estado: 'Activo' }
-    ];
+    const firebaseConfigLocal = auth.app.options;
 
-    function obtenerUsuarios() {
-        try {
-            const data = localStorage.getItem(KEY_USUARIOS);
-            if (!data) {
-                localStorage.setItem(KEY_USUARIOS, JSON.stringify(USUARIOS_INICIALES));
-                return USUARIOS_INICIALES;
-            }
-            return JSON.parse(data);
-        } catch (e) {
-            return USUARIOS_INICIALES;
-        }
+    async function obtenerUsuarios() {
+        const snap = await getDocs(collection(db, 'usuarios'));
+        return snap.docs.map(d => ({ uid: d.id, ...d.data() }));
     }
 
-    function guardarUsuarios(lista) {
-        localStorage.setItem(KEY_USUARIOS, JSON.stringify(lista));
-        renderizarTablaUsuarios();
-    }
-
-    function renderizarTablaUsuarios(filtro = '') {
+    async function renderizarTablaUsuarios(filtro = '') {
         const tabla = document.getElementById('tablaUsuariosAdmin');
         const badge = document.getElementById('badgeTotalUsuarios');
-        const usuarios = obtenerUsuarios();
+        let usuarios;
+        try {
+            usuarios = await obtenerUsuarios();
+        } catch (e) {
+            console.error('Error leyendo usuarios de Firestore:', e);
+            if (tabla) tabla.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">No se pudo conectar con Firebase.</td></tr>';
+            return;
+        }
 
         const query = (typeof filtro === 'string' ? filtro : '').trim().toLowerCase();
-        const usuariosFiltrados = query 
-            ? usuarios.filter(u => 
+        const usuariosFiltrados = query
+            ? usuarios.filter(u =>
                 (u.nombre && u.nombre.toLowerCase().includes(query)) ||
                 (u.apellido && u.apellido.toLowerCase().includes(query)) ||
                 (u.dni && u.dni.toLowerCase().includes(query)) ||
@@ -268,7 +260,7 @@
             : usuarios;
 
         if (badge) {
-            badge.innerText = query 
+            badge.innerText = query
                 ? `${usuariosFiltrados.length} de ${usuarios.length} usuario(s)`
                 : `${usuarios.length} usuario(s)`;
         }
@@ -296,7 +288,7 @@
                 <td><small class="text-secondary fw-medium">${nivelTexto}</small></td>
                 <td><span class="badge bg-success-subtle text-success rounded-pill px-2">Activo</span></td>
                 <td class="text-end pe-3">
-                    <button class="btn btn-outline-danger btn-sm rounded-pill px-3 py-1 small fw-bold" onclick="eliminarUsuarioPorDni('${u.dni}')">
+                    <button class="btn btn-outline-danger btn-sm rounded-pill px-3 py-1 small fw-bold" onclick="eliminarUsuarioPorUid('${u.uid}')">
                         <span class="material-symbols-outlined align-middle fs-6">delete</span> Eliminar
                     </button>
                 </td>
@@ -305,17 +297,16 @@
         });
     }
 
-    window.eliminarUsuarioPorDni = function(dni) {
-        const usuarios = obtenerUsuarios();
-        const indexReal = usuarios.findIndex(u => u.dni === dni);
-        if (indexReal === -1) return;
-        const usuarioAEliminar = usuarios[indexReal];
-        if (confirm(`¿Estás seguro de eliminar el usuario ${usuarioAEliminar.nombre} ${usuarioAEliminar.apellido} (DNI ${usuarioAEliminar.dni})?`)) {
-            usuarios.splice(indexReal, 1);
-            localStorage.setItem(KEY_USUARIOS, JSON.stringify(usuarios));
+    window.eliminarUsuarioPorUid = async function(uid) {
+        if (!confirm('¿Estás seguro de eliminar el perfil de este usuario? (La cuenta de acceso solo puede eliminarse por completo desde el backend)')) return;
+        try {
+            await deleteDoc(doc(db, 'usuarios', uid));
             const busquedaActual = document.getElementById('inputBuscarUsuario')?.value || '';
-            renderizarTablaUsuarios(busquedaActual);
-            mostrarAlerta(`Usuario ${usuarioAEliminar.nombre} eliminado correctamente.`, 'info');
+            await renderizarTablaUsuarios(busquedaActual);
+            mostrarAlerta('Perfil eliminado correctamente de Firestore.', 'info');
+        } catch (e) {
+            console.error(e);
+            mostrarAlerta('No se pudo eliminar el usuario: ' + e.message, 'danger');
         }
     };
 
@@ -340,10 +331,17 @@
         });
     });
 
+    const MENSAJES_ERROR_CREAR = {
+        'auth/email-already-in-use': 'Ya existe una cuenta registrada con ese DNI.',
+        'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
+        'auth/invalid-email': 'DNI inválido.',
+        'auth/network-request-failed': 'Sin conexión a internet o con Firebase.'
+    };
+
     // Formulario de creación
     const formCrear = document.getElementById('formCrear');
     if (formCrear) {
-        formCrear.addEventListener('submit', (e) => {
+        formCrear.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const nombre = document.getElementById('nombre').value.trim();
@@ -351,7 +349,7 @@
             const dni = document.getElementById('dni').value.trim();
             const password = document.getElementById('password').value;
             const rol = document.querySelector('input[name="rol"]:checked')?.value || 'alumno';
-            const nivel = rol === 'familia' ? 'general' : (document.querySelector('input[name="nivel"]:checked')?.value || 'primaria');
+            const nivel = rol === 'familia' ? null : (document.querySelector('input[name="nivel"]:checked')?.value || 'primaria');
 
             if (!nombre || !apellido || !dni || !password) {
                 mostrarAlerta('Por favor completa todos los campos requeridos.', 'danger');
@@ -366,33 +364,44 @@
                 return;
             }
 
-            const usuarios = obtenerUsuarios();
-            const yaExiste = usuarios.some(u => u.dni === dni);
-            if (yaExiste) {
-                mostrarAlerta(`Ya existe un usuario registrado con el DNI ${dni}.`, 'warning');
-                return;
+            const btnCrear = document.getElementById('btnCrear');
+            btnCrear.disabled = true;
+
+            // Usamos una app secundaria de Firebase para crear el usuario sin
+            // cerrar la sesión de administración actual (createUser inicia
+            // sesión automáticamente como el usuario nuevo en la app que se use).
+            const appSecundaria = initializeApp(firebaseConfigLocal, 'admin-crear-usuario-' + Date.now());
+            const authSecundaria = getAuth(appSecundaria);
+
+            try {
+                const email = `${dni}@escuela.edu.ar`;
+                const cred = await createUserWithEmailAndPassword(authSecundaria, email, password);
+
+                await setDoc(doc(db, 'usuarios', cred.user.uid), {
+                    dni,
+                    nombre,
+                    apellido,
+                    rol,
+                    nivel,
+                    estado: 'Activo'
+                });
+
+                formCrear.reset();
+                const nivelCont = document.getElementById('nivelContainer');
+                if (nivelCont) nivelCont.style.display = 'block';
+
+                mostrarAlerta(`¡Usuario ${nombre} ${apellido} registrado con éxito en Firebase!`, 'success');
+                await renderizarTablaUsuarios(document.getElementById('inputBuscarUsuario')?.value || '');
+            } catch (err) {
+                console.error(err);
+                mostrarAlerta(MENSAJES_ERROR_CREAR[err.code] || `Error al registrar: ${err.message}`, 'danger');
+            } finally {
+                btnCrear.disabled = false;
+                await deleteApp(appSecundaria);
             }
-
-            // Registrar nuevo usuario
-            const nuevo = {
-                dni,
-                nombre,
-                apellido,
-                password,
-                rol,
-                nivel,
-                estado: 'Activo'
-            };
-
-            usuarios.push(nuevo);
-            guardarUsuarios(usuarios);
-
-            formCrear.reset();
-            const nivelCont = document.getElementById('nivelContainer');
-            if (nivelCont) nivelCont.style.display = 'block';
-
-            mostrarAlerta(`¡Usuario ${nombre} ${apellido} registrado con éxito!`, 'success');
         });
+    }
+
     // Evento de búsqueda en tiempo real
     const inputBuscar = document.getElementById('inputBuscarUsuario');
     if (inputBuscar) {
