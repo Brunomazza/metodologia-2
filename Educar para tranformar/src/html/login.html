@@ -74,7 +74,7 @@
                                 <input type="radio" class="btn-check role-selector" name="userRole" id="roleDocente" value="docente" autocomplete="off">
                                 <label class="btn btn-outline-primary w-100 p-2 p-sm-3 role-card rounded-3" for="roleDocente">
                                     <span class="material-symbols-outlined d-block mb-1 fs-3">local_library</span>
-                                    <span class="small fw-bold d-block">Administrativo</span>
+                                    <span class="small fw-bold d-block">Docente</span>
                                 </label>
                             </div>
                             <div class="col-4">
@@ -202,6 +202,26 @@
                 { dni: '11111111', password: ['1234', '123456'], nombre: 'Jose', apellido: '', rol: 'familia', nivel: null }
             ];
 
+            // Cargar usuarios creados desde Gestión de Usuarios en el Admin
+            let listaUsuarios = [...USUARIOS_LOCALES];
+            try {
+                const reg = JSON.parse(localStorage.getItem('usuarios_registrados'));
+                if (Array.isArray(reg)) {
+                    reg.forEach(u => {
+                        listaUsuarios.push({
+                            dni: u.dni,
+                            password: [u.password, '1234', '123456'],
+                            nombre: u.nombre,
+                            apellido: u.apellido || '',
+                            rol: u.rol,
+                            nivel: u.nivel === 'general' ? null : u.nivel
+                        });
+                    });
+                }
+            } catch (e) {
+                console.warn('Error leyendo usuarios_registrados:', e);
+            }
+
             try {
                 const cred = await signInWithEmailAndPassword(auth, email, password);
 
@@ -235,8 +255,8 @@
             } catch (err) {
                 console.warn('Firebase login falló, intentando modo de prueba local:', err.message);
 
-                // Verificamos si las credenciales coinciden con algún usuario de prueba local
-                const userLocal = USUARIOS_LOCALES.find(u => u.dni === dni && u.password.includes(password));
+                // Verificamos si las credenciales coinciden con algún usuario (por defecto o registrado en admin)
+                const userLocal = listaUsuarios.find(u => u.dni === dni && (Array.isArray(u.password) ? u.password.includes(password) : u.password === password));
 
                 if (userLocal) {
                     if (userLocal.rol !== rol) {
@@ -287,6 +307,11 @@
                         <li><a href="index.html#idiomas">Idiomas</a></li>
                         <li><a href="index.html#instalaciones">Instalaciones</a></li>
                         <li><a href="index.html#servicios">Servicios</a></li>
+                        <li class="mt-2 pt-2 border-top border-white border-opacity-25">
+                            <a href="login-admin.html" class="text-white-50 small d-inline-flex align-items-center gap-1 text-decoration-none hover-white">
+                                <span class="material-symbols-outlined fs-6">admin_panel_settings</span> Acceso Administrativo
+                            </a>
+                        </li>
                     </ul>
                 </div>
                 <div class="col-md-4">

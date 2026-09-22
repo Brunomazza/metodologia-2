@@ -22,12 +22,14 @@
             </div>
             <ul class="nav flex-column mt-3">
                 <li class="nav-item"><a class="nav-link active" href="#"><span class="material-symbols-outlined me-2">analytics</span> Vista General</a></li>
+                <li class="nav-item"><a class="nav-link" href="#seccionNoticias"><span class="material-symbols-outlined me-2">campaign</span> Publicar Noticias</a></li>
+                <li class="nav-item"><a class="nav-link" href="admin-usuarios.html"><span class="material-symbols-outlined me-2">manage_accounts</span> Gestión Usuarios</a></li>
                 <li class="nav-item"><a class="nav-link" href="#"><span class="material-symbols-outlined me-2">group</span> Control Alumnos</a></li>
                 <li class="nav-item"><a class="nav-link" href="#"><span class="material-symbols-outlined me-2">badge</span> Legajos Docentes</a></li>
                 <li class="nav-item"><a class="nav-link" href="#"><span class="material-symbols-outlined me-2">menu_book</span> Oferta Académica</a></li>
                 <li class="nav-item mt-3 border-top border-white border-opacity-10 pt-3">
-                    <a class="nav-link" href="dashboard-docente.html">
-                        <span class="material-symbols-outlined me-2">arrow_back</span> Portal Docente
+                    <a class="nav-link" href="index.html">
+                        <span class="material-symbols-outlined me-2">public</span> Ver Sitio Web
                     </a>
                 </li>
             </ul>
@@ -57,8 +59,8 @@
                         <p class="text-muted mb-0">Indicadores globales del Centro Educativo "Educar para Transformar".</p>
                     </div>
                     <div class="d-flex gap-2">
-                        <a href="dashboard-docente.html" class="btn btn-outline-secondary rounded-pill px-4">
-                            <span class="material-symbols-outlined align-middle me-1" style="font-size:16px">arrow_back</span> Volver
+                        <a href="index.html" class="btn btn-outline-secondary rounded-pill px-4">
+                            <span class="material-symbols-outlined align-middle me-1" style="font-size:16px">public</span> Ver Sitio Web
                         </a>
                         <button id="btnRefrescarAdmin" class="btn btn-primary rounded-pill px-4 shadow-sm">Actualizar Datos</button>
                     </div>
@@ -143,24 +145,333 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- SECCIÓN DE PUBLICAR NOTICIAS (DISEÑO MEJORADO) -->
+                <section id="seccionNoticias" class="card border-0 shadow-sm mt-5 overflow-hidden rounded-4">
+                    <!-- ENCABEZADO ESTILIZADO CON DEGRADADO INSTITUCIONAL -->
+                    <div class="p-4 p-md-5 text-white" style="background: linear-gradient(135deg, #0b2545 0%, #172554 50%, #1e40af 100%);">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-white bg-opacity-10 border border-white border-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width:56px;height:56px;">
+                                    <span class="material-symbols-outlined fs-2 text-warning">campaign</span>
+                                </div>
+                                <div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <h4 class="fw-bold mb-0 text-white">Publicar Noticia Institucional</h4>
+                                        <span class="badge bg-warning text-dark fw-bold rounded-pill px-2 py-1 small">Gestión Activa</span>
+                                    </div>
+                                    <p class="text-white-50 small mb-0 mt-1">Crea anuncios y comunicados que se sincronizan con el portal público escolar.</p>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="badge bg-white bg-opacity-10 text-white border border-white border-opacity-25 px-3 py-2 rounded-pill">
+                                    <span class="material-symbols-outlined align-middle fs-6 me-1">visibility</span> Vista Previa Activa
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CUERPO PRINCIPAL EN 2 COLUMNAS (FORMULARIO + VISTA PREVIA EN VIVO) -->
+                    <div class="p-4 p-md-5 bg-white">
+                        <div class="row g-4">
+                            <!-- COLUMNA IZQUIERDA: FORMULARIO -->
+                            <div class="col-lg-7">
+                                <div class="p-4 rounded-4 border bg-light bg-opacity-50">
+                                    <h5 class="fw-bold mb-3 text-dark d-flex align-items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary fs-5">edit_note</span> Datos de la Publicación
+                                    </h5>
+                                    
+                                    <form id="formPublicarNoticia" class="row g-3">
+                                        <div class="col-12">
+                                            <label for="noticiaTitulo" class="form-label fw-bold small text-secondary">Título de la Noticia *</label>
+                                            <input type="text" class="form-control bg-white shadow-none" id="noticiaTitulo" placeholder="Ej: Apertura Oficial de Inscripciones 2027" required>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="noticiaCategoria" class="form-label fw-bold small text-secondary">Categoría *</label>
+                                            <select class="form-select bg-white shadow-none" id="noticiaCategoria" required>
+                                                <option value="Institucional">Institucional</option>
+                                                <option value="Académico">Académico</option>
+                                                <option value="Deportes">Deportes</option>
+                                                <option value="Comunidad">Comunidad</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="noticiaFecha" class="form-label fw-bold small text-secondary">Fecha de Publicación *</label>
+                                            <input type="date" class="form-control bg-white shadow-none" id="noticiaFecha" required>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label for="noticiaImagen" class="form-label fw-bold small text-secondary">Imagen de Portada *</label>
+                                            <select class="form-select bg-white shadow-none" id="noticiaImagen" required>
+                                                <option value="../img/portada1.jpg">Fachada Institucional</option>
+                                                <option value="../img/ninosEstudiando.jpg">Alumnos en Actividad</option>
+                                                <option value="../img/Pileta natacion.jpg">Complejo Acuático y Deportivo</option>
+                                                <option value="../img/docente.jpg">Docentes y Capacitación</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label for="noticiaDescripcion" class="form-label fw-bold small text-secondary">Descripción / Comunicado *</label>
+                                            <textarea class="form-control bg-white shadow-none" id="noticiaDescripcion" rows="4" placeholder="Escribe aquí el resumen y detalle de la noticia..." required></textarea>
+                                        </div>
+
+                                        <div class="col-12 mt-3 d-flex justify-content-end">
+                                            <button type="submit" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm d-flex align-items-center gap-2">
+                                                <span class="material-symbols-outlined fs-5">publish</span> Publicar Noticia
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    <div id="alertaNoticia" class="alert alert-success d-none mt-3" role="alert"></div>
+                                </div>
+                            </div>
+
+                            <!-- COLUMNA DERECHA: VISTA PREVIA EN TIEMPO REAL -->
+                            <div class="col-lg-5">
+                                <div class="p-3 rounded-4 border bg-light h-100 d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="fw-bold text-secondary mb-0 small text-uppercase">Vista Previa para el Portal Público</h6>
+                                        <span class="badge bg-secondary-subtle text-secondary small">En Vivo</span>
+                                    </div>
+
+                                    <!-- CARD DE VISTA PREVIA -->
+                                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden mt-auto mb-auto bg-white">
+                                        <img id="prevImg" src="../img/portada1.jpg" class="card-img-top object-fit-cover" alt="Vista Previa" style="height: 180px;">
+                                        <div class="card-body p-4 d-flex flex-column">
+                                            <div class="mb-2">
+                                                <span id="prevCategoriaBadge" class="badge bg-warning text-dark">Institucional</span>
+                                                <small id="prevFecha" class="text-muted ms-2">Hoy</small>
+                                            </div>
+                                            <h5 id="prevTitulo" class="card-title fw-bold text-dark">Título de la noticia en vista previa</h5>
+                                            <p id="prevDescripcion" class="card-text text-secondary small mb-3">Aquí podrás previsualizar cómo se verá la noticia exactamente antes de ser publicada.</p>
+                                            <span class="mt-auto fw-bold text-primary small d-inline-flex align-items-center gap-1">
+                                                Leer más <span class="material-symbols-outlined fs-6">arrow_forward</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted text-center mt-2" style="font-size: 0.78rem;">Así se renderizará automáticamente en la página <code>noticias.html</code>.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LISTADO DE NOTICIAS PUBLICADAS EN LOCALSTORAGE -->
+                        <div class="mt-5 pt-4 border-top">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h5 class="fw-bold mb-0 text-dark">Noticias Gestionadas en el Sistema</h5>
+                                    <small class="text-muted">Historial de publicaciones activas en la memoria local.</small>
+                                </div>
+                                <span id="badgeTotalNoticias" class="badge bg-primary rounded-pill px-3 py-2">0 noticias</span>
+                            </div>
+                            <div class="table-responsive rounded-3 border">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-3">Noticia</th>
+                                            <th>Categoría</th>
+                                            <th>Fecha</th>
+                                            <th class="text-end pe-3">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaNoticiasAdmin">
+                                        <tr><td colspan="4" class="text-center text-muted py-4">No hay noticias personalizadas registradas todavía.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
         </main>
     </div>
 </div>
 
 <script>
-    document.getElementById('btnRefrescarAdmin').addEventListener('click', async () => {
-        try {
-            const res = await fetch('http://localhost:3000/api/dashboard');
-            const data = await res.json();
-            if(data.ok) {
-                document.getElementById('totalAlumnosAdmin').innerText = data.data.alumnosActivos;
-                document.getElementById('totalDocentesAdmin').innerText = data.data.docentesRegistrados;
-            }
-        } catch (err) {
-            console.log('Usando datos estáticos de respaldo.');
+    // --- LÓGICA DE PUBLICAR NOTICIAS (LOCALSTORAGE) ---
+    const STORAGE_KEY = 'noticias_institucionales';
+
+    // Elementos de la vista previa interactiva
+    const tituloInput = document.getElementById('noticiaTitulo');
+    const categoriaSelect = document.getElementById('noticiaCategoria');
+    const fechaInput = document.getElementById('noticiaFecha');
+    const imagenSelect = document.getElementById('noticiaImagen');
+    const descInput = document.getElementById('noticiaDescripcion');
+
+    const prevTitulo = document.getElementById('prevTitulo');
+    const prevCategoria = document.getElementById('prevCategoriaBadge');
+    const prevFecha = document.getElementById('prevFecha');
+    const prevImg = document.getElementById('prevImg');
+    const prevDesc = document.getElementById('prevDescripcion');
+
+    // Colores de los badges según categoría
+    const coloresCat = {
+        'Institucional': 'bg-warning text-dark',
+        'Deportes': 'bg-info text-white',
+        'Académico': 'bg-success text-white',
+        'Comunidad': 'bg-primary text-white'
+    };
+
+    // Actualizar vista previa en tiempo real
+    function actualizarVistaPrevia() {
+        if (prevTitulo && tituloInput) prevTitulo.innerText = tituloInput.value.trim() || 'Título de la noticia en vista previa';
+        if (prevDesc && descInput) prevDesc.innerText = descInput.value.trim() || 'Aquí podrás previsualizar cómo se verá la noticia exactamente antes de ser publicada.';
+        if (prevImg && imagenSelect) prevImg.src = imagenSelect.value;
+        if (prevCategoria && categoriaSelect) {
+            prevCategoria.innerText = categoriaSelect.value;
+            prevCategoria.className = `badge ${coloresCat[categoriaSelect.value] || 'bg-secondary text-white'}`;
+        }
+        if (prevFecha && fechaInput && fechaInput.value) {
+            const partes = fechaInput.value.split('-');
+            const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            prevFecha.innerText = `${partes[2]} ${meses[parseInt(partes[1], 10) - 1]}, ${partes[0]}`;
+        }
+    }
+
+    // Escuchadores de eventos para la vista previa en vivo
+    [tituloInput, categoriaSelect, fechaInput, imagenSelect, descInput].forEach(el => {
+        if (el) {
+            el.addEventListener('input', actualizarVistaPrevia);
+            el.addEventListener('change', actualizarVistaPrevia);
         }
     });
+
+    // Establecer fecha de hoy por defecto
+    if (fechaInput) {
+        fechaInput.value = new Date().toISOString().split('T')[0];
+        actualizarVistaPrevia();
+    }
+
+    function obtenerNoticiasGuardadas() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function guardarNoticias(noticias) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(noticias));
+        renderizarTablaNoticias();
+    }
+
+    function renderizarTablaNoticias() {
+        const tabla = document.getElementById('tablaNoticiasAdmin');
+        const badge = document.getElementById('badgeTotalNoticias');
+        const noticias = obtenerNoticiasGuardadas();
+
+        if (badge) badge.innerText = `${noticias.length} noticia(s)`;
+
+        if (!tabla) return;
+
+        if (noticias.length === 0) {
+            tabla.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">No hay noticias personalizadas registradas todavía.</td></tr>';
+            return;
+        }
+
+        tabla.innerHTML = '';
+        noticias.forEach((noticia, index) => {
+            const tr = document.createElement('tr');
+            const badgeClase = coloresCat[noticia.categoria] || 'bg-secondary text-white';
+            tr.innerHTML = `
+                <td class="ps-3 py-3">
+                    <div class="fw-bold text-dark">${noticia.titulo}</div>
+                    <small class="text-muted d-block text-truncate" style="max-width:350px;">${noticia.descripcion}</small>
+                </td>
+                <td><span class="badge ${badgeClase}">${noticia.categoria}</span></td>
+                <td><small class="text-secondary fw-medium">${noticia.fecha}</small></td>
+                <td class="text-end pe-3">
+                    <button class="btn btn-outline-danger btn-sm rounded-pill px-3 py-1 small fw-bold" onclick="eliminarNoticia(${index})">
+                        <span class="material-symbols-outlined align-middle fs-6">delete</span> Eliminar
+                    </button>
+                </td>
+            `;
+            tabla.appendChild(tr);
+        });
+    }
+
+    window.eliminarNoticia = function(index) {
+        const noticias = obtenerNoticiasGuardadas();
+        noticias.splice(index, 1);
+        guardarNoticias(noticias);
+        mostrarAlertaNoticia('Noticia eliminada correctamente.', 'info');
+    };
+
+    function mostrarAlertaNoticia(mensaje, tipo = 'success') {
+        const alerta = document.getElementById('alertaNoticia');
+        if (!alerta) return;
+        alerta.className = `alert alert-${tipo} mt-3`;
+        alerta.innerText = mensaje;
+        alerta.classList.remove('d-none');
+        setTimeout(() => {
+            alerta.classList.add('d-none');
+        }, 3500);
+    }
+
+    const form = document.getElementById('formPublicarNoticia');
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const titulo = document.getElementById('noticiaTitulo').value.trim();
+            const categoria = document.getElementById('noticiaCategoria').value;
+            const fechaRaw = document.getElementById('noticiaFecha').value;
+            const imagen = document.getElementById('noticiaImagen').value;
+            const descripcion = document.getElementById('noticiaDescripcion').value.trim();
+
+            if (!titulo || !descripcion || !fechaRaw) {
+                mostrarAlertaNoticia('Por favor completa todos los campos requeridos.', 'danger');
+                return;
+            }
+
+            // Formatear fecha amigable (ej: 21 Sep, 2026)
+            const partesFecha = fechaRaw.split('-');
+            const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            const dia = partesFecha[2];
+            const mesNombre = meses[parseInt(partesFecha[1], 10) - 1] || partesFecha[1];
+            const anio = partesFecha[0];
+            const fechaFormateada = `${dia} ${mesNombre}, ${anio}`;
+
+            const nuevaNoticia = {
+                id: Date.now(),
+                titulo,
+                categoria,
+                fecha: fechaFormateada,
+                imagen,
+                descripcion
+            };
+
+            const noticias = obtenerNoticiasGuardadas();
+            noticias.unshift(nuevaNoticia); // Agregar al principio
+            guardarNoticias(noticias);
+
+            form.reset();
+            if (fechaInput) fechaInput.value = new Date().toISOString().split('T')[0];
+            actualizarVistaPrevia();
+            mostrarAlertaNoticia('¡Noticia publicada con éxito en el sistema local!');
+        });
+    }
+
+    // Inicializar listado al cargar
+    renderizarTablaNoticias();
+
+    // Botón refrescar
+    const btnRefrescar = document.getElementById('btnRefrescarAdmin');
+    if (btnRefrescar) {
+        btnRefrescar.addEventListener('click', async () => {
+            try {
+                const res = await fetch('http://localhost:3000/api/dashboard');
+                const data = await res.json();
+                if(data.ok) {
+                    document.getElementById('totalAlumnosAdmin').innerText = data.data.alumnosActivos;
+                    document.getElementById('totalDocentesAdmin').innerText = data.data.docentesRegistrados;
+                }
+            } catch (err) {
+                console.log('Usando datos estáticos de respaldo.');
+            }
+        });
+    }
 </script>
 
 <script type="module" src="../js/auth-guard.js"></script>

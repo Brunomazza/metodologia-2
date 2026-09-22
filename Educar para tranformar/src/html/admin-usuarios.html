@@ -3,242 +3,406 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administración de Usuarios — Educar para Transformar</title>
+    <title>Gestión de Usuarios | NovaSYS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+    <link rel="icon" href="../img/logo.png" type="image/png">
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
     <style>
-        body { background: #f0f4f8; }
-        .card { border-radius: 16px; }
         .role-card { cursor: pointer; transition: all .2s; }
         .btn-check:checked + .role-card { background: #0d6efd; color: white; border-color: #0d6efd; }
-        #nivelContainer { transition: opacity .2s; }
-        .usuario-item { border-left: 4px solid #0d6efd; }
         .badge-alumno  { background: #cfe2ff; color: #084298; }
         .badge-docente { background: #d1e7dd; color: #0a3622; }
         .badge-familia { background: #fff3cd; color: #664d03; }
+        .card-dash { border-radius: 14px; }
     </style>
 </head>
-<body>
+<body class="bg-light pt-0 m-0">
 
-<div class="container py-5" style="max-width: 680px;">
+<div class="container-fluid p-0">
+    <div class="row g-0">
 
-    <div class="text-center mb-4">
-        <span class="material-symbols-outlined fs-1 text-primary">manage_accounts</span>
-        <h3 class="fw-bold text-primary mt-1">Administración de Usuarios</h3>
-        <p class="text-muted small">Creá cuentas para alumnos, docentes y tutores</p>
+        <!-- SIDEBAR DE NAVEGACIÓN ADMINISTRATIVA (IDÉNTICO A DASHBOARD) -->
+        <aside class="col-md-2 d-none d-md-block sidebar p-0 vh-100 position-sticky top-0">
+            <div class="p-4 text-center">
+                <img src="../img/logo.png" width="50" class="mb-2 bg-white rounded-circle p-1" alt="Logo NovaSYS">
+                <h5 class="text-white mb-0">NovaSYS</h5>
+                <small class="text-white-50">Gestión Institucional</small>
+            </div>
+            <ul class="nav flex-column mt-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html">
+                        <span class="material-symbols-outlined me-2">analytics</span> Vista General
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html#seccionNoticias">
+                        <span class="material-symbols-outlined me-2">campaign</span> Publicar Noticias
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="admin-usuarios.html">
+                        <span class="material-symbols-outlined me-2">manage_accounts</span> Gestión Usuarios
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html">
+                        <span class="material-symbols-outlined me-2">group</span> Control Alumnos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html">
+                        <span class="material-symbols-outlined me-2">badge</span> Legajos Docentes
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html">
+                        <span class="material-symbols-outlined me-2">menu_book</span> Oferta Académica
+                    </a>
+                </li>
+                <li class="nav-item mt-3 border-top border-white border-opacity-10 pt-3">
+                    <a class="nav-link" href="index.html">
+                        <span class="material-symbols-outlined me-2">public</span> Ver Sitio Web
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="col-md-10 main-content p-0">
+            
+            <!-- NAVBAR SUPERIOR -->
+            <nav class="navbar-dashboard bg-white shadow-sm px-4 py-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2 w-50">
+                    <span class="material-symbols-outlined text-muted">search</span>
+                    <input type="text" id="inputBuscarUsuario" class="form-control border-0 bg-light rounded-pill" placeholder="Buscar por nombre, apellido o DNI...">
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-2 border-start ps-3">
+                        <img src="../img/logo.png" width="32" class="rounded-circle border p-1" alt="Admin">
+                        <span class="fw-bold small text-dark d-none d-sm-inline">Administración</span>
+                    </div>
+                    <button onclick="window.cerrarSesion()" class="btn btn-outline-danger btn-sm rounded-pill fw-bold ms-2">Cerrar Sesión</button>
+                </div>
+            </nav>
+
+            <div class="p-4 p-md-5">
+                <header class="d-flex justify-content-between align-items-end mb-4">
+                    <div>
+                        <h1 class="h3 fw-bold mb-1">Gestión y Registro de Usuarios</h1>
+                        <p class="text-muted mb-0">Control de acceso y creación de perfiles para Alumnos, Docentes y Tutores.</p>
+                    </div>
+                    <a href="dashboard.html" class="btn btn-outline-secondary rounded-pill px-4">
+                        <span class="material-symbols-outlined align-middle me-1" style="font-size:16px">arrow_back</span> Volver a Métricas
+                    </a>
+                </header>
+
+                <div class="row g-4">
+                    <!-- COLUMNA IZQUIERDA: FORMULARIO DE ALTA -->
+                    <div class="col-lg-5">
+                        <div class="card card-dash p-4 bg-white border-0 shadow-sm h-100">
+                            <h5 class="fw-bold mb-3 text-dark d-flex align-items-center gap-2">
+                                <span class="material-symbols-outlined text-primary fs-5">person_add</span> Registrar Nuevo Usuario
+                            </h5>
+                            <p class="text-muted small mb-4">Ingresa los datos para habilitar el acceso a la plataforma.</p>
+
+                            <form id="formCrear" novalidate>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold small text-secondary">Nombre *</label>
+                                        <input type="text" id="nombre" class="form-control" placeholder="Ej: Lucas" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold small text-secondary">Apellido *</label>
+                                        <input type="text" id="apellido" class="form-control" placeholder="Ej: Fernández" required>
+                                    </div>
+                                </div>
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold small text-secondary">DNI *</label>
+                                        <input type="text" id="dni" class="form-control" placeholder="Sin puntos" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold small text-secondary">Contraseña *</label>
+                                        <input type="password" id="password" class="form-control" placeholder="Mínimo 6 carac." minlength="6" required>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small text-secondary">Rol del Usuario *</label>
+                                    <div class="row g-2">
+                                        <div class="col-4">
+                                            <input type="radio" class="btn-check" name="rol" id="rolAlumno" value="alumno" checked>
+                                            <label class="btn btn-outline-primary w-100 role-card text-center py-2" for="rolAlumno">
+                                                <span class="material-symbols-outlined d-block mb-1 fs-5">school</span>
+                                                <span class="small fw-bold">Alumno</span>
+                                            </label>
+                                        </div>
+                                        <div class="col-4">
+                                            <input type="radio" class="btn-check" name="rol" id="rolDocente" value="docente">
+                                            <label class="btn btn-outline-primary w-100 role-card text-center py-2" for="rolDocente">
+                                                <span class="material-symbols-outlined d-block mb-1 fs-5">local_library</span>
+                                                <span class="small fw-bold">Docente</span>
+                                            </label>
+                                        </div>
+                                        <div class="col-4">
+                                            <input type="radio" class="btn-check" name="rol" id="rolFamilia" value="familia">
+                                            <label class="btn btn-outline-primary w-100 role-card text-center py-2" for="rolFamilia">
+                                                <span class="material-symbols-outlined d-block mb-1 fs-5">family_restroom</span>
+                                                <span class="small fw-bold">Tutor</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="nivelContainer" class="mb-4">
+                                    <label class="form-label fw-bold small text-secondary">Nivel Académico *</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="radio" class="btn-check" name="nivel" id="nivelPrimaria" value="primaria" checked>
+                                            <label class="btn btn-outline-info w-100 text-center py-2 role-card" for="nivelPrimaria">
+                                                <span class="small fw-bold">Primario</span>
+                                            </label>
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="radio" class="btn-check" name="nivel" id="nivelSecundaria" value="secundaria">
+                                            <label class="btn btn-outline-info w-100 text-center py-2 role-card" for="nivelSecundaria">
+                                                <span class="small fw-bold">Secundario</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="msgAlerta" class="alert d-none py-2 small" role="alert"></div>
+
+                                <button type="submit" id="btnCrear" class="btn btn-primary w-100 fw-bold py-2 rounded-pill shadow-sm d-flex align-items-center justify-content-center gap-2">
+                                    <span class="material-symbols-outlined fs-5">person_add</span> Registrar Usuario
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- COLUMNA DERECHA: LISTADO DE USUARIOS REGISTRADOS -->
+                    <div class="col-lg-7">
+                        <div class="card card-dash p-4 bg-white border-0 shadow-sm h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h5 class="fw-bold mb-0 text-dark">Usuarios Registrados en el Sistema</h5>
+                                    <small class="text-muted">Cuentas activas en la memoria local de la plataforma.</small>
+                                </div>
+                                <span id="badgeTotalUsuarios" class="badge bg-primary rounded-pill px-3 py-2">0 usuarios</span>
+                            </div>
+
+                            <div class="table-responsive rounded-3 border">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-3">Usuario</th>
+                                            <th>Rol</th>
+                                            <th>Nivel</th>
+                                            <th>Estado</th>
+                                            <th class="text-end pe-3">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaUsuariosAdmin">
+                                        <!-- Se puebla dinámicamente con JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
     </div>
-
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body p-4 p-md-5">
-            <h5 class="fw-bold mb-4">Nuevo usuario</h5>
-
-            <form id="formCrear" novalidate>
-
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold small text-secondary">Nombre</label>
-                        <input type="text" id="nombre" class="form-control" placeholder="Ej: Lucas" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold small text-secondary">Apellido</label>
-                        <input type="text" id="apellido" class="form-control" placeholder="Ej: Fernández" required>
-                    </div>
-                </div>
-
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold small text-secondary">DNI</label>
-                        <input type="text" id="dni" class="form-control" placeholder="Sin guiones" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold small text-secondary">Contraseña</label>
-                        <input type="password" id="password" class="form-control" placeholder="Mínimo 6 caracteres" minlength="6" required>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-bold small text-secondary">Rol</label>
-                    <div class="row g-2">
-                        <div class="col-4">
-                            <input type="radio" class="btn-check" name="rol" id="rolAlumno" value="alumno" required>
-                            <label class="btn btn-outline-primary w-100 role-card text-center py-2" for="rolAlumno">
-                                <span class="material-symbols-outlined d-block mb-1">school</span>
-                                <span class="small fw-bold">Alumno</span>
-                            </label>
-                        </div>
-                        <div class="col-4">
-                            <input type="radio" class="btn-check" name="rol" id="rolDocente" value="docente">
-                            <label class="btn btn-outline-primary w-100 role-card text-center py-2" for="rolDocente">
-                                <span class="material-symbols-outlined d-block mb-1">local_library</span>
-                                <span class="small fw-bold">Docente</span>
-                            </label>
-                        </div>
-                        <div class="col-4">
-                            <input type="radio" class="btn-check" name="rol" id="rolFamilia" value="familia">
-                            <label class="btn btn-outline-primary w-100 role-card text-center py-2" for="rolFamilia">
-                                <span class="material-symbols-outlined d-block mb-1">family_restroom</span>
-                                <span class="small fw-bold">Familia</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="nivelContainer" class="mb-4">
-                    <label class="form-label fw-bold small text-secondary">Nivel</label>
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <input type="radio" class="btn-check" name="nivel" id="nivelPrimaria" value="primaria">
-                            <label class="btn btn-outline-info w-100 text-center py-2 role-card" for="nivelPrimaria">
-                                <span class="small fw-bold">Primario</span>
-                            </label>
-                        </div>
-                        <div class="col-6">
-                            <input type="radio" class="btn-check" name="nivel" id="nivelSecundaria" value="secundaria">
-                            <label class="btn btn-outline-info w-100 text-center py-2 role-card" for="nivelSecundaria">
-                                <span class="small fw-bold">Secundario</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="msgError" class="alert alert-danger d-none py-2 small"></div>
-
-                <button type="submit" id="btnCrear" class="btn btn-primary w-100 fw-bold py-2">
-                    <span class="material-symbols-outlined align-middle me-1" style="font-size:18px">person_add</span>
-                    Crear usuario
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <div id="listaUsuarios">
-        <h6 class="fw-bold text-secondary mb-3">Usuarios creados en esta sesión</h6>
-        <div id="itemsUsuarios" class="d-flex flex-column gap-2"></div>
-        <p id="sinUsuarios" class="text-muted small text-center mt-2">Todavía no creaste ningún usuario.</p>
-    </div>
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module" src="../js/auth-guard.js"></script>
 
-<script type="module">
-    import { auth, db } from '../js/firebase-config.js';
-    import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-    import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+<script>
+    // --- LÓGICA DE GESTIÓN DE USUARIOS LOCALSTORAGE ---
+    const KEY_USUARIOS = 'usuarios_registrados';
 
-    const form         = document.getElementById('formCrear');
-    const btnCrear     = document.getElementById('btnCrear');
-    const msgError     = document.getElementById('msgError');
-    const itemsLista   = document.getElementById('itemsUsuarios');
-    const sinUsuarios  = document.getElementById('sinUsuarios');
-    const nivelCont    = document.getElementById('nivelContainer');
+    // Usuarios iniciales de prueba (se inicializan si la lista está vacía)
+    const USUARIOS_INICIALES = [
+        { dni: '12345678', nombre: 'Lucas', apellido: 'Fernández', rol: 'alumno', nivel: 'primaria', estado: 'Activo' },
+        { dni: '87654321', nombre: 'Ana', apellido: 'López', rol: 'docente', nivel: 'secundaria', estado: 'Activo' },
+        { dni: '11111111', nombre: 'Jose', apellido: 'Gómez', rol: 'familia', nivel: 'general', estado: 'Activo' }
+    ];
 
-    // Mostrar/ocultar nivel según el rol
+    function obtenerUsuarios() {
+        try {
+            const data = localStorage.getItem(KEY_USUARIOS);
+            if (!data) {
+                localStorage.setItem(KEY_USUARIOS, JSON.stringify(USUARIOS_INICIALES));
+                return USUARIOS_INICIALES;
+            }
+            return JSON.parse(data);
+        } catch (e) {
+            return USUARIOS_INICIALES;
+        }
+    }
+
+    function guardarUsuarios(lista) {
+        localStorage.setItem(KEY_USUARIOS, JSON.stringify(lista));
+        renderizarTablaUsuarios();
+    }
+
+    function renderizarTablaUsuarios(filtro = '') {
+        const tabla = document.getElementById('tablaUsuariosAdmin');
+        const badge = document.getElementById('badgeTotalUsuarios');
+        const usuarios = obtenerUsuarios();
+
+        const query = (typeof filtro === 'string' ? filtro : '').trim().toLowerCase();
+        const usuariosFiltrados = query 
+            ? usuarios.filter(u => 
+                (u.nombre && u.nombre.toLowerCase().includes(query)) ||
+                (u.apellido && u.apellido.toLowerCase().includes(query)) ||
+                (u.dni && u.dni.toLowerCase().includes(query)) ||
+                (u.rol && u.rol.toLowerCase().includes(query))
+              )
+            : usuarios;
+
+        if (badge) {
+            badge.innerText = query 
+                ? `${usuariosFiltrados.length} de ${usuarios.length} usuario(s)`
+                : `${usuarios.length} usuario(s)`;
+        }
+        if (!tabla) return;
+
+        tabla.innerHTML = '';
+        if (usuariosFiltrados.length === 0) {
+            tabla.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No se encontraron usuarios coincidentes.</td></tr>';
+            return;
+        }
+
+        usuariosFiltrados.forEach((u) => {
+            const tr = document.createElement('tr');
+
+            const badgeRolClase = u.rol === 'alumno' ? 'badge-alumno' : u.rol === 'docente' ? 'badge-docente' : 'badge-familia';
+            const rolTexto = u.rol === 'alumno' ? 'Alumno' : u.rol === 'docente' ? 'Docente' : 'Tutor';
+            const nivelTexto = u.nivel === 'primaria' ? 'Primario' : u.nivel === 'secundaria' ? 'Secundario' : 'General';
+
+            tr.innerHTML = `
+                <td class="ps-3 py-3">
+                    <div class="fw-bold text-dark">${u.nombre} ${u.apellido}</div>
+                    <small class="text-muted">DNI: ${u.dni}</small>
+                </td>
+                <td><span class="badge rounded-pill ${badgeRolClase} border">${rolTexto}</span></td>
+                <td><small class="text-secondary fw-medium">${nivelTexto}</small></td>
+                <td><span class="badge bg-success-subtle text-success rounded-pill px-2">Activo</span></td>
+                <td class="text-end pe-3">
+                    <button class="btn btn-outline-danger btn-sm rounded-pill px-3 py-1 small fw-bold" onclick="eliminarUsuarioPorDni('${u.dni}')">
+                        <span class="material-symbols-outlined align-middle fs-6">delete</span> Eliminar
+                    </button>
+                </td>
+            `;
+            tabla.appendChild(tr);
+        });
+    }
+
+    window.eliminarUsuarioPorDni = function(dni) {
+        const usuarios = obtenerUsuarios();
+        const indexReal = usuarios.findIndex(u => u.dni === dni);
+        if (indexReal === -1) return;
+        const usuarioAEliminar = usuarios[indexReal];
+        if (confirm(`¿Estás seguro de eliminar el usuario ${usuarioAEliminar.nombre} ${usuarioAEliminar.apellido} (DNI ${usuarioAEliminar.dni})?`)) {
+            usuarios.splice(indexReal, 1);
+            localStorage.setItem(KEY_USUARIOS, JSON.stringify(usuarios));
+            const busquedaActual = document.getElementById('inputBuscarUsuario')?.value || '';
+            renderizarTablaUsuarios(busquedaActual);
+            mostrarAlerta(`Usuario ${usuarioAEliminar.nombre} eliminado correctamente.`, 'info');
+        }
+    };
+
+    function mostrarAlerta(msg, tipo = 'success') {
+        const alerta = document.getElementById('msgAlerta');
+        if (!alerta) return;
+        alerta.className = `alert alert-${tipo} py-2 small`;
+        alerta.innerText = msg;
+        alerta.classList.remove('d-none');
+        setTimeout(() => {
+            alerta.classList.add('d-none');
+        }, 3500);
+    }
+
+    // Toggle de contenedor nivel si es tutor
     document.querySelectorAll('input[name="rol"]').forEach(radio => {
         radio.addEventListener('change', () => {
-            const necesitaNivel = radio.value !== 'familia';
-            nivelCont.style.display = necesitaNivel ? 'block' : 'none';
-            if (!necesitaNivel) {
-                document.querySelectorAll('input[name="nivel"]').forEach(r => r.checked = false);
+            const nivelCont = document.getElementById('nivelContainer');
+            if (nivelCont) {
+                nivelCont.style.display = radio.value === 'familia' ? 'none' : 'block';
             }
         });
     });
 
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        msgError.classList.add('d-none');
+    // Formulario de creación
+    const formCrear = document.getElementById('formCrear');
+    if (formCrear) {
+        formCrear.addEventListener('submit', (e) => {
+            e.preventDefault();
 
-        const nombre   = document.getElementById('nombre').value.trim();
-        const apellido = document.getElementById('apellido').value.trim();
-        const dni      = document.getElementById('dni').value.trim();
-        const password = document.getElementById('password').value;
-        const rol      = document.querySelector('input[name="rol"]:checked')?.value;
-        const nivel    = document.querySelector('input[name="nivel"]:checked')?.value || null;
+            const nombre = document.getElementById('nombre').value.trim();
+            const apellido = document.getElementById('apellido').value.trim();
+            const dni = document.getElementById('dni').value.trim();
+            const password = document.getElementById('password').value;
+            const rol = document.querySelector('input[name="rol"]:checked')?.value || 'alumno';
+            const nivel = rol === 'familia' ? 'general' : (document.querySelector('input[name="nivel"]:checked')?.value || 'primaria');
 
-        // Validaciones
-        if (!nombre || !apellido || !dni || !password) {
-            return mostrarError('Completá todos los campos obligatorios.');
-        }
-        if (!/^\d+$/.test(dni)) {
-            return mostrarError('El DNI debe contener solo números.');
-        }
-        if (password.length < 6) {
-            return mostrarError('La contraseña debe tener al menos 6 caracteres.');
-        }
-        if (!rol) {
-            return mostrarError('Seleccioná un rol.');
-        }
-        if (rol !== 'familia' && !nivel) {
-            return mostrarError('Seleccioná un nivel (Primario o Secundario).');
-        }
-
-        btnCrear.disabled = true;
-        btnCrear.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creando...';
-
-        const email = `${dni}@escuela.edu.ar`;
-
-        try {
-            const cred = await createUserWithEmailAndPassword(auth, email, password);
-
-            await setDoc(doc(db, 'usuarios', cred.user.uid), {
-                dni, nombre, apellido, rol, nivel
-            });
-
-            agregarALista({ nombre, apellido, dni, rol, nivel });
-            form.reset();
-            nivelCont.style.display = 'block';
-
-        } catch (err) {
-            console.warn('Firebase crear usuario falló, agregando en modo local:', err.message);
-
-            if (err.message.includes('api-key-not-valid') || err.code === 'auth/api-key-not-valid') {
-                // Modo fallback local: Se agrega visualmente a la lista para probar la interfaz
-                agregarALista({ nombre, apellido, dni, rol, nivel });
-                form.reset();
-                nivelCont.style.display = 'block';
-                mostrarError('Modo local: Usuario agregado solo visualmente (Firebase desacoplado).');
+            if (!nombre || !apellido || !dni || !password) {
+                mostrarAlerta('Por favor completa todos los campos requeridos.', 'danger');
+                return;
+            }
+            if (!/^\d+$/.test(dni)) {
+                mostrarAlerta('El DNI debe contener solo números.', 'danger');
+                return;
+            }
+            if (password.length < 6) {
+                mostrarAlerta('La contraseña debe tener al menos 6 caracteres.', 'danger');
                 return;
             }
 
-            const msgs = {
-                'auth/email-already-in-use': `Ya existe un usuario con DNI ${dni}.`,
-                'auth/weak-password':        'La contraseña debe tener al menos 6 caracteres.',
-                'auth/invalid-email':        'El formato del DNI no es válido.',
+            const usuarios = obtenerUsuarios();
+            const yaExiste = usuarios.some(u => u.dni === dni);
+            if (yaExiste) {
+                mostrarAlerta(`Ya existe un usuario registrado con el DNI ${dni}.`, 'warning');
+                return;
+            }
+
+            // Registrar nuevo usuario
+            const nuevo = {
+                dni,
+                nombre,
+                apellido,
+                password,
+                rol,
+                nivel,
+                estado: 'Activo'
             };
-            mostrarError(msgs[err.code] || `Error: ${err.message}`);
-        } finally {
-            btnCrear.disabled = false;
-            btnCrear.innerHTML = '<span class="material-symbols-outlined align-middle me-1" style="font-size:18px">person_add</span>Crear usuario';
-        }
-    });
 
-    function mostrarError(msg) {
-        msgError.textContent = msg;
-        msgError.classList.remove('d-none');
+            usuarios.push(nuevo);
+            guardarUsuarios(usuarios);
+
+            formCrear.reset();
+            const nivelCont = document.getElementById('nivelContainer');
+            if (nivelCont) nivelCont.style.display = 'block';
+
+            mostrarAlerta(`¡Usuario ${nombre} ${apellido} registrado con éxito!`, 'success');
+        });
+    // Evento de búsqueda en tiempo real
+    const inputBuscar = document.getElementById('inputBuscarUsuario');
+    if (inputBuscar) {
+        inputBuscar.addEventListener('input', (e) => {
+            renderizarTablaUsuarios(e.target.value);
+        });
     }
 
-    function agregarALista({ nombre, apellido, dni, rol, nivel }) {
-        sinUsuarios.style.display = 'none';
-
-        const nivelTexto = nivel === 'primaria' ? 'Primario' : nivel === 'secundaria' ? 'Secundario' : '';
-        const badgeClass = `badge-${rol}`;
-        const rolTexto   = rol.charAt(0).toUpperCase() + rol.slice(1);
-
-        const div = document.createElement('div');
-        div.className = 'card border-0 shadow-sm usuario-item p-3 d-flex flex-row align-items-center gap-3';
-        div.innerHTML = `
-            <span class="material-symbols-outlined text-primary fs-3">account_circle</span>
-            <div class="flex-grow-1">
-                <div class="fw-bold">${nombre} ${apellido}</div>
-                <div class="text-muted small">DNI: ${dni} · Email: ${dni}@escuela.edu.ar</div>
-            </div>
-            <div class="d-flex gap-1 flex-wrap justify-content-end">
-                <span class="badge rounded-pill ${badgeClass}">${rolTexto}</span>
-                ${nivelTexto ? `<span class="badge rounded-pill bg-light text-secondary border">${nivelTexto}</span>` : ''}
-            </div>
-        `;
-        itemsLista.appendChild(div);
-    }
+    // Render inicial
+    renderizarTablaUsuarios();
 </script>
 </body>
 </html>

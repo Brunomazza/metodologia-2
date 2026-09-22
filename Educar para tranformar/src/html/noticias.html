@@ -9,6 +9,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="../css/index.css">
+    <style>
+        .custom-hover-card {
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .custom-hover-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 14px 28px rgba(11, 37, 69, 0.12) !important;
+        }
+        .active-filter {
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
+        }
+        .noticia-modal-banner {
+            max-height: 320px;
+            object-fit: cover;
+            width: 100%;
+        }
+    </style>
 </head>
 <body class="bg-light">
 
@@ -39,58 +56,82 @@
         </div>
     </nav>
 
-    <header class="py-5 mt-5 bg-primary text-white text-center">
-        <div class="container py-4">
-            <span class="material-symbols-outlined display-3 mb-3">campaign</span>
-            <h1 class="display-5 fw-bold">Novedades y Noticias</h1>
-            <p class="lead text-white-50">Enterate de los últimos avances, eventos y comunicados de nuestra institución.</p>
+    <header class="py-5 mt-5 text-white text-center position-relative overflow-hidden" 
+            style="background: linear-gradient(135deg, #0b2545 0%, #172554 60%, #1d4ed8 100%);">
+        <div class="container py-4 position-relative z-1">
+            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3 shadow-sm d-inline-flex align-items-center gap-1">
+                <span class="material-symbols-outlined fs-6">campaign</span> Comunicados Oficiales
+            </span>
+            <h1 class="display-5 fw-bold text-white mb-2">Novedades y Noticias</h1>
+            <p class="lead text-white-50 mx-auto mb-0" style="max-width: 680px;">Enterate de los últimos avances, eventos académicos y comunicados de nuestra comunidad educativa.</p>
         </div>
     </header>
 
-    <main class="container py-5 my-4">
-        <div class="row g-4">
+    <!-- BARRA DE FILTROS POR CATEGORÍA -->
+    <div class="container mt-4 pt-2">
+        <div class="d-flex flex-wrap justify-content-center gap-2" id="filtrosCategorias">
+            <button class="btn btn-sm btn-primary rounded-pill px-3 py-2 fw-bold active-filter" data-cat="todas">Todas las Noticias</button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 fw-medium" data-cat="Institucional">Institucional</button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 fw-medium" data-cat="Académico">Académico</button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 fw-medium" data-cat="Deportes">Deportes</button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 fw-medium" data-cat="Comunidad">Comunidad</button>
+        </div>
+    </div>
+
+    <main class="container py-5">
+        <!-- CONTENEDOR DINÁMICO DE NOTICIAS -->
+        <div class="row g-4" id="contenedorNoticias">
             
-            <div class="col-lg-4 col-md-6">
-                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden custom-hover-card">
+            <!-- Noticia Estática de Ejemplo 1 -->
+            <div class="col-lg-4 col-md-6 noticia-card-item" data-cat="Institucional">
+                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden custom-hover-card bg-white" style="border: 1px solid rgba(0,0,0,0.06);">
                     <img src="../img/portada1.jpg" class="card-img-top object-fit-cover" alt="Noticia 1" style="height: 200px;">
                     <div class="card-body p-4 d-flex flex-column">
                         <div class="mb-2">
                             <span class="badge bg-warning text-dark">Institucional</span>
                             <small class="text-muted ms-2">15 Jun, 2026</small>
                         </div>
-                        <h4 class="card-title fw-bold">Apertura Oficial de Inscripciones 2027</h4>
+                        <h4 class="card-title fw-bold text-dark">Apertura Oficial de Inscripciones 2027</h4>
                         <p class="card-text text-secondary mb-4">Con gran entusiasmo anunciamos el inicio de nuestro proceso de matriculación para el primer ciclo lectivo de nuestra institución.</p>
-                        <a href="#" class="mt-auto fw-bold text-primary text-decoration-none">Leer más <i class="bi bi-arrow-right"></i></a>
+                        <button type="button" class="btn btn-link p-0 mt-auto fw-bold text-primary text-decoration-none d-inline-flex align-items-center gap-1" onclick="abrirNoticiaModal('Apertura Oficial de Inscripciones 2027', 'Institucional', '15 Jun, 2026', '../img/portada1.jpg', 'Con gran entusiasmo anunciamos el inicio de nuestro proceso de matriculación para el primer ciclo lectivo de nuestra institución.', '<p>Con gran entusiasmo anunciamos el inicio de nuestro proceso de matriculación para el primer ciclo lectivo de nuestra institución.</p><p>Nuestro equipo directivo y docente ha preparado un itinerario de admisiones transparente, inclusivo y enfocado en el acompañamiento a las familias en cada etapa. Los cupos son limitados con el fin de mantener un ratio alumno-docente óptimo que garantice atención personalizada.</p><p>Para solicitar una entrevista diagnóstica o recorrer las instalaciones edilicias, complete el formulario de preinscripción en nuestro portal web.</p>')">
+                            Leer más <i class="bi bi-arrow-right"></i>
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-4 col-md-6">
-                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden custom-hover-card">
+            <!-- Noticia Estática de Ejemplo 2 -->
+            <div class="col-lg-4 col-md-6 noticia-card-item" data-cat="Deportes">
+                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden custom-hover-card bg-white" style="border: 1px solid rgba(0,0,0,0.06);">
                     <img src="../img/Pileta natacion.jpg" class="card-img-top object-fit-cover" alt="Noticia 2" style="height: 200px;">
                     <div class="card-body p-4 d-flex flex-column">
                         <div class="mb-2">
                             <span class="badge bg-info text-white">Deportes</span>
                             <small class="text-muted ms-2">08 Jun, 2026</small>
                         </div>
-                        <h4 class="card-title fw-bold">Finalizan obras del Complejo Acuático</h4>
+                        <h4 class="card-title fw-bold text-dark">Finalizan obras del Complejo Acuático</h4>
                         <p class="card-text text-secondary mb-4">Nuestra pileta olímpica climatizada ya está en la fase final de pruebas. Un espacio de primer nivel para nuestros futuros alumnos.</p>
-                        <a href="#" class="mt-auto fw-bold text-primary text-decoration-none">Leer más <i class="bi bi-arrow-right"></i></a>
+                        <button type="button" class="btn btn-link p-0 mt-auto fw-bold text-primary text-decoration-none d-inline-flex align-items-center gap-1" onclick="abrirNoticiaModal('Finalizan obras del Complejo Acuático', 'Deportes', '08 Jun, 2026', '../img/Pileta natacion.jpg', 'Nuestra pileta olímpica climatizada ya está en la fase final de pruebas. Un espacio de primer nivel para nuestros futuros alumnos.', '<p>Nuestra pileta olímpica climatizada ya está en la fase final de pruebas. Un espacio de primer nivel para nuestros futuros alumnos.</p><p>La infraestructura cuenta con climatización geotérmica de última generación, carriles homologados de competición y vestuarios de estándar profesional adaptados para todas las edades y niveles de habilidad.</p><p>La natación formará parte integral de la currícula deportiva desde el nivel inicial hasta el secundario.</p>')">
+                            Leer más <i class="bi bi-arrow-right"></i>
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-4 col-md-6">
-                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden custom-hover-card">
+            <!-- Noticia Estática de Ejemplo 3 -->
+            <div class="col-lg-4 col-md-6 noticia-card-item" data-cat="Académico">
+                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden custom-hover-card bg-white" style="border: 1px solid rgba(0,0,0,0.06);">
                     <img src="../img/ninosEstudiando.jpg" class="card-img-top object-fit-cover" alt="Noticia 3" style="height: 200px;">
                     <div class="card-body p-4 d-flex flex-column">
                         <div class="mb-2">
                             <span class="badge bg-success text-white">Académico</span>
                             <small class="text-muted ms-2">25 May, 2026</small>
                         </div>
-                        <h4 class="card-title fw-bold">Alianza estratégica con Cambridge</h4>
+                        <h4 class="card-title fw-bold text-dark">Alianza estratégica con Cambridge</h4>
                         <p class="card-text text-secondary mb-4">Firmamos un convenio para que nuestro programa de inglés cuente con certificación internacional desde la primaria.</p>
-                        <a href="#" class="mt-auto fw-bold text-primary text-decoration-none">Leer más <i class="bi bi-arrow-right"></i></a>
+                        <button type="button" class="btn btn-link p-0 mt-auto fw-bold text-primary text-decoration-none d-inline-flex align-items-center gap-1" onclick="abrirNoticiaModal('Alianza estratégica con Cambridge', 'Académico', '25 May, 2026', '../img/ninosEstudiando.jpg', 'Firmamos un convenio para que nuestro programa de inglés cuente con certificación internacional desde la primaria.', '<p>Firmamos un convenio para que nuestro programa de inglés cuente con certificación internacional desde la primaria.</p><p>Este convenio brindará a nuestros alumnos la posibilidad de rendir exámenes oficiales con reconocimiento global (Starters, Movers, Flyers, KET y PET), fortaleciendo sus competencias lingüísticas en un mundo interconectado.</p><p>Los docentes a cargo contarán con actualización pedagógica continua brindada directamente por examinadores internacionales.</p>')">
+                            Leer más <i class="bi bi-arrow-right"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -126,13 +167,163 @@
                 </div>
             </div>
             <hr class="my-5 border-white-50">
-            <div class="text-center text-white-50 small">
+            <div class="text-center text-white-50 small d-flex flex-column flex-md-row justify-content-between align-items-center">
                 <span>&copy; 2026 Centro Educativo "Educar para Transformar". Todos los derechos reservados.</span>
+                <a href="login-admin.html" class="text-white-50 text-decoration-none small d-inline-flex align-items-center gap-1 mt-2 mt-md-0 opacity-75 hover-white">
+                    <span class="material-symbols-outlined fs-6">admin_panel_settings</span> Acceso Administrativo
+                </a>
             </div>
         </div>
     </footer>
 
+    <!-- MODAL DE LECTURA COMPLETA DE ARTÍCULO -->
+    <div class="modal fade" id="modalLecturaNoticia" tabindex="-1" aria-labelledby="modalNoticiaTitulo" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-4 border-0 shadow overflow-hidden">
+                <div class="position-relative">
+                    <img id="modalNoticiaImg" src="../img/portada1.jpg" alt="Imagen Noticia" class="noticia-modal-banner">
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 p-2 bg-dark bg-opacity-50 rounded-circle" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body p-4 p-md-5">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span id="modalNoticiaCategoria" class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">Institucional</span>
+                        <span class="text-muted small d-inline-flex align-items-center gap-1">
+                            <span class="material-symbols-outlined fs-6">calendar_month</span>
+                            <span id="modalNoticiaFecha">15 Jun, 2026</span>
+                        </span>
+                    </div>
+                    <h2 id="modalNoticiaTitulo" class="fw-bold text-dark mb-3">Título de la Noticia</h2>
+                    <p id="modalNoticiaDescripcion" class="lead text-secondary mb-4 pb-3 border-bottom"></p>
+                    <div id="modalNoticiaCuerpo" class="text-dark opacity-90 fs-6 lh-lg mb-4">
+                        <!-- Contenido completo del artículo -->
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <small class="text-muted">Centro Educativo "Educar para Transformar"</small>
+                        <button type="button" class="btn btn-outline-primary rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cerrar Artículo</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/main.js"></script>
+
+    <!-- SCRIPT DE CARGA DINÁMICA, FILTRADO Y LECTURA DE NOTICIAS -->
+    <script>
+        // Función global para abrir cualquier noticia en el Modal de Lectura
+        window.abrirNoticiaModal = function(titulo, categoria, fecha, imagen, descripcion, cuerpo) {
+            document.getElementById('modalNoticiaTitulo').innerText = titulo;
+            const badge = document.getElementById('modalNoticiaCategoria');
+            badge.innerText = categoria;
+
+            const coloresCategoria = {
+                'Institucional': 'bg-warning text-dark',
+                'Deportes': 'bg-info text-white',
+                'Académico': 'bg-success text-white',
+                'Comunidad': 'bg-primary text-white'
+            };
+            badge.className = `badge px-3 py-2 rounded-pill fw-bold ${coloresCategoria[categoria] || 'bg-secondary text-white'}`;
+
+            document.getElementById('modalNoticiaFecha').innerText = fecha;
+            document.getElementById('modalNoticiaImg').src = imagen || '../img/portada1.jpg';
+            document.getElementById('modalNoticiaDescripcion').innerText = descripcion;
+            document.getElementById('modalNoticiaCuerpo').innerHTML = cuerpo || `<p>${descripcion}</p>`;
+
+            const modalEl = document.getElementById('modalLecturaNoticia');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const STORAGE_KEY = 'noticias_institucionales';
+            const contenedor = document.getElementById('contenedorNoticias');
+
+            if (!contenedor) return;
+
+            // 1. Obtener las noticias guardadas por el Administrador desde localStorage
+            let noticiasGuardadas = [];
+            try {
+                noticiasGuardadas = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            } catch (error) {
+                console.error('Error al leer noticias desde localStorage:', error);
+                noticiasGuardadas = [];
+            }
+
+            // Guardamos las noticias en memoria para acceder a ellas al hacer clic
+            window._noticiasDinamicas = noticiasGuardadas;
+
+            // 2. Si hay noticias publicadas por el Administrador, las renderizamos al principio
+            if (noticiasGuardadas.length > 0) {
+                const coloresCategoria = {
+                    'Institucional': 'bg-warning text-dark',
+                    'Deportes': 'bg-info text-white',
+                    'Académico': 'bg-success text-white',
+                    'Comunidad': 'bg-primary text-white'
+                };
+
+                let htmlNuevasNoticias = '';
+                noticiasGuardadas.forEach((noticia, idx) => {
+                    const badgeClass = coloresCategoria[noticia.categoria] || 'bg-secondary text-white';
+                    const imagenSrc = noticia.imagen || '../img/portada1.jpg';
+
+                    htmlNuevasNoticias += `
+                        <div class="col-lg-4 col-md-6 noticia-card-item" data-cat="${noticia.categoria}">
+                            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden custom-hover-card bg-white" style="border: 1px solid rgba(0,0,0,0.06);">
+                                <img src="${imagenSrc}" class="card-img-top object-fit-cover" alt="${noticia.titulo}" style="height: 200px;">
+                                <div class="card-body p-4 d-flex flex-column">
+                                    <div class="mb-2">
+                                        <span class="badge ${badgeClass}">${noticia.categoria}</span>
+                                        <small class="text-muted ms-2">${noticia.fecha}</small>
+                                    </div>
+                                    <h4 class="card-title fw-bold text-dark">${noticia.titulo}</h4>
+                                    <p class="card-text text-secondary mb-4">${noticia.descripcion}</p>
+                                    <button type="button" class="btn btn-link p-0 mt-auto fw-bold text-primary text-decoration-none d-inline-flex align-items-center gap-1" onclick="abrirNoticiaDinamica(${idx})">
+                                        Leer más <i class="bi bi-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Insertar las noticias del Administrador antes de las noticias de ejemplo
+                contenedor.innerHTML = htmlNuevasNoticias + contenedor.innerHTML;
+            }
+
+            window.abrirNoticiaDinamica = function(idx) {
+                const n = window._noticiasDinamicas[idx];
+                if (n) {
+                    abrirNoticiaModal(n.titulo, n.categoria, n.fecha, n.imagen, n.descripcion, `<p>${n.descripcion}</p><p class="mt-3">Para más información sobre este comunicado oficial, puede acercarse a la secretaría del establecimiento o contactar al canal de atención a familias.</p>`);
+                }
+            };
+
+            // 3. Sistema de Filtros por Categoría en Vivo
+            const botonesFiltro = document.querySelectorAll('#filtrosCategorias button');
+            botonesFiltro.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Actualizar estilos activos de los botones
+                    botonesFiltro.forEach(b => {
+                        b.classList.remove('btn-primary', 'active-filter');
+                        b.classList.add('btn-outline-secondary');
+                    });
+                    btn.classList.remove('btn-outline-secondary');
+                    btn.classList.add('btn-primary', 'active-filter');
+
+                    const categoriaSeleccionada = btn.getAttribute('data-cat');
+                    const tarjetas = document.querySelectorAll('.noticia-card-item');
+
+                    tarjetas.forEach(tarjeta => {
+                        const categoriaTarjeta = tarjeta.getAttribute('data-cat');
+                        if (categoriaSeleccionada === 'todas' || categoriaTarjeta === categoriaSeleccionada) {
+                            tarjeta.style.display = 'block';
+                        } else {
+                            tarjeta.style.display = 'none';
+                        }
+                    });
+                });
+            });
+        });
+    </script>
 </body>
 </html>
