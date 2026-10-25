@@ -121,20 +121,10 @@
                                                 <th>Estado</th>
                                             </tr>
                                         </thead>
+                                        <!-- Las filas se generan dinámicamente desde asignacion-materias.js -->
                                         <tbody id="tablaMaterias">
-                                            <tr>
-                                                <td><code>M001</code></td>
-                                                <td class="fw-bold">Programación I</td>
-                                                <td>80 Horas</td>
-                                                <td>28</td>
-                                                <td><span class="badge bg-success-subtle text-success border border-success-subtle">Activa</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td><code>M003</code></td>
-                                                <td class="fw-bold">Programación II</td>
-                                                <td>80 Horas</td>
-                                                <td>22</td>
-                                                <td><span class="badge bg-success-subtle text-success border border-success-subtle">Activa</span></td>
+                                            <tr id="filaPlaceholderMaterias">
+                                                <td colspan="5" class="text-center text-muted fst-italic py-3">Cargando materias asignadas...</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -154,13 +144,20 @@
                                     </div>
                                 </div>
                                 <hr class="text-muted my-3">
+                                <!-- Legajo: lo buscamos en el catálogo de docentes por nombre de sesión -->
                                 <div class="d-flex justify-content-between small mb-2">
                                     <span>Legajo Docente:</span>
-                                    <span class="fw-bold text-dark">D001</span>
+                                    <span id="perfilLegajo" class="fw-bold text-dark">—</span>
                                 </div>
+                                <!-- Cantidad de materias actualmente asignadas al docente -->
                                 <div class="d-flex justify-content-between small mb-2">
                                     <span>Materias Activas:</span>
-                                    <span class="fw-bold text-dark">2</span>
+                                    <span id="perfilCantMaterias" class="fw-bold text-dark">0</span>
+                                </div>
+                                <!-- Carga horaria total asignada (actualizada desde el módulo) -->
+                                <div class="d-flex justify-content-between small mb-2">
+                                    <span>Carga Horaria:</span>
+                                    <span id="perfilCargaHoraria" class="fw-bold text-dark">0 h</span>
                                 </div>
                                 <div class="d-flex justify-content-between small">
                                     <span>Condición:</span>
@@ -350,22 +347,25 @@
 </div>
 
 <!-- ===== SCRIPTS ===== -->
+
+<!-- Script no-module: carga datos de sesión y configura cierre de sesión -->
 <script>
-    // --- Sesión ---
+    // Verificar que el usuario esté logueado; si no, redirigir al login
     const usuario = JSON.parse(localStorage.getItem('usuario'));
     if (!usuario) {
         window.location.href = 'login.html';
     } else {
-        document.getElementById('txtBienvenida').innerText = `Bienvenido, Prof. ${usuario.nombre}`;
-        document.getElementById('txtNombreSidebar').innerText = usuario.nombre;
-        document.getElementById('navNombreDocente').innerText = usuario.nombre;
-        document.getElementById('perfilNombreCompleto').innerText = usuario.nombre;
-        document.getElementById('perfilRol').innerText = `Rol verificado: ${usuario.rol.toUpperCase()}`;
+        // Completar los textos de bienvenida con el nombre del usuario de sesión
+        document.getElementById('txtBienvenida').innerText         = `Bienvenido, Prof. ${usuario.nombre}`;
+        document.getElementById('txtNombreSidebar').innerText      = usuario.nombre;
+        document.getElementById('navNombreDocente').innerText      = usuario.nombre;
+        document.getElementById('perfilNombreCompleto').innerText  = usuario.nombre;
+        document.getElementById('perfilRol').innerText             = `Rol verificado: ${usuario.rol.toUpperCase()}`;
     }
 
     document.getElementById('btnCerrarSesionTop').addEventListener('click', () => window.cerrarSesion());
 
-    // --- Filtro de alumnos por materia ---
+    // --- Filtro de alumnos por materia (tabla de la sección Alumnos) ---
     document.getElementById('filtroMateria').addEventListener('change', function () {
         const valor = this.value;
         document.querySelectorAll('#tablaAlumnos tr').forEach(tr => {
@@ -373,12 +373,12 @@
         });
     });
 
-    // --- Ver calificaciones (placeholder) ---
+    // --- Ver calificaciones (placeholder — a completar en sprint siguiente) ---
     function verCalificaciones(legajo) {
         alert(`Calificaciones del alumno ${legajo} — funcionalidad en desarrollo.`);
     }
 
-    // --- Guardar nota desde el modal ---
+    // --- Guardar nota desde el modal de calificaciones ---
     document.getElementById('btnGuardarNota').addEventListener('click', () => {
         const alumno  = document.getElementById('modalAlumno').value;
         const p1      = document.getElementById('modalParcial1').value;
@@ -393,7 +393,7 @@
                 if (p2)    fila.cells[4].innerText = p2;
                 if (final) fila.cells[5].innerText = final;
 
-                // Recalcula estado simple
+                // Recalcula el estado académico según el promedio de parciales
                 const promedio = ((+p1 || 0) + (+p2 || 0)) / 2;
                 const badge    = fila.cells[6].querySelector('.badge');
                 if (promedio >= 6) {
@@ -411,6 +411,80 @@
 
         bootstrap.Modal.getInstance(document.getElementById('modalNota')).hide();
     });
+</script>
+
+<!-- Script module: carga las materias asignadas desde el módulo compartido -->
+<script type="module">
+    // Importar las funciones necesarias del módulo de asignación de HU-04
+    import {
+        getDocentes,
+        getMateriasCompletasPorDocente,
+        getCargaHorariaDocente
+    } from '../js/asignacion-materias.js';
+
+    /**
+     * Busca el docente en el catálogo del módulo cuyo nombre coincida
+     * con el usuario de sesión (enfoque híbrido: localStorage de sesión
+     * no tiene el ID del catálogo, así que matcheamos por nombre).
+     * En una integración real con API, se usaría el ID de usuario.
+     */
+    function encontrarDocenteDeSession() {
+        const usuarioSesion = JSON.parse(localStorage.getItem('usuario'));
+        if (!usuarioSesion) return null;
+
+        const docentes = getDocentes();
+        // Buscar por coincidencia de nombre (case-insensitive)
+        return docentes.find(d =>
+            usuarioSesion.nombre?.toLowerCase().includes(d.nombre.toLowerCase()) ||
+            usuarioSesion.nombre?.toLowerCase().includes(d.apellido.toLowerCase())
+        ) || docentes[0]; // fallback: primer docente del catálogo para demo
+    }
+
+    /** Renderiza la tabla de materias asignadas con los datos reales del módulo. */
+    function cargarMateriasAsignadas() {
+        const docente = encontrarDocenteDeSession();
+        if (!docente) return;
+
+        // Obtener las materias completas asignadas a este docente
+        const materias = getMateriasCompletasPorDocente(docente.id);
+        const carga    = getCargaHorariaDocente(docente.id);
+        const tbody    = document.getElementById('tablaMaterias');
+
+        // Actualizar datos del perfil lateral
+        document.getElementById('perfilLegajo').textContent        = docente.legajo;
+        document.getElementById('perfilCantMaterias').textContent  = materias.length;
+        document.getElementById('perfilCargaHoraria').textContent  = `${carga.horasUsadas} h`;
+
+        if (!materias.length) {
+            // Sin materias asignadas: mostrar mensaje informativo
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center py-4">
+                        <span class="material-symbols-outlined text-muted d-block mb-1" style="font-size:2rem">assignment_late</span>
+                        <span class="text-muted fst-italic small">No tenés materias asignadas aún. El área administrativa las cargará en breve.</span>
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        // Generar una fila por cada materia asignada
+        tbody.innerHTML = materias.map(m => {
+            const nivelBadge = m.nivel === 'primaria'
+                ? '<span class="badge bg-info-subtle text-info">Primaria</span>'
+                : '<span class="badge bg-secondary-subtle text-secondary">Secundaria</span>';
+
+            return `<tr>
+                <td><code>${m.codigo}</code></td>
+                <td class="fw-bold">${m.nombre} ${nivelBadge}</td>
+                <td>${m.cargaHoraria} Horas</td>
+                <td>—</td>
+                <td><span class="badge bg-success-subtle text-success border border-success-subtle">Activa</span></td>
+            </tr>`;
+        }).join('');
+    }
+
+    // Ejecutar la carga cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', cargarMateriasAsignadas);
 </script>
 
 <script type="module" src="../js/auth-guard.js"></script>

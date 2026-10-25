@@ -1,0 +1,595 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asignación de Materias | NovaSYS</title>
+    <link rel="icon" href="../img/logo.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <style>
+        /* ── Tarjeta de docente seleccionable ── */
+        .docente-card {
+            border: 2px solid #e9ecef;
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+        .docente-card:hover { border-color: #0d6efd; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(13,110,253,.15); }
+        .docente-card.seleccionado { border-color: #0b2545; background: #eef4ff; }
+
+        /* ── Fila de materia en el panel de asignación ── */
+        .materia-row { border-radius: .75rem; transition: background .15s; }
+        .materia-row:hover { background: #f8f9fa; }
+        .materia-row.asignada-aqui { background: #e8f5e9; }
+        .materia-row.asignada-otro { opacity: .55; }
+
+        /* ── Barra de carga horaria ── */
+        .carga-progress { height: 8px; border-radius: 4px; }
+        .carga-ok   { background-color: #198754; }
+        .carga-warn { background-color: #ffc107; }
+        .carga-full { background-color: #dc3545; }
+
+        /* ── Toast de feedback ── */
+        .toast-feedback { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; min-width: 320px; }
+    </style>
+</head>
+<body class="bg-light pt-0 m-0">
+
+<div class="container-fluid p-0">
+    <div class="row g-0">
+
+        <!-- ═══ SIDEBAR ADMINISTRATIVO ═══ -->
+        <aside class="col-md-2 d-none d-md-block sidebar p-0 vh-100 position-sticky top-0">
+            <div class="p-4 text-center">
+                <img src="../img/logo.png" width="50" class="mb-2 bg-white rounded-circle p-1" alt="Logo NovaSYS">
+                <h5 class="text-white mb-0">NovaSYS</h5>
+                <small class="text-white-50">Gestión Institucional</small>
+            </div>
+            <ul class="nav flex-column mt-3">
+                <li class="nav-item"><a class="nav-link" href="dashboard.html"><span class="material-symbols-outlined me-2">analytics</span> Vista General</a></li>
+                <li class="nav-item"><a class="nav-link" href="dashboard.html#seccionNoticias"><span class="material-symbols-outlined me-2">campaign</span> Publicar Noticias</a></li>
+                <li class="nav-item"><a class="nav-link" href="admin-usuarios.html"><span class="material-symbols-outlined me-2">manage_accounts</span> Gestión Usuarios</a></li>
+                <li class="nav-item"><a class="nav-link" href="dashboard.html"><span class="material-symbols-outlined me-2">group</span> Control Alumnos</a></li>
+                <li class="nav-item"><a class="nav-link" href="dashboard.html"><span class="material-symbols-outlined me-2">badge</span> Legajos Docentes</a></li>
+                <!-- Item activo: esta misma página -->
+                <li class="nav-item"><a class="nav-link active" href="asignacion-docentes.html"><span class="material-symbols-outlined me-2">menu_book</span> Oferta Académica</a></li>
+                <li class="nav-item mt-3 border-top border-white border-opacity-10 pt-3">
+                    <a class="nav-link" href="index.html"><span class="material-symbols-outlined me-2">public</span> Ver Sitio Web</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- ═══ CONTENIDO PRINCIPAL ═══ -->
+        <main class="col-md-10 main-content p-0">
+
+            <!-- Navbar superior -->
+            <nav class="navbar-dashboard bg-white shadow-sm px-4 py-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2 w-50">
+                    <span class="material-symbols-outlined text-muted">search</span>
+                    <!-- Buscador: filtra tanto docentes como materias en tiempo real -->
+                    <input type="text" id="inputBuscar" class="form-control border-0 bg-light rounded-pill" placeholder="Buscar docente o materia...">
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-2 border-start ps-3">
+                        <img src="../img/logo.png" width="32" class="rounded-circle border p-1" alt="Admin">
+                        <span class="fw-bold small text-dark d-none d-sm-inline">Administración</span>
+                    </div>
+                    <button onclick="window.cerrarSesion()" class="btn btn-outline-danger btn-sm rounded-pill fw-bold ms-2">Cerrar Sesión</button>
+                </div>
+            </nav>
+
+            <div class="p-4 p-md-5">
+
+                <!-- Encabezado de sección -->
+                <header class="d-flex justify-content-between align-items-end mb-4 dash-reveal">
+                    <div>
+                        <h1 class="h3 fw-bold mb-1">Asignación de Materias a Docentes</h1>
+                        <p class="text-muted mb-0">Seleccioná un docente y luego asignale las materias que dictará en el ciclo lectivo 2027.</p>
+                    </div>
+                    <!-- Botón para abrir el modal de nueva materia -->
+                    <button class="btn btn-primary rounded-pill px-4 shadow-sm d-flex align-items-center gap-2"
+                            data-bs-toggle="modal" data-bs-target="#modalNuevaMateria">
+                        <span class="material-symbols-outlined">add</span> Nueva Materia
+                    </button>
+                </header>
+
+                <!-- ═══ LAYOUT EN DOS PANELES ═══ -->
+                <div class="row g-4">
+
+                    <!-- PANEL IZQUIERDO: Lista de Docentes -->
+                    <div class="col-lg-4 dash-reveal delay-100">
+                        <div class="card card-dash p-4 bg-white border-0 shadow-sm">
+                            <h5 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">badge</span> Planta Docente
+                                <!-- Contador dinámico de docentes -->
+                                <span id="badgeDocentesCount" class="badge bg-primary rounded-pill ms-auto">0</span>
+                            </h5>
+                            <!-- Grid de tarjetas de docentes, generado por JS -->
+                            <div id="listaDocentes" class="d-flex flex-column gap-2">
+                                <p class="text-muted small text-center fst-italic py-3">Cargando docentes...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PANEL DERECHO: Materias disponibles + asignación -->
+                    <div class="col-lg-8 dash-reveal delay-200">
+                        <div class="card card-dash p-4 bg-white border-0 shadow-sm">
+
+                            <!-- Cabecera del panel derecho: muestra el docente seleccionado -->
+                            <div class="d-flex justify-content-between align-items-start mb-4" id="panelMateriasCabecera">
+                                <div>
+                                    <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                                        <span class="material-symbols-outlined text-warning">menu_book</span>
+                                        <span id="panelDocenteNombre">Seleccioná un docente</span>
+                                    </h5>
+                                    <small class="text-muted" id="panelDocenteDetalle">Hacé clic en cualquier docente de la izquierda para ver y gestionar sus materias.</small>
+                                </div>
+                                <!-- Barra de carga horaria del docente seleccionado -->
+                                <div class="text-end" id="panelCargaHoraria" style="min-width:160px; display:none!important;">
+                                    <small class="text-muted d-block mb-1">Carga horaria</small>
+                                    <div class="progress carga-progress mb-1">
+                                        <div id="barraHoras" class="progress-bar carga-ok" style="width:0%"></div>
+                                    </div>
+                                    <small id="textoHoras" class="fw-bold text-dark">0 / 200 h</small>
+                                </div>
+                            </div>
+
+                            <!-- Mensaje cuando no hay docente seleccionado -->
+                            <div id="placeholderSinDocente" class="text-center py-5 text-muted">
+                                <span class="material-symbols-outlined display-1 d-block mb-2">person_search</span>
+                                <p class="fst-italic small">Ningún docente seleccionado. Hacé clic en uno para ver las materias disponibles.</p>
+                            </div>
+
+                            <!-- Lista de materias: se genera dinámicamente cuando se selecciona un docente -->
+                            <div id="listaMaterias" class="d-none">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <small class="text-muted fw-bold text-uppercase">Materias del Ciclo 2027</small>
+                                    <!-- Filtro rápido por nivel: Primaria / Secundaria -->
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-secondary active" id="filtroTodos" onclick="filtrarMaterias('todos')">Todos</button>
+                                        <button class="btn btn-outline-secondary" id="filtroPrimaria" onclick="filtrarMaterias('primaria')">Primaria</button>
+                                        <button class="btn btn-outline-secondary" id="filtroSecundaria" onclick="filtrarMaterias('secundaria')">Secundaria</button>
+                                    </div>
+                                </div>
+                                <!-- Contenedor de filas de materias -->
+                                <div id="contenedorMaterias" class="d-flex flex-column gap-2 mt-3"></div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ TABLA RESUMEN: todas las asignaciones actuales ═══ -->
+                <div class="row g-4 mt-1">
+                    <div class="col-12 dash-reveal delay-300">
+                        <div class="card card-dash p-4 bg-white border-0 shadow-sm">
+                            <h5 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                                <span class="material-symbols-outlined text-success">assignment</span> Resumen de Asignaciones Actuales
+                            </h5>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Docente</th>
+                                            <th>Legajo</th>
+                                            <th>Materia</th>
+                                            <th>Nivel</th>
+                                            <th>Carga Horaria</th>
+                                            <th>Fecha Asignación</th>
+                                            <th class="text-end">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <!-- Cuerpo generado dinámicamente por JS -->
+                                    <tbody id="tablaResumen">
+                                        <tr><td colspan="7" class="text-center text-muted fst-italic py-3">Sin asignaciones todavía.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /p-4 p-md-5 -->
+        </main>
+    </div>
+</div>
+
+<!-- ═══ MODAL: Agregar nueva materia al catálogo ═══ -->
+<div class="modal fade" id="modalNuevaMateria" tabindex="-1" aria-labelledby="modalNuevaMateriaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="modalNuevaMateriaLabel">
+                    <span class="material-symbols-outlined text-primary me-2" style="vertical-align:middle;">add_circle</span>
+                    Nueva Materia al Catálogo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNuevaMateria" novalidate>
+                    <div class="row g-3">
+                        <!-- Código: identificador único de la materia -->
+                        <div class="col-4">
+                            <label class="form-label fw-bold small text-secondary">Código *</label>
+                            <input type="text" id="nuevoCodigo" class="form-control" placeholder="Ej: M008" required>
+                        </div>
+                        <!-- Nombre descriptivo de la materia -->
+                        <div class="col-8">
+                            <label class="form-label fw-bold small text-secondary">Nombre de la Materia *</label>
+                            <input type="text" id="nuevoNombre" class="form-control" placeholder="Ej: Química I" required>
+                        </div>
+                        <!-- Nivel: determina a qué sector educativo pertenece -->
+                        <div class="col-6">
+                            <label class="form-label fw-bold small text-secondary">Nivel Académico *</label>
+                            <select id="nuevoNivel" class="form-select" required>
+                                <option value="primaria">Primaria</option>
+                                <option value="secundaria" selected>Secundaria</option>
+                            </select>
+                        </div>
+                        <!-- Carga horaria: se usa para controlar el límite por docente -->
+                        <div class="col-6">
+                            <label class="form-label fw-bold small text-secondary">Carga Horaria *</label>
+                            <input type="number" id="nuevaCarga" class="form-control" min="8" max="200" placeholder="Ej: 80" required>
+                        </div>
+                        <!-- Ciclo lectivo al que pertenece la materia -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold small text-secondary">Ciclo Lectivo *</label>
+                            <input type="number" id="nuevoCiclo" class="form-control" value="2027" min="2020" max="2035" required>
+                        </div>
+                        <!-- Área de mensajes de validación del formulario -->
+                        <div id="alertaMateria" class="col-12 d-none">
+                            <div class="alert alert-danger py-2 small mb-0"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnGuardarMateria" class="btn btn-primary rounded-pill px-4">
+                    <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle;">save</span> Guardar Materia
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast de feedback para mensajes de éxito / error -->
+<div class="toast-feedback" id="toastContainer" aria-live="polite"></div>
+
+<!-- Bootstrap JS (necesario para modales) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ═══ LÓGICA DE LA INTERFAZ (ES Module) ═══ -->
+<script type="module">
+// Importar todas las funciones del módulo de lógica de negocio
+import {
+    getMaterias,
+    getDocentes,
+    getAsignaciones,
+    getMateriasPorDocente,
+    getMateriasCompletasPorDocente,
+    getDocentePorMateria,
+    getCargaHorariaDocente,
+    asignarMateria,
+    desasignarMateria,
+    agregarMateria
+} from '../js/asignacion-materias.js';
+
+// ── Estado de la interfaz ─────────────────────────────────────────────────────
+let docenteSeleccionadoId = null;   // ID del docente actualmente visible en el panel derecho
+let filtroNivelActual     = 'todos'; // Filtro de nivel académico activo
+
+// ── Función: mostrar toast de notificación ────────────────────────────────────
+function mostrarToast(mensaje, tipo = 'success') {
+    const container = document.getElementById('toastContainer');
+    const id        = 'toast-' + Date.now();
+    // Elegir icono según el tipo de mensaje
+    const icon = tipo === 'success' ? 'check_circle' : (tipo === 'warning' ? 'warning' : 'error');
+    container.insertAdjacentHTML('beforeend', `
+        <div id="${id}" class="toast align-items-center text-bg-${tipo} border-0 mb-2 show" role="alert">
+            <div class="d-flex align-items-center p-3 gap-2">
+                <span class="material-symbols-outlined">${icon}</span>
+                <div class="toast-body p-0 flex-grow-1">${mensaje}</div>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>`);
+    // Auto-eliminar después de 4 segundos
+    setTimeout(() => document.getElementById(id)?.remove(), 4000);
+}
+
+// ── Función: renderizar la lista de docentes en el panel izquierdo ────────────
+function renderDocentes() {
+    const docentes   = getDocentes();
+    const container  = document.getElementById('listaDocentes');
+    const badge      = document.getElementById('badgeDocentesCount');
+
+    // Obtener el término de búsqueda para filtrar
+    const busqueda = document.getElementById('inputBuscar').value.toLowerCase();
+    const filtrados = busqueda
+        ? docentes.filter(d =>
+            `${d.nombre} ${d.apellido}`.toLowerCase().includes(busqueda) ||
+            d.legajo.toLowerCase().includes(busqueda)
+          )
+        : docentes;
+
+    badge.textContent = filtrados.length;
+
+    if (!filtrados.length) {
+        container.innerHTML = '<p class="text-muted small text-center fst-italic py-3">Sin resultados.</p>';
+        return;
+    }
+
+    // Generar una tarjeta por cada docente
+    container.innerHTML = filtrados.map(d => {
+        const carga     = getCargaHorariaDocente(d.id);
+        const isSelected = d.id === docenteSeleccionadoId;
+        // Color de la barra de carga horaria según porcentaje
+        const colorBarra = carga.porcentaje >= 90 ? 'carga-full' : carga.porcentaje >= 70 ? 'carga-warn' : 'carga-ok';
+
+        return `
+        <div class="docente-card p-3 ${isSelected ? 'seleccionado' : ''}"
+             onclick="window._seleccionarDocente('${d.id}')">
+            <div class="d-flex align-items-center gap-3">
+                <!-- Avatar con inicial del nombre -->
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
+                     style="width:42px;height:42px;font-size:1.1rem;">${d.nombre[0]}${d.apellido[0]}</div>
+                <div class="flex-grow-1 min-w-0">
+                    <h6 class="fw-bold mb-0 text-truncate">${d.apellido}, ${d.nombre}</h6>
+                    <small class="text-muted">${d.legajo} · <span class="text-capitalize">${d.nivel}</span></small>
+                </div>
+                <!-- Badge: cantidad de materias asignadas -->
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle flex-shrink-0">
+                    ${getMateriasPorDocente(d.id).length} mat.
+                </span>
+            </div>
+            <!-- Mini barra de carga horaria en la tarjeta -->
+            <div class="progress mt-2" style="height:4px;">
+                <div class="progress-bar ${colorBarra}" style="width:${carga.porcentaje}%"></div>
+            </div>
+            <small class="text-muted d-block mt-1">${carga.horasUsadas}/${carga.horasMax} h asignadas</small>
+        </div>`;
+    }).join('');
+}
+
+// ── Función: seleccionar un docente y mostrar sus materias en el panel derecho ─
+window._seleccionarDocente = function(docenteId) {
+    docenteSeleccionadoId = docenteId;
+
+    // Obtener datos del docente seleccionado
+    const docentes = getDocentes();
+    const docente  = docentes.find(d => d.id === docenteId);
+    if (!docente) return;
+
+    // Actualizar el encabezado del panel de materias
+    document.getElementById('panelDocenteNombre').textContent   = `${docente.nombre} ${docente.apellido}`;
+    document.getElementById('panelDocenteDetalle').textContent  = `${docente.legajo} · Nivel ${docente.nivel}`;
+
+    // Mostrar la barra de carga horaria
+    const cargaEl = document.getElementById('panelCargaHoraria');
+    cargaEl.style.removeProperty('display'); // quitar el display:none inline
+    cargaEl.classList.remove('d-none');
+    actualizarBarraHoras();
+
+    // Ocultar el placeholder y mostrar la lista de materias
+    document.getElementById('placeholderSinDocente').classList.add('d-none');
+    document.getElementById('listaMaterias').classList.remove('d-none');
+
+    // Actualizar tarjetas de docentes (para resaltar el seleccionado)
+    renderDocentes();
+    // Renderizar las materias del panel derecho
+    renderMaterias();
+};
+
+// ── Función: actualizar la barra de carga horaria del docente activo ──────────
+function actualizarBarraHoras() {
+    if (!docenteSeleccionadoId) return;
+    const carga       = getCargaHorariaDocente(docenteSeleccionadoId);
+    const barra       = document.getElementById('barraHoras');
+    const texto       = document.getElementById('textoHoras');
+    const colorBarra  = carga.porcentaje >= 90 ? 'carga-full' : carga.porcentaje >= 70 ? 'carga-warn' : 'carga-ok';
+
+    // Resetear clases de color y aplicar la correcta
+    barra.className   = `progress-bar ${colorBarra}`;
+    barra.style.width = `${carga.porcentaje}%`;
+    texto.textContent = `${carga.horasUsadas} / ${carga.horasMax} h`;
+}
+
+// ── Función: renderizar la lista de materias en el panel derecho ─────────────
+function renderMaterias() {
+    if (!docenteSeleccionadoId) return;
+
+    const materias  = getMaterias();
+    const asignadas = getMateriasPorDocente(docenteSeleccionadoId); // IDs asignadas a este docente
+    const container = document.getElementById('contenedorMaterias');
+
+    // Aplicar filtro por nivel si está activo
+    const filtradas = filtroNivelActual === 'todos'
+        ? materias
+        : materias.filter(m => m.nivel === filtroNivelActual);
+
+    if (!filtradas.length) {
+        container.innerHTML = '<p class="text-muted small fst-italic text-center py-3">No hay materias para este filtro.</p>';
+        return;
+    }
+
+    container.innerHTML = filtradas.map(m => {
+        const esAsignadaAEste  = asignadas.includes(m.id);
+        const docenteOtroId    = getDocentePorMateria(m.id);
+        // ¿Está asignada a otro docente distinto al seleccionado?
+        const esAsignadaAOtro  = docenteOtroId && docenteOtroId !== docenteSeleccionadoId;
+        const docentes         = getDocentes();
+        const otroDocente      = esAsignadaAOtro ? docentes.find(d => d.id === docenteOtroId) : null;
+
+        // Badge de nivel: primaria/secundaria
+        const nivelBadge = m.nivel === 'primaria'
+            ? '<span class="badge bg-info-subtle text-info border border-info-subtle">Primaria</span>'
+            : '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Secundaria</span>';
+
+        return `
+        <div class="materia-row p-3 border rounded-3 d-flex align-items-center gap-3
+                    ${esAsignadaAEste ? 'asignada-aqui' : ''} ${esAsignadaAOtro ? 'asignada-otro' : ''}">
+            <!-- Icono de la materia -->
+            <div class="flex-shrink-0">
+                <span class="material-symbols-outlined fs-4 text-${esAsignadaAEste ? 'success' : 'muted'}">
+                    ${esAsignadaAEste ? 'check_circle' : 'circle'}
+                </span>
+            </div>
+            <!-- Información de la materia -->
+            <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <code class="text-muted small">${m.codigo}</code>
+                    <strong>${m.nombre}</strong>
+                    ${nivelBadge}
+                </div>
+                <small class="text-muted">
+                    ${m.cargaHoraria}h · Ciclo ${m.cicloLectivo}
+                    <!-- Si está asignada a otro docente, mostrar su nombre -->
+                    ${esAsignadaAOtro && otroDocente
+                        ? ` · <span class="text-warning fw-bold">Asignada a ${otroDocente.nombre} ${otroDocente.apellido}</span>`
+                        : ''}
+                </small>
+            </div>
+            <!-- Botón de asignar o desasignar -->
+            <div class="flex-shrink-0">
+                ${esAsignadaAEste
+                    ? `<button class="btn btn-outline-danger btn-sm rounded-pill"
+                              onclick="window._handleAsignacion('${m.id}', true)">
+                           <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle;">link_off</span> Quitar
+                       </button>`
+                    : `<button class="btn btn-outline-primary btn-sm rounded-pill"
+                              ${esAsignadaAOtro ? 'disabled title="Asignada a otro docente"' : ''}
+                              onclick="window._handleAsignacion('${m.id}', false)">
+                           <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle;">add_link</span> Asignar
+                       </button>`
+                }
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ── Función: manejar clic en Asignar / Quitar ─────────────────────────────────
+window._handleAsignacion = function(materiaId, estaAsignada) {
+    if (!docenteSeleccionadoId) return;
+
+    // Llamar a la función correspondiente del módulo de lógica de negocio
+    const resultado = estaAsignada
+        ? desasignarMateria(docenteSeleccionadoId, materiaId)
+        : asignarMateria(docenteSeleccionadoId, materiaId);
+
+    // Mostrar toast con resultado
+    mostrarToast(resultado.mensaje, resultado.ok ? 'success' : 'danger');
+
+    if (resultado.ok) {
+        // Actualizar todos los componentes visuales afectados
+        actualizarBarraHoras();
+        renderDocentes();
+        renderMaterias();
+        renderTablaResumen();
+    }
+};
+
+// ── Función: filtrar materias por nivel desde los botones de filtro ───────────
+window.filtrarMaterias = function(nivel) {
+    filtroNivelActual = nivel;
+
+    // Actualizar el estado visual de los botones de filtro
+    ['filtroTodos', 'filtroPrimaria', 'filtroSecundaria'].forEach(id => {
+        document.getElementById(id).classList.remove('active');
+    });
+    const mapa = { todos: 'filtroTodos', primaria: 'filtroPrimaria', secundaria: 'filtroSecundaria' };
+    document.getElementById(mapa[nivel]).classList.add('active');
+
+    renderMaterias();
+};
+
+// ── Función: renderizar la tabla resumen de asignaciones ─────────────────────
+function renderTablaResumen() {
+    const asignaciones = getAsignaciones();
+    const materias     = getMaterias();
+    const docentes     = getDocentes();
+    const tbody        = document.getElementById('tablaResumen');
+
+    if (!asignaciones.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted fst-italic py-3">Sin asignaciones todavía.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = asignaciones.map(a => {
+        const docente = docentes.find(d => d.id === a.docenteId);
+        const materia = materias.find(m => m.id === a.materiaId);
+        if (!docente || !materia) return ''; // Ignorar asignaciones huérfanas
+
+        const nivelBadge = materia.nivel === 'primaria'
+            ? '<span class="badge bg-info-subtle text-info">Primaria</span>'
+            : '<span class="badge bg-secondary-subtle text-secondary">Secundaria</span>';
+
+        return `<tr>
+            <td class="fw-bold">${docente.apellido}, ${docente.nombre}</td>
+            <td><code>${docente.legajo}</code></td>
+            <td>${materia.nombre}</td>
+            <td>${nivelBadge}</td>
+            <td>${materia.cargaHoraria}h</td>
+            <td><small class="text-muted">${a.fechaAsignacion || '—'}</small></td>
+            <td class="text-end">
+                <!-- Botón eliminar asignación directamente desde la tabla resumen -->
+                <button class="btn btn-outline-danger btn-sm rounded-pill px-3"
+                        onclick="window._handleAsignacion('${a.materiaId}', true); window._seleccionarDocente('${a.docenteId}')">
+                    <span class="material-symbols-outlined" style="font-size:.85rem;vertical-align:middle;">delete</span>
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+// ── Handler: guardar nueva materia desde el modal ─────────────────────────────
+document.getElementById('btnGuardarMateria').addEventListener('click', () => {
+    const alertaEl = document.getElementById('alertaMateria');
+
+    // Recolectar valores del formulario
+    const datos = {
+        codigo:       document.getElementById('nuevoCodigo').value.trim(),
+        nombre:       document.getElementById('nuevoNombre').value.trim(),
+        nivel:        document.getElementById('nuevoNivel').value,
+        cargaHoraria: document.getElementById('nuevaCarga').value,
+        cicloLectivo: document.getElementById('nuevoCiclo').value
+    };
+
+    // Llamar a la función de negocio
+    const resultado = agregarMateria(datos);
+
+    if (!resultado.ok) {
+        // Mostrar error dentro del modal
+        alertaEl.classList.remove('d-none');
+        alertaEl.querySelector('.alert').textContent = resultado.mensaje;
+        return;
+    }
+
+    // Éxito: cerrar modal, limpiar formulario, actualizar UI
+    alertaEl.classList.add('d-none');
+    document.getElementById('formNuevaMateria').reset();
+    bootstrap.Modal.getInstance(document.getElementById('modalNuevaMateria')).hide();
+    mostrarToast(resultado.mensaje, 'success');
+
+    // Si hay un docente seleccionado, refrescar su panel de materias
+    if (docenteSeleccionadoId) renderMaterias();
+});
+
+// ── Buscador: filtrar docentes en tiempo real mientras se escribe ─────────────
+document.getElementById('inputBuscar').addEventListener('input', () => {
+    renderDocentes();
+});
+
+// ── Inicialización: dibujar toda la interfaz al cargar la página ──────────────
+document.addEventListener('DOMContentLoaded', () => {
+    renderDocentes();
+    renderTablaResumen();
+});
+</script>
+
+<!-- Auth guard: verifica que el usuario esté logueado y tenga rol admin -->
+<script type="module" src="../js/auth-guard.js"></script>
+</body>
+</html>
