@@ -203,6 +203,51 @@
                 { dni: '11111111', password: ['1234', '123456'], nombre: 'Jose', apellido: '', rol: 'familia', nivel: null }
             ];
 
+            // 1. Intentamos login real contra el Backend PostgreSQL (Neon)
+            try {
+                const resBackend = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dni, password })
+                });
+
+                if (resBackend.ok) {
+                    const data = await resBackend.json();
+                    if (data.ok && data.data && data.data.usuario) {
+                        const u = data.data.usuario;
+                        // Mapeo de rol backend a rol frontend
+                        const rolMap = { 'ESTUDIANTE': 'alumno', 'DOCENTE': 'docente', 'PADRE': 'familia', 'ADMIN': 'admin' };
+                        const rolDetectado = rolMap[u.rol] || u.rol.toLowerCase();
+
+                        if (rolDetectado !== rol) {
+                            alert(`El rol seleccionado (${rol}) no coincide con el perfil del usuario (${rolDetectado}).`);
+                            btn.disabled = false;
+                            btn.textContent = 'Ingresar al Portal';
+                            return;
+                        }
+
+                        // Guardar token JWT y sesión
+                        localStorage.setItem('token', data.data.token);
+                        localStorage.setItem('usuario', JSON.stringify({
+                            uid: u.id,
+                            email: u.email,
+                            nombre: u.nombre,
+                            apellido: u.apellido,
+                            rol: rolDetectado,
+                            nivel: nivel
+                        }));
+
+                        if (rol === 'alumno')  window.location.href = 'dashboard-alumno.html';
+                        if (rol === 'docente') window.location.href = 'dashboard-docente.html';
+                        if (rol === 'familia') window.location.href = 'dashboard-familia.html';
+                        return;
+                    }
+                }
+            } catch (errBackend) {
+                console.warn('API local no disponible, intentando Firebase o local:', errBackend.message);
+            }
+
+            // 2. Intento secundario con Firebase o usuarios locales
             try {
                 const cred = await signInWithEmailAndPassword(auth, email, password);
 

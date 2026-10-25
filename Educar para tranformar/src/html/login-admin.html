@@ -144,7 +144,7 @@
 
     <!-- SCRIPT DE AUTENTICACIÓN ADMINISTRATIVA -->
     <script>
-        document.getElementById('formLoginAdmin').addEventListener('submit', (e) => {
+        document.getElementById('formLoginAdmin').addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const usuario = document.getElementById('adminUsuario').value.trim();
@@ -164,15 +164,57 @@
                 return;
             }
 
-            // Credenciales exclusivas del Administrador institucional
-            const esAdminValido = (usuario.toLowerCase() === 'admin' || usuario === '99999999') && 
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Accediendo...';
+            alerta.classList.add('d-none');
+
+            // 1. Intentamos login real contra el Backend PostgreSQL (Neon)
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: usuario.includes('@') ? usuario : (usuario.toLowerCase() === 'admin' ? 'admin@novasys.edu.ar' : `${usuario}@novasys.edu.ar`),
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.ok) {
+                    if (data.data.usuario.rol !== 'ADMIN') {
+                        alerta.innerText = 'Acceso denegado: este usuario no posee rol de Administrador.';
+                        alerta.classList.remove('d-none');
+                        btn.disabled = false;
+                        btn.innerHTML = '<span class="material-symbols-outlined fs-5">admin_panel_settings</span> Ingresar al Dashboard';
+                        return;
+                    }
+
+                    // Guardar token JWT y datos de sesión
+                    localStorage.setItem('token', data.data.token);
+                    localStorage.setItem('usuario', JSON.stringify({
+                        uid: data.data.usuario.id,
+                        email: data.data.usuario.email,
+                        nombre: data.data.usuario.nombre,
+                        apellido: data.data.usuario.apellido,
+                        rol: 'admin',
+                        nivel: 'todos'
+                    }));
+
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 400);
+                    return;
+                }
+            } catch (errApi) {
+                console.warn('API local no disponible, recurriendo a modo offline:', errApi.message);
+            }
+
+            // 2. Fallback de respaldo para pruebas rápidas si el servidor no está levantado
+            const esAdminValido = (usuario.toLowerCase() === 'admin' || usuario === '99999999' || usuario === 'admin@novasys.edu.ar') && 
                                   (password === '1234' || password === '123456' || password === 'admin123');
 
             if (esAdminValido) {
-                btn.disabled = true;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Accediendo...';
-
-                // Guardar perfil administrador en localStorage
                 const perfilAdmin = {
                     uid: 'admin-01',
                     nombre: 'Dirección',
@@ -184,9 +226,11 @@
 
                 setTimeout(() => {
                     window.location.href = 'dashboard.html';
-                }, 600);
+                }, 400);
             } else {
-                alerta.innerText = 'Credenciales administrativas inválidas. Use el usuario "admin" con clave "123456".';
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-symbols-outlined fs-5">admin_panel_settings</span> Ingresar al Dashboard';
+                alerta.innerText = 'Credenciales administrativas inválidas. Use "admin@novasys.edu.ar" (o "admin") con clave "1234".';
                 alerta.classList.remove('d-none');
             }
         });
