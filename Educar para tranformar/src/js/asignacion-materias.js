@@ -1,245 +1,234 @@
-﻿/**
- * ════════════════════════════════════════════════════════════════════════════
- *  asignacion-materias.js
- *  HU-04: Asignación de Materias y Cursos a Docentes
- * ════════════════════════════════════════════════════════════════════════════
- *
- *  ARQUITECTURA HÍBRIDA:
- *  - Persiste en localStorage para funcionar sin servidor (presentación).
- *  - Cada función sigue la misma firma que usaría una llamada REST a la API,
- *    lo que facilita migrar a fetch('/api/...') en el futuro.
- *
- *  CLAVES EN localStorage:
- *    · "hu04_materias"   → Array<Materia>
- *    · "hu04_docentes"   → Array<Docente>
- *    · "hu04_asignaciones" → Array<Asignacion>
+/**
+ * =============================================================================
+ * asignacion-materias.js - HU-04: Asignación de Materias y Cursos a Docentes
+ * Metodología de Sistemas II - UTN TUP
+ * 
+ * Conexión completa a la API REST de PostgreSQL en Neon Cloud:
+ * - GET    /api/docentes
+ * - GET    /api/materias
+ * - POST   /api/asignaciones
+ * - DELETE /api/asignaciones/:id_materia
+ * - POST   /api/materias
+ * =============================================================================
  */
 
-// ─── REGLA DE NEGOCIO: máximo de horas asignables por docente en un ciclo ────
+const API_BASE = 'http://localhost:3000/api';
 const MAX_HORAS_DOCENTE = 200;
 
-// ─── CATÁLOGO INICIAL DE MATERIAS (semilla de datos) ─────────────────────────
-// Se usa solo la primera vez que no hay datos guardados en localStorage.
-const MATERIAS_SEMILLA = [
-    { id: 'M001', codigo: 'M001', nombre: 'Programación I',       nivel: 'secundaria', cargaHoraria: 80,  cicloLectivo: 2027 },
-    { id: 'M002', codigo: 'M002', nombre: 'Base de Datos I',      nivel: 'secundaria', cargaHoraria: 64,  cicloLectivo: 2027 },
-    { id: 'M003', codigo: 'M003', nombre: 'Programación II',      nivel: 'secundaria', cargaHoraria: 80,  cicloLectivo: 2027 },
-    { id: 'M004', codigo: 'M004', nombre: 'Matemática',           nivel: 'primaria',   cargaHoraria: 96,  cicloLectivo: 2027 },
-    { id: 'M005', codigo: 'M005', nombre: 'Lengua y Literatura',  nivel: 'secundaria', cargaHoraria: 80,  cicloLectivo: 2027 },
-    { id: 'M006', codigo: 'M006', nombre: 'Física',               nivel: 'secundaria', cargaHoraria: 64,  cicloLectivo: 2027 },
-    { id: 'M007', codigo: 'M007', nombre: 'Inglés',               nivel: 'primaria',   cargaHoraria: 48,  cicloLectivo: 2027 },
-];
+// Caché en memoria para acceso rápido y renderizado fluido
+let _docentes = [];
+let _materias = [];
 
-// ─── CATÁLOGO INICIAL DE DOCENTES (semilla de datos) ─────────────────────────
-const DOCENTES_SEMILLA = [
-    { id: 'D001', legajo: 'D001', nombre: 'Ana',    apellido: 'López',     email: 'ana.lopez@novasys.edu',     nivel: 'secundaria', estado: 'activo' },
-    { id: 'D002', legajo: 'D002', nombre: 'Carlos', apellido: 'Martínez',  email: 'carlos.martinez@novasys.edu', nivel: 'secundaria', estado: 'activo' },
-    { id: 'D003', legajo: 'D003', nombre: 'Laura',  apellido: 'García',    email: 'laura.garcia@novasys.edu',  nivel: 'primaria',   estado: 'activo' },
-    { id: 'D004', legajo: 'D004', nombre: 'Miguel', apellido: 'Torres',    email: 'miguel.torres@novasys.edu', nivel: 'secundaria', estado: 'activo' },
-];
+/**
+ * Carga o refresca docentes y materias desde la base de datos PostgreSQL
+ */
+export async function sincronizarConServidor() {
+  try {
+    const [resDocentes, resMaterias] = await Promise.all([
+      fetch(`${API_BASE}/docentes`),
+      fetch(`${API_BASE}/materias`)
+    ]);
 
-// ─── HELPERS DE PERSISTENCIA ──────────────────────────────────────────────────
-
-/** Lee datos de localStorage con fallback al arreglo semilla. */
-function leer(clave, semilla) {
-    try {
-        const raw = localStorage.getItem(clave);
-        if (raw) return JSON.parse(raw);
-        // Primera ejecución: guardar semilla y devolverla
-        localStorage.setItem(clave, JSON.stringify(semilla));
-        return semilla;
-    } catch {
-        return semilla;
+    if (resDocentes.ok) {
+      const dataDoc = await resDocentes.json();
+      if (dataDoc.ok) {
+        _docentes = dataDoc.data.map(d => {
+          const esp = (d.especialidad || '').toLowerCase();
+          return {
+            id: d.id,
+            legajo: d.legajo,
+            nombre: d.nombre,
+            apellido: d.apellido,
+            email: d.email || `${d.legajo.toLowerCase()}@novasys.edu.ar`,
+            edad: d.edad || null,
+            genero: d.genero || null,
+            nivel: (esp.includes('inicial') || esp.includes('jard')) ? 'inicial' : (esp.includes('primar') ? 'primaria' : 'secundaria'),
+            cargaHorariaTotal: d.cargaHorariaTotal || 0,
+            materiasACargo: (d.materiasACargo || []).map(m => m.id_materia)
+          };
+        });
+      }
     }
+
+    if (resMaterias.ok) {
+      const dataMat = await resMaterias.json();
+      if (dataMat.ok) {
+        _materias = dataMat.data.map(m => {
+          const niv = (m.nivel || '').toLowerCase();
+          return {
+            id: m.id,
+            codigo: m.codigo,
+            nombre: m.nombre,
+            cargaHoraria: m.cargaHoraria || 4,
+            nivel: (niv.includes('ini') || niv.includes('jard')) ? 'inicial' : (niv.includes('prim') ? 'primaria' : 'secundaria'),
+            cicloLectivo: 2027,
+            docenteId: m.docenteId || null,
+            docenteNombre: m.docenteNombre || null,
+            id_asignacion: m.id_asignacion || null
+          };
+        });
+      }
+    }
+
+    return { ok: true, docentes: _docentes, materias: _materias };
+  } catch (error) {
+    console.warn('[HU-04] Servidor local no disponible, utilizando caché/fallback local:', error.message);
+    return { ok: false, error: error.message };
+  }
 }
 
-/** Persiste un arreglo en localStorage. */
-function guardar(clave, datos) {
-    localStorage.setItem(clave, JSON.stringify(datos));
-}
-
-// ─── ACCESO A DATOS (API-ready: se pueden reemplazar por fetch) ───────────────
-
-/** Retorna todas las materias del ciclo lectivo activo. */
+/** Devuelve la lista de materias en memoria */
 export function getMaterias() {
-    return leer('hu04_materias', MATERIAS_SEMILLA);
+  return _materias;
 }
 
-/** Retorna todos los docentes activos. */
+/** Devuelve la lista de docentes en memoria */
 export function getDocentes() {
-    return leer('hu04_docentes', DOCENTES_SEMILLA);
+  return _docentes;
 }
 
-/** Retorna el docente con el id dado, o null si no existe. */
+/** Devuelve un docente por su ID */
 export function getDocenteById(id) {
-    return getDocentes().find(d => d.id === id) || null;
+  return _docentes.find(d => Number(d.id) === Number(id));
 }
 
-/** Retorna todas las asignaciones vigentes. */
-export function getAsignaciones() {
-    return leer('hu04_asignaciones', []);
-}
-
-/**
- * Retorna las IDs de materias asignadas a un docente específico.
- * @param {string} docenteId
- * @returns {string[]}
- */
+/** Devuelve los IDs de materias asignadas a un docente */
 export function getMateriasPorDocente(docenteId) {
-    return getAsignaciones()
-        .filter(a => a.docenteId === docenteId)
-        .map(a => a.materiaId);
+  return _materias
+    .filter(m => Number(m.docenteId) === Number(docenteId))
+    .map(m => m.id);
 }
 
-/**
- * Retorna los objetos Materia completos asignados a un docente.
- * @param {string} docenteId
- * @returns {object[]}
- */
+/** Devuelve los objetos Materia completos asignados a un docente */
 export function getMateriasCompletasPorDocente(docenteId) {
-    const materias   = getMaterias();
-    const asignadas  = getMateriasPorDocente(docenteId);
-    return materias.filter(m => asignadas.includes(m.id));
+  return _materias.filter(m => Number(m.docenteId) === Number(docenteId));
 }
 
-/**
- * Retorna el ID del docente asignado a una materia, o null si no tiene.
- * @param {string} materiaId
- */
+/** Devuelve el ID del docente asignado a una materia (o null) */
 export function getDocentePorMateria(materiaId) {
-    const asig = getAsignaciones().find(a => a.materiaId === materiaId);
-    return asig ? asig.docenteId : null;
-}
-
-// ─── HU-04: ASIGNACIÓN ───────────────────────────────────────────────────────
-
-/**
- * Asigna una materia a un docente aplicando todas las reglas de negocio.
- *
- * Reglas validadas:
- *  1. La materia no debe estar ya asignada a otro docente.
- *  2. El docente no puede tener ya esa misma materia asignada (duplicado).
- *  3. La suma de carga horaria del docente no puede superar MAX_HORAS_DOCENTE.
- *
- * @param {string} docenteId
- * @param {string} materiaId
- * @returns {{ ok: boolean, mensaje: string }}
- */
-export function asignarMateria(docenteId, materiaId) {
-    const materias    = getMaterias();
-    const docentes    = getDocentes();
-    const asignaciones = getAsignaciones();
-
-    // Buscar entidades involucradas
-    const materia = materias.find(m => m.id === materiaId);
-    const docente = docentes.find(d => d.id === docenteId);
-
-    if (!materia) return { ok: false, mensaje: 'Materia no encontrada en el catálogo.' };
-    if (!docente) return { ok: false, mensaje: 'Docente no encontrado.' };
-
-    // Regla 1: ¿La materia ya tiene un docente asignado (distinto)?
-    const yaAsignada = asignaciones.find(a => a.materiaId === materiaId);
-    if (yaAsignada && yaAsignada.docenteId !== docenteId) {
-        const otro = docentes.find(d => d.id === yaAsignada.docenteId);
-        return {
-            ok: false,
-            mensaje: `Esta materia ya está asignada a ${otro ? otro.nombre + ' ' + otro.apellido : 'otro docente'}.`
-        };
-    }
-
-    // Regla 2: ¿El docente ya tiene esta materia?
-    const duplicado = asignaciones.find(a => a.docenteId === docenteId && a.materiaId === materiaId);
-    if (duplicado) return { ok: false, mensaje: 'Este docente ya tiene asignada esa materia.' };
-
-    // Regla 3: Control de carga horaria total
-    const horasActuales = getMateriasCompletasPorDocente(docenteId)
-        .reduce((sum, m) => sum + m.cargaHoraria, 0);
-    if (horasActuales + materia.cargaHoraria > MAX_HORAS_DOCENTE) {
-        return {
-            ok: false,
-            mensaje: `Límite de carga horaria superado. ${docente.nombre} tiene ${horasActuales}h asignadas y el máximo es ${MAX_HORAS_DOCENTE}h.`
-        };
-    }
-
-    // Todas las reglas pasaron → guardar la asignación
-    const nuevaAsignacion = {
-        id:          `${docenteId}-${materiaId}`,   // ID compuesto único
-        docenteId,
-        materiaId,
-        fechaAsignacion: new Date().toISOString().split('T')[0]  // YYYY-MM-DD
-    };
-
-    asignaciones.push(nuevaAsignacion);
-    guardar('hu04_asignaciones', asignaciones);
-
-    return { ok: true, mensaje: `${materia.nombre} asignada a ${docente.nombre} ${docente.apellido} correctamente. ✓` };
+  const m = _materias.find(mat => Number(mat.id) === Number(materiaId));
+  return m ? m.docenteId : null;
 }
 
 /**
- * Quita la asignación de una materia a un docente.
- * @param {string} docenteId
- * @param {string} materiaId
- * @returns {{ ok: boolean, mensaje: string }}
- */
-export function desasignarMateria(docenteId, materiaId) {
-    const asignaciones  = getAsignaciones();
-    const materia       = getMaterias().find(m => m.id === materiaId);
-
-    const idx = asignaciones.findIndex(a => a.docenteId === docenteId && a.materiaId === materiaId);
-    if (idx === -1) return { ok: false, mensaje: 'Esa asignación no existe.' };
-
-    asignaciones.splice(idx, 1);
-    guardar('hu04_asignaciones', asignaciones);
-
-    return { ok: true, mensaje: `${materia?.nombre || materiaId} desasignada correctamente.` };
-}
-
-/**
- * Agrega una nueva materia al catálogo.
- * @param {{ codigo, nombre, nivel, cargaHoraria, cicloLectivo }} datos
- * @returns {{ ok: boolean, mensaje: string, materia?: object }}
- */
-export function agregarMateria(datos) {
-    const { codigo, nombre, nivel, cargaHoraria, cicloLectivo } = datos;
-
-    // Validar campos obligatorios
-    if (!codigo || !nombre || !nivel || !cargaHoraria || !cicloLectivo) {
-        return { ok: false, mensaje: 'Faltan campos obligatorios: código, nombre, nivel, carga horaria y ciclo lectivo.' };
-    }
-
-    const materias = getMaterias();
-
-    // No puede haber dos materias con el mismo código
-    if (materias.find(m => m.codigo.toLowerCase() === codigo.toLowerCase())) {
-        return { ok: false, mensaje: `Ya existe una materia con el código "${codigo}".` };
-    }
-
-    const nueva = {
-        id: codigo.toUpperCase(),
-        codigo: codigo.toUpperCase(),
-        nombre,
-        nivel,
-        cargaHoraria: Number(cargaHoraria),
-        cicloLectivo:  Number(cicloLectivo)
-    };
-
-    materias.push(nueva);
-    guardar('hu04_materias', materias);
-    return { ok: true, mensaje: `Materia "${nombre}" creada correctamente.`, materia: nueva };
-}
-
-/**
- * Calcula las horas totales asignadas a un docente.
- * Útil para mostrar la barra de progreso de carga horaria.
- * @param {string} docenteId
- * @returns {{ horasUsadas: number, horasMax: number, porcentaje: number }}
+ * Calcula la carga horaria acumulada y el porcentaje sobre el límite de 200h
  */
 export function getCargaHorariaDocente(docenteId) {
-    const horasUsadas = getMateriasCompletasPorDocente(docenteId)
-        .reduce((sum, m) => sum + m.cargaHoraria, 0);
-    return {
-        horasUsadas,
-        horasMax:    MAX_HORAS_DOCENTE,
-        porcentaje:  Math.round((horasUsadas / MAX_HORAS_DOCENTE) * 100)
-    };
+  const materiasDocente = getMateriasCompletasPorDocente(docenteId);
+  const horasUsadas = materiasDocente.reduce((acc, m) => acc + (m.cargaHoraria || 0), 0);
+  const porcentaje = Math.min(100, Math.round((horasUsadas / MAX_HORAS_DOCENTE) * 100));
+
+  return {
+    horasUsadas,
+    horasMax: MAX_HORAS_DOCENTE,
+    horasDisponibles: Math.max(0, MAX_HORAS_DOCENTE - horasUsadas),
+    porcentaje
+  };
+}
+
+/** Devuelve todas las asignaciones activas */
+export function getAsignaciones() {
+  return _materias
+    .filter(m => m.docenteId !== null)
+    .map(m => ({
+      id: `${m.docenteId}-${m.id}`,
+      docenteId: m.docenteId,
+      materiaId: m.id,
+      docenteNombre: m.docenteNombre
+    }));
+}
+
+/**
+ * Asigna una materia a un docente en PostgreSQL mediante la API
+ */
+export async function asignarMateria(docenteId, materiaId) {
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_BASE}/asignaciones`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+      },
+      body: JSON.stringify({
+        id_profesor: Number(docenteId),
+        id_materia: Number(materiaId)
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      return { ok: false, mensaje: data.error || 'No se pudo asignar la materia' };
+    }
+
+    // Refrescar datos en memoria desde PostgreSQL
+    await sincronizarConServidor();
+    return { ok: true, mensaje: 'Materia asignada correctamente en PostgreSQL. ✓' };
+
+  } catch (error) {
+    console.error('Error al asignar materia:', error);
+    return { ok: false, mensaje: 'Error al conectar con el servidor: ' + error.message };
+  }
+}
+
+/**
+ * Quita la asignación de una materia en PostgreSQL
+ */
+export async function desasignarMateria(docenteId, materiaId) {
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_BASE}/asignaciones/${materiaId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : ''
+      }
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      return { ok: false, mensaje: data.error || 'No se pudo desasignar la materia' };
+    }
+
+    // Refrescar datos en memoria desde PostgreSQL
+    await sincronizarConServidor();
+    return { ok: true, mensaje: 'Materia desasignada correctamente en PostgreSQL.' };
+
+  } catch (error) {
+    console.error('Error al desasignar materia:', error);
+    return { ok: false, mensaje: 'Error al conectar con el servidor: ' + error.message };
+  }
+}
+
+/**
+ * Agrega una nueva materia en PostgreSQL
+ */
+export async function agregarMateria(datos) {
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_BASE}/materias`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+      },
+      body: JSON.stringify({
+        codigo: datos.codigo,
+        nombre: datos.nombre,
+        cargaHoraria: Number(datos.cargaHoraria),
+        nivel: datos.nivel
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      return { ok: false, mensaje: data.error || 'Error al agregar la materia' };
+    }
+
+    await sincronizarConServidor();
+    return { ok: true, mensaje: `Materia "${datos.nombre}" agregada con éxito en PostgreSQL.`, materia: data.data.materia };
+
+  } catch (error) {
+    console.error('Error al agregar materia:', error);
+    return { ok: false, mensaje: 'Error al conectar con el servidor: ' + error.message };
+  }
 }

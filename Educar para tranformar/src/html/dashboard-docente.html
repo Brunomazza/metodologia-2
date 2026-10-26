@@ -246,45 +246,26 @@
                             </button>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
+                            <table class="table table-hover align-middle mb-0 text-center">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Legajo</th>
-                                        <th>Alumno</th>
-                                        <th>Materia</th>
-                                        <th>Parcial 1</th>
-                                        <th>Parcial 2</th>
-                                        <th>Final</th>
+                                        <th class="text-start ps-3">Legajo</th>
+                                        <th class="text-start">Alumno</th>
+                                        <th>Edad / Género</th>
+                                        <th class="text-start">Materia</th>
+                                        <th>1° Trim</th>
+                                        <th>2° Trim</th>
+                                        <th>3° Trim</th>
+                                        <th>Promedio</th>
                                         <th>Estado</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tablaCalificaciones">
                                     <tr>
-                                        <td><code>A001</code></td>
-                                        <td class="fw-bold">García, Lucía</td>
-                                        <td>Programación I</td>
-                                        <td>8</td>
-                                        <td>9</td>
-                                        <td>—</td>
-                                        <td><span class="badge bg-success-subtle text-success border border-success-subtle">Regular</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>A002</code></td>
-                                        <td class="fw-bold">López, Martín</td>
-                                        <td>Programación I</td>
-                                        <td>4</td>
-                                        <td>6</td>
-                                        <td>—</td>
-                                        <td><span class="badge bg-warning-subtle text-warning border border-warning-subtle">Condicional</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>A003</code></td>
-                                        <td class="fw-bold">Romero, Sofía</td>
-                                        <td>Programación II</td>
-                                        <td>10</td>
-                                        <td>9</td>
-                                        <td>—</td>
-                                        <td><span class="badge bg-success-subtle text-success border border-success-subtle">Regular</span></td>
+                                        <td colspan="9" class="text-center py-3 text-muted">
+                                            <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                            Cargando calificaciones desde PostgreSQL...
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -303,44 +284,46 @@
         <div class="modal-content border-0 shadow">
             <div class="modal-header border-0">
                 <h5 class="modal-title fw-bold" id="modalNotaLabel">
-                    <span class="material-symbols-outlined align-middle me-1 text-primary">grading</span> Cargar Calificación
+                    <span class="material-symbols-outlined align-middle me-1 text-primary">grading</span> Cargar Calificación en PostgreSQL
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label small fw-bold">Alumno</label>
+                    <label class="form-label small fw-bold">Estudiante *</label>
                     <select class="form-select" id="modalAlumno">
-                        <option value="A001">A001 — García, Lucía</option>
-                        <option value="A002">A002 — López, Martín</option>
-                        <option value="A003">A003 — Romero, Sofía</option>
+                        <option value="">Seleccionar alumno...</option>
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small fw-bold">Materia</label>
+                    <label class="form-label small fw-bold">Asignatura *</label>
                     <select class="form-select" id="modalMateriaSelect">
-                        <option value="M001">Programación I</option>
-                        <option value="M003">Programación II</option>
+                        <option value="">Seleccionar materia...</option>
                     </select>
                 </div>
-                <div class="row g-3">
-                    <div class="col">
-                        <label class="form-label small fw-bold">Parcial 1</label>
-                        <input type="number" class="form-control" id="modalParcial1" min="1" max="10" placeholder="1–10">
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-bold">Trimestre *</label>
+                        <select class="form-select" id="modalTrimestre">
+                            <option value="1">1° Trimestre</option>
+                            <option value="2">2° Trimestre</option>
+                            <option value="3">3° Trimestre</option>
+                        </select>
                     </div>
-                    <div class="col">
-                        <label class="form-label small fw-bold">Parcial 2</label>
-                        <input type="number" class="form-control" id="modalParcial2" min="1" max="10" placeholder="1–10">
-                    </div>
-                    <div class="col">
-                        <label class="form-label small fw-bold">Final</label>
-                        <input type="number" class="form-control" id="modalFinal" min="1" max="10" placeholder="1–10">
+                    <div class="col-6">
+                        <label class="form-label small fw-bold">Calificación (1-10) *</label>
+                        <input type="number" class="form-control" id="modalNotaValor" min="1" max="10" step="0.25" placeholder="Ej: 8.50" required>
                     </div>
                 </div>
+                <div class="mb-2">
+                    <label class="form-label small fw-bold">Observación / Concepto Pedagógico</label>
+                    <input type="text" class="form-control" id="modalObservacion" placeholder="Ej: Excelente evolución conceptual">
+                </div>
+                <div id="modalNotaAlert" class="alert alert-danger py-2 small mt-2 d-none"></div>
             </div>
             <div class="modal-footer border-0">
                 <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary btn-sm rounded-pill" id="btnGuardarNota">Guardar Nota</button>
+                <button type="button" class="btn btn-primary btn-sm rounded-pill px-4" id="btnGuardarNota">Guardar en Base de Datos</button>
             </div>
         </div>
     </div>
@@ -373,75 +356,114 @@
         });
     });
 
-    // --- Ver calificaciones (placeholder — a completar en sprint siguiente) ---
-    function verCalificaciones(legajo) {
-        alert(`Calificaciones del alumno ${legajo} — funcionalidad en desarrollo.`);
-    }
+    // --- Cargar notas en el modal ---
+    window.abrirCargarNotaDirecta = function(idAlumno, nombreCompleto) {
+        const modalSelect = document.getElementById('modalAlumno');
+        if (modalSelect) modalSelect.value = idAlumno;
+        const modalEl = new bootstrap.Modal(document.getElementById('modalNota'));
+        modalEl.show();
+    };
 
-    // --- Guardar nota desde el modal de calificaciones ---
-    document.getElementById('btnGuardarNota').addEventListener('click', () => {
-        const alumno  = document.getElementById('modalAlumno').value;
-        const p1      = document.getElementById('modalParcial1').value;
-        const p2      = document.getElementById('modalParcial2').value;
-        const final   = document.getElementById('modalFinal').value;
+    // --- Guardar nota en PostgreSQL desde el modal de calificaciones ---
+    const btnGuardarNota = document.getElementById('btnGuardarNota');
+    if (btnGuardarNota) {
+        btnGuardarNota.addEventListener('click', async () => {
+            const id_alumno  = document.getElementById('modalAlumno')?.value;
+            const id_materia = document.getElementById('modalMateriaSelect')?.value;
+            const trimestre  = document.getElementById('modalTrimestre')?.value;
+            const notaVal    = document.getElementById('modalNotaValor')?.value;
+            const observacion = document.getElementById('modalObservacion')?.value.trim();
+            const alertEl    = document.getElementById('modalNotaAlert');
 
-        // Actualiza la fila correspondiente en la tabla de calificaciones
-        const filas = document.querySelectorAll('#tablaCalificaciones tr');
-        filas.forEach(fila => {
-            if (fila.querySelector('td:first-child')?.innerText === alumno) {
-                if (p1)    fila.cells[3].innerText = p1;
-                if (p2)    fila.cells[4].innerText = p2;
-                if (final) fila.cells[5].innerText = final;
-
-                // Recalcula el estado académico según el promedio de parciales
-                const promedio = ((+p1 || 0) + (+p2 || 0)) / 2;
-                const badge    = fila.cells[6].querySelector('.badge');
-                if (promedio >= 6) {
-                    badge.className = 'badge bg-success-subtle text-success border border-success-subtle';
-                    badge.innerText = 'Regular';
-                } else if (promedio >= 4) {
-                    badge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle';
-                    badge.innerText = 'Condicional';
-                } else {
-                    badge.className = 'badge bg-danger-subtle text-danger border border-danger-subtle';
-                    badge.innerText = 'Libre';
+            if (!id_alumno || !id_materia || !notaVal) {
+                if (alertEl) {
+                    alertEl.textContent = 'Por favor selecciona el alumno, materia e ingresa una nota válida.';
+                    alertEl.classList.remove('d-none');
                 }
+                return;
+            }
+
+            const nota = parseFloat(notaVal);
+            if (isNaN(nota) || nota < 1 || nota > 10) {
+                if (alertEl) {
+                    alertEl.textContent = 'La calificación debe ser un valor entre 1.00 y 10.00.';
+                    alertEl.classList.remove('d-none');
+                }
+                return;
+            }
+
+            btnGuardarNota.disabled = true;
+            btnGuardarNota.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
+
+            try {
+                const res = await fetch('http://localhost:3000/api/calificaciones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_alumno: parseInt(id_alumno, 10),
+                        id_materia: parseInt(id_materia, 10),
+                        trimestre: parseInt(trimestre, 10),
+                        nota,
+                        observacion
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.error || 'Error al guardar calificación');
+                }
+
+                if (alertEl) alertEl.classList.add('d-none');
+                bootstrap.Modal.getInstance(document.getElementById('modalNota')).hide();
+
+                // Recargar tabla de calificaciones
+                if (window.recargarCalificacionesDocente) {
+                    await window.recargarCalificacionesDocente();
+                }
+
+                alert('✅ Calificación guardada exitosamente en PostgreSQL!');
+            } catch (err) {
+                console.error(err);
+                if (alertEl) {
+                    alertEl.textContent = 'No se pudo guardar: ' + err.message;
+                    alertEl.classList.remove('d-none');
+                }
+            } finally {
+                btnGuardarNota.disabled = false;
+                btnGuardarNota.innerHTML = 'Guardar en Base de Datos';
             }
         });
-
-        bootstrap.Modal.getInstance(document.getElementById('modalNota')).hide();
-    });
+    }
 </script>
 
-<!-- Script module: carga las materias asignadas desde el módulo compartido -->
+<!-- Script module: carga las materias asignadas desde PostgreSQL -->
 <script type="module">
     // Importar las funciones necesarias del módulo de asignación de HU-04
     import {
+        sincronizarConServidor,
         getDocentes,
         getMateriasCompletasPorDocente,
         getCargaHorariaDocente
     } from '../js/asignacion-materias.js';
 
-    /**
-     * Busca el docente en el catálogo del módulo cuyo nombre coincida
-     * con el usuario de sesión (enfoque híbrido: localStorage de sesión
-     * no tiene el ID del catálogo, así que matcheamos por nombre).
-     * En una integración real con API, se usaría el ID de usuario.
-     */
     function encontrarDocenteDeSession() {
         const usuarioSesion = JSON.parse(localStorage.getItem('usuario'));
         if (!usuarioSesion) return null;
 
         const docentes = getDocentes();
-        // Buscar por coincidencia de nombre (case-insensitive)
+        // Buscar por email o coincidencia de nombre
         return docentes.find(d =>
-            usuarioSesion.nombre?.toLowerCase().includes(d.nombre.toLowerCase()) ||
-            usuarioSesion.nombre?.toLowerCase().includes(d.apellido.toLowerCase())
-        ) || docentes[0]; // fallback: primer docente del catálogo para demo
+            (usuarioSesion.email && d.email && d.email.toLowerCase() === usuarioSesion.email.toLowerCase()) ||
+            (usuarioSesion.nombre && d.nombre && usuarioSesion.nombre.toLowerCase().includes(d.nombre.toLowerCase())) ||
+            (usuarioSesion.apellido && d.apellido && usuarioSesion.apellido.toLowerCase().includes(d.apellido.toLowerCase()))
+        ) || docentes[0];
     }
 
-    /** Renderiza la tabla de materias asignadas con los datos reales del módulo. */
-    function cargarMateriasAsignadas() {
+    /** Renderiza la tabla de materias asignadas con los datos reales de PostgreSQL. */
+    async function cargarMateriasAsignadas() {
+        // Sincronizar datos frescos desde la API REST y PostgreSQL
+        await sincronizarConServidor();
+
         const docente = encontrarDocenteDeSession();
         if (!docente) return;
 
@@ -451,17 +473,22 @@
         const tbody    = document.getElementById('tablaMaterias');
 
         // Actualizar datos del perfil lateral
-        document.getElementById('perfilLegajo').textContent        = docente.legajo;
-        document.getElementById('perfilCantMaterias').textContent  = materias.length;
-        document.getElementById('perfilCargaHoraria').textContent  = `${carga.horasUsadas} h`;
+        const legajoEl = document.getElementById('perfilLegajo');
+        const cantEl   = document.getElementById('perfilCantMaterias');
+        const cargaEl  = document.getElementById('perfilCargaHoraria');
+
+        if (legajoEl) legajoEl.textContent = docente.legajo;
+        if (cantEl)   cantEl.textContent   = materias.length;
+        if (cargaEl)  cargaEl.textContent  = `${carga.horasUsadas} h`;
+
+        if (!tbody) return;
 
         if (!materias.length) {
-            // Sin materias asignadas: mostrar mensaje informativo
             tbody.innerHTML = `
                 <tr>
                     <td colspan="5" class="text-center py-4">
                         <span class="material-symbols-outlined text-muted d-block mb-1" style="font-size:2rem">assignment_late</span>
-                        <span class="text-muted fst-italic small">No tenés materias asignadas aún. El área administrativa las cargará en breve.</span>
+                        <span class="text-muted fst-italic small">No tenés materias asignadas aún en la base de datos. El área administrativa las cargará en breve.</span>
                     </td>
                 </tr>`;
             return;
@@ -469,18 +496,120 @@
 
         // Generar una fila por cada materia asignada
         tbody.innerHTML = materias.map(m => {
-            const nivelBadge = m.nivel === 'primaria'
-                ? '<span class="badge bg-info-subtle text-info">Primaria</span>'
-                : '<span class="badge bg-secondary-subtle text-secondary">Secundaria</span>';
+            const nivelBadge = m.nivel === 'inicial'
+                ? '<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Inicial</span>'
+                : m.nivel === 'primaria'
+                    ? '<span class="badge bg-info-subtle text-info">Primaria</span>'
+                    : '<span class="badge bg-secondary-subtle text-secondary">Secundaria</span>';
 
             return `<tr>
                 <td><code>${m.codigo}</code></td>
                 <td class="fw-bold">${m.nombre} ${nivelBadge}</td>
                 <td>${m.cargaHoraria} Horas</td>
-                <td>—</td>
+                <td>Ciclo ${m.cicloLectivo || 2027}</td>
                 <td><span class="badge bg-success-subtle text-success border border-success-subtle">Activa</span></td>
             </tr>`;
         }).join('');
+
+        // Cargar alumnos reales vinculados desde PostgreSQL y poblar modal
+        try {
+            const resAl = await fetch('http://localhost:3000/api/alumnos');
+            const dataAl = await resAl.json();
+            const tablaAlumnos = document.getElementById('tablaAlumnos');
+            const filtroMateria = document.getElementById('filtroMateria');
+            const modalAlumno = document.getElementById('modalAlumno');
+            const modalMateriaSelect = document.getElementById('modalMateriaSelect');
+
+            if (modalMateriaSelect && materias.length > 0) {
+                modalMateriaSelect.innerHTML = materias.map(m => `
+                    <option value="${m.id}">${m.nombre} (${m.codigo})</option>
+                `).join('');
+            }
+
+            if (dataAl.ok && Array.isArray(dataAl.data)) {
+                if (modalAlumno) {
+                    modalAlumno.innerHTML = '<option value="">-- Seleccionar Estudiante --</option>' +
+                        dataAl.data.map(a => `
+                            <option value="${a.id}">
+                                ${a.apellido}, ${a.nombre} (${a.curso || 'Sin curso'}${a.edad ? ' • ' + a.edad + ' años' : ''})
+                            </option>
+                        `).join('');
+                }
+
+                if (filtroMateria) {
+                    filtroMateria.innerHTML = '<option value="">Todos los cursos y alumnos</option>' +
+                        materias.map(m => `<option value="${m.codigo}">${m.nombre}</option>`).join('');
+                }
+
+                if (tablaAlumnos) {
+                    if (dataAl.data.length === 0) {
+                        tablaAlumnos.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No hay alumnos registrados actualmente.</td></tr>';
+                    } else {
+                        tablaAlumnos.innerHTML = dataAl.data.map(a => `
+                            <tr>
+                                <td><code>${a.legajo}</code></td>
+                                <td class="fw-bold">
+                                    ${a.apellido}, ${a.nombre}
+                                    ${(a.edad || a.genero) ? `<div class="text-secondary small fw-normal" style="font-size:11px;"><span class="material-symbols-outlined align-middle" style="font-size:12px;">person</span> ${a.edad ? a.edad + ' años' : ''} ${a.edad && a.genero ? '•' : ''} ${a.genero || ''}</div>` : ''}
+                                </td>
+                                <td>${a.curso || 'Sin curso'} <small class="text-muted d-block" style="font-size:11px;">${a.ciclo || a.nivel || ''}</small></td>
+                                <td><span class="badge bg-success-subtle text-success border border-success-subtle">${a.estado || 'Regular'}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="window.abrirCargarNotaDirecta(${a.id}, '${a.nombre} ${a.apellido}')">
+                                        <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">grading</span> Calificar
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
+                }
+
+                // Cargar tabla de calificaciones
+                window.recargarCalificacionesDocente = async function() {
+                    const tbodyCal = document.getElementById('tablaCalificaciones');
+                    if (!tbodyCal) return;
+
+                    try {
+                        const boletines = await Promise.all(
+                            dataAl.data.map(async al => {
+                                const r = await fetch(`http://localhost:3000/api/alumnos/${al.id}/calificaciones`);
+                                const d = await r.json();
+                                return { al, boletin: (d.ok && d.data) ? d.data.boletin : [] };
+                            })
+                        );
+
+                        const filas = [];
+                        boletines.forEach(({ al, boletin }) => {
+                            boletin.forEach(m => {
+                                filas.push(`
+                                    <tr>
+                                        <td class="text-start ps-3"><code>${al.legajo}</code></td>
+                                        <td class="text-start fw-bold">${al.apellido}, ${al.nombre}</td>
+                                        <td><small class="text-muted">${al.edad ? al.edad + 'a' : '-'} • ${al.genero || '-'}</small></td>
+                                        <td class="text-start">${m.materia}</td>
+                                        <td>${m.trimestre_1 !== null ? Number(m.trimestre_1).toFixed(2) : '-'}</td>
+                                        <td>${m.trimestre_2 !== null ? Number(m.trimestre_2).toFixed(2) : '-'}</td>
+                                        <td>${m.trimestre_3 !== null ? Number(m.trimestre_3).toFixed(2) : '-'}</td>
+                                        <td class="fw-bold ${m.promedio >= 7 ? 'text-success' : 'text-primary'}">${m.promedio !== null ? Number(m.promedio).toFixed(2) : '-'}</td>
+                                        <td><span class="badge ${m.estado === 'Promocionado' ? 'bg-success-subtle text-success border' : 'bg-primary-subtle text-primary border'}">${m.estado}</span></td>
+                                    </tr>
+                                `);
+                            });
+                        });
+
+                        tbodyCal.innerHTML = filas.length > 0
+                            ? filas.join('')
+                            : '<tr><td colspan="9" class="text-center text-muted py-3">No hay calificaciones registradas aún.</td></tr>';
+                    } catch (err) {
+                        console.error('Error al recargar calificaciones docente:', err);
+                    }
+                };
+
+                await window.recargarCalificacionesDocente();
+            }
+        } catch (err) {
+            console.warn('No se pudo cargar la lista de alumnos en el dashboard docente:', err);
+        }
     }
 
     // Ejecutar la carga cuando el DOM esté listo

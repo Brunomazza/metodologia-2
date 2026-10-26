@@ -58,7 +58,7 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="asignacion-docentes.html">
-                        <span class="material-symbols-outlined me-2">menu_book</span> Oferta Académica
+                        <span class="material-symbols-outlined me-2">menu_book</span> Asignación Materias
                     </a>
                 </li>
                 <li class="nav-item mt-3 border-top border-white border-opacity-10 pt-3">
@@ -130,6 +130,23 @@
                                     </div>
                                 </div>
 
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold small text-secondary">Edad</label>
+                                        <input type="number" id="edad" class="form-control form-control-sm" placeholder="Ej: 15" min="2" max="100">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold small text-secondary">Género</label>
+                                        <select id="genero" class="form-select form-select-sm">
+                                            <option value="">Seleccionar género</option>
+                                            <option value="Femenino">Femenino</option>
+                                            <option value="Masculino">Masculino</option>
+                                            <option value="Otro">Otro / No binario</option>
+                                            <option value="Prefiero no decir">Prefiero no decir</option>
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <div class="mb-3">
                                     <label class="form-label fw-bold small text-secondary">Rol del Usuario *</label>
                                     <div class="row g-2">
@@ -157,20 +174,69 @@
                                     </div>
                                 </div>
 
-                                <div id="nivelContainer" class="mb-4">
+                                <div id="nivelContainer" class="mb-3">
                                     <label class="form-label fw-bold small text-secondary">Nivel Académico *</label>
                                     <div class="row g-2">
-                                        <div class="col-6">
+                                        <div class="col-4">
+                                            <input type="radio" class="btn-check" name="nivel" id="nivelInicial" value="inicial">
+                                            <label class="btn btn-outline-info w-100 text-center py-2 role-card" for="nivelInicial">
+                                                <span class="small fw-bold">Inicial (Jardín)</span>
+                                            </label>
+                                        </div>
+                                        <div class="col-4">
                                             <input type="radio" class="btn-check" name="nivel" id="nivelPrimaria" value="primaria" checked>
                                             <label class="btn btn-outline-info w-100 text-center py-2 role-card" for="nivelPrimaria">
                                                 <span class="small fw-bold">Primario</span>
                                             </label>
                                         </div>
-                                        <div class="col-6">
+                                        <div class="col-4">
                                             <input type="radio" class="btn-check" name="nivel" id="nivelSecundaria" value="secundaria">
                                             <label class="btn btn-outline-info w-100 text-center py-2 role-card" for="nivelSecundaria">
                                                 <span class="small fw-bold">Secundario</span>
                                             </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ASIGNACIÓN DE CURSO ESPECÍFICO PARA ALUMNOS (Ciclos y Grados) -->
+                                <div id="cursoContainer" class="mb-3">
+                                    <label class="form-label fw-bold small text-secondary d-flex align-items-center gap-1">
+                                        <span class="material-symbols-outlined fs-6 text-primary">school</span>
+                                        Curso / Grado Escolar *
+                                    </label>
+                                    <select id="selectCurso" class="form-select form-select-sm">
+                                        <option value="">-- Seleccionar Curso --</option>
+                                    </select>
+                                    <div id="cursoDetalleInfo" class="mt-1 small text-muted d-none" style="font-size:0.75rem;"></div>
+                                </div>
+
+                                <!-- ASIGNACIÓN DE TUTOR / PADRE PARA ALUMNOS (REGLA DE NEGOCIO OBLIGATORIA) -->
+                                <div id="tutorContainer" class="mb-3 p-3 border rounded-4 bg-light bg-opacity-75">
+                                    <label class="form-label fw-bold small text-secondary d-flex align-items-center gap-1 mb-2">
+                                        <span class="material-symbols-outlined fs-6 text-primary">family_restroom</span>
+                                        Padre / Tutor Responsable *
+                                    </label>
+                                    <select id="selectTutor" class="form-select form-select-sm mb-2">
+                                        <option value="">-- Seleccionar Tutor Registrado --</option>
+                                        <option value="nuevo">+ Registrar Nuevo Tutor con este Alumno</option>
+                                    </select>
+                                    <div id="datosNuevoTutor" class="d-none pt-2 border-top">
+                                        <p class="small text-muted mb-2 fw-medium">Datos del nuevo tutor:</p>
+                                        <div class="row g-2 mb-2">
+                                            <div class="col-6">
+                                                <input type="text" id="tutorNombre" class="form-control form-control-sm" placeholder="Nombre tutor">
+                                            </div>
+                                            <div class="col-6">
+                                                <input type="text" id="tutorApellido" class="form-control form-control-sm" placeholder="Apellido tutor">
+                                            </div>
+                                        </div>
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <input type="text" id="tutorDni" class="form-control form-control-sm" placeholder="DNI tutor">
+                                            </div>
+                                            <div class="col-6">
+                                                <input type="text" id="tutorTelefono" class="form-control form-control-sm" placeholder="Teléfono tutor">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -313,6 +379,9 @@
                 <td class="ps-3 py-3">
                     <div class="fw-bold text-dark">${u.nombre || 'Sin nombre'} ${u.apellido || ''}</div>
                     <small class="text-muted">DNI: ${u.dni || 'S/D'} • ${u.email || ''}</small>
+                    ${(u.edad || u.genero) ? `<div class="text-secondary small mt-1" style="font-size:0.75rem;"><span class="material-symbols-outlined align-middle" style="font-size:13px;">person</span> ${u.edad ? u.edad + ' años' : ''} ${u.edad && u.genero ? '•' : ''} ${u.genero || ''}</div>` : ''}
+                    ${u.curso ? `<div class="mt-1"><span class="badge bg-primary-subtle text-primary border border-primary-subtle"><span class="material-symbols-outlined align-middle" style="font-size:13px;">school</span> ${u.curso}${u.ciclo ? ' • ' + u.ciclo : ''}</span></div>` : ''}
+                    ${u.tutorNombre ? `<div class="mt-1"><span class="badge bg-light text-primary border"><span class="material-symbols-outlined align-middle" style="font-size:13px;">family_restroom</span> Tutor: ${u.tutorNombre}</span></div>` : ''}
                 </td>
                 <td><span class="badge rounded-pill ${badgeRolClase} border">${rolTexto}</span></td>
                 <td><small class="text-secondary fw-medium">${nivelTexto}</small></td>
@@ -326,6 +395,95 @@
                 </td>
             `;
             tabla.appendChild(tr);
+        });
+    }
+
+    // Cargar tutores registrados para el select
+    async function cargarTutores() {
+        const select = document.getElementById('selectTutor');
+        if (!select) return;
+        try {
+            const res = await fetch('http://localhost:3000/api/tutores');
+            const data = await res.json();
+            select.innerHTML = '<option value="">-- Seleccionar Tutor Registrado --</option><option value="nuevo">+ Registrar Nuevo Tutor con este Alumno</option>';
+            if (data.ok && Array.isArray(data.data)) {
+                data.data.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id_tutor;
+                    opt.textContent = `${t.nombre} ${t.apellido} (DNI ${t.dni}) - ${t.hijosACargo} a cargo`;
+                    select.appendChild(opt);
+                });
+            }
+        } catch (e) {
+            console.warn('No se pudo cargar la lista de tutores:', e);
+        }
+    }
+
+    // Cargar catálogo de cursos desde PostgreSQL
+    let cursosCache = [];
+    async function cargarCursos() {
+        try {
+            const res = await fetch('http://localhost:3000/api/cursos');
+            const data = await res.json();
+            if (data.ok && Array.isArray(data.data)) {
+                cursosCache = data.data;
+                actualizarSelectCursos();
+            }
+        } catch (e) {
+            console.warn('No se pudo cargar la lista de cursos:', e);
+        }
+    }
+
+    // Actualiza las opciones del desplegable de cursos según el nivel seleccionado
+    function actualizarSelectCursos() {
+        const select = document.getElementById('selectCurso');
+        const detalle = document.getElementById('cursoDetalleInfo');
+        if (!select) return;
+
+        const nivelSeleccionado = document.querySelector('input[name="nivel"]:checked')?.value || 'primaria';
+        const nivelId = nivelSeleccionado === 'inicial' ? 1 : nivelSeleccionado === 'primaria' ? 2 : 3;
+
+        const filtrados = cursosCache.filter(c => Number(c.id_nivel) === nivelId);
+        select.innerHTML = '<option value="">-- Seleccionar Curso / Grado --</option>';
+
+        filtrados.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id_curso;
+            const cicloTexto = c.ciclo ? ` • ${c.ciclo}` : '';
+            opt.textContent = `${c.nombre} (${c.nivel}${cicloTexto}) — ${c.total_materias} materias`;
+            select.appendChild(opt);
+        });
+
+        if (detalle) detalle.classList.add('d-none');
+    }
+
+    // Mostrar detalle del curso seleccionado (materias y ciclo)
+    const selectCursoEl = document.getElementById('selectCurso');
+    if (selectCursoEl) {
+        selectCursoEl.addEventListener('change', (e) => {
+            const detalle = document.getElementById('cursoDetalleInfo');
+            if (!detalle) return;
+            const cursoId = Number(e.target.value);
+            const curso = cursosCache.find(c => Number(c.id_curso) === cursoId);
+            if (curso) {
+                detalle.classList.remove('d-none');
+                detalle.innerHTML = `<span class="badge bg-light text-primary border me-1">${curso.ciclo || curso.nivel}</span> Plan oficial: <strong>${curso.total_materias} materias</strong> vinculadas.`;
+            } else {
+                detalle.classList.add('d-none');
+            }
+        });
+    }
+
+    // Mostrar/ocultar campos de nuevo tutor
+    const selectTutorEl = document.getElementById('selectTutor');
+    if (selectTutorEl) {
+        selectTutorEl.addEventListener('change', (e) => {
+            const divNuevo = document.getElementById('datosNuevoTutor');
+            if (e.target.value === 'nuevo') {
+                divNuevo.classList.remove('d-none');
+            } else {
+                divNuevo.classList.add('d-none');
+            }
         });
     }
 
@@ -345,6 +503,7 @@
             listaUsuariosCache = [];
             const busquedaActual = document.getElementById('inputBuscarUsuario')?.value || '';
             await renderizarTablaUsuarios(busquedaActual);
+            await cargarTutores();
         } catch (e) {
             console.error(e);
             mostrarAlerta('No se pudo eliminar el usuario: ' + e.message, 'danger');
@@ -362,13 +521,33 @@
         }, 4000);
     }
 
-    // Toggle de contenedor nivel si es tutor
+    // Toggle de contenedores según rol
     document.querySelectorAll('input[name="rol"]').forEach(radio => {
         radio.addEventListener('change', () => {
             const nivelCont = document.getElementById('nivelContainer');
-            if (nivelCont) {
-                nivelCont.style.display = radio.value === 'familia' ? 'none' : 'block';
+            const cursoCont = document.getElementById('cursoContainer');
+            const tutorCont = document.getElementById('tutorContainer');
+            if (radio.value === 'alumno') {
+                if (nivelCont) nivelCont.style.display = 'block';
+                if (cursoCont) cursoCont.style.display = 'block';
+                if (tutorCont) tutorCont.style.display = 'block';
+                actualizarSelectCursos();
+            } else if (radio.value === 'docente') {
+                if (nivelCont) nivelCont.style.display = 'block';
+                if (cursoCont) cursoCont.style.display = 'none';
+                if (tutorCont) tutorCont.style.display = 'none';
+            } else if (radio.value === 'familia') {
+                if (nivelCont) nivelCont.style.display = 'none';
+                if (cursoCont) cursoCont.style.display = 'none';
+                if (tutorCont) tutorCont.style.display = 'none';
             }
+        });
+    });
+
+    // Actualizar cursos al cambiar el nivel seleccionado
+    document.querySelectorAll('input[name="nivel"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            actualizarSelectCursos();
         });
     });
 
@@ -382,6 +561,9 @@
             const apellido = document.getElementById('apellido').value.trim();
             const dni = document.getElementById('dni').value.trim();
             const password = document.getElementById('password').value;
+            const edadInput = document.getElementById('edad')?.value;
+            const edad = edadInput ? parseInt(edadInput, 10) : null;
+            const genero = document.getElementById('genero')?.value || null;
             const rol = document.querySelector('input[name="rol"]:checked')?.value || 'alumno';
             const nivel = rol === 'familia' ? null : (document.querySelector('input[name="nivel"]:checked')?.value || 'primaria');
 
@@ -398,19 +580,66 @@
                 return;
             }
 
+            // Validación de regla de negocio: Alumno requiere Padre/Tutor y Curso
+            let id_curso = null;
+            let id_tutor = null;
+            let tutor_dni = null;
+            let tutor_nombre = null;
+            let tutor_apellido = null;
+            let tutor_telefono = null;
+
+            if (rol === 'alumno') {
+                const selectCurso = document.getElementById('selectCurso');
+                const valCurso = selectCurso ? selectCurso.value : '';
+                if (!valCurso) {
+                    mostrarAlerta('Por favor selecciona el curso / grado al que asistirá el alumno.', 'warning');
+                    return;
+                }
+                id_curso = parseInt(valCurso, 10);
+
+                const selectTutor = document.getElementById('selectTutor');
+                const valTutor = selectTutor ? selectTutor.value : '';
+
+                if (!valTutor) {
+                    mostrarAlerta('Todo alumno debe tener un padre/tutor responsable. Selecciona uno o elige "+ Registrar Nuevo Tutor".', 'warning');
+                    return;
+                }
+
+                if (valTutor === 'nuevo') {
+                    tutor_nombre = document.getElementById('tutorNombre')?.value.trim();
+                    tutor_apellido = document.getElementById('tutorApellido')?.value.trim();
+                    tutor_dni = document.getElementById('tutorDni')?.value.trim();
+                    tutor_telefono = document.getElementById('tutorTelefono')?.value.trim();
+
+                    if (!tutor_nombre || !tutor_apellido || !tutor_dni) {
+                        mostrarAlerta('Por favor completa Nombre, Apellido y DNI del nuevo tutor.', 'warning');
+                        return;
+                    }
+                } else {
+                    id_tutor = parseInt(valTutor, 10);
+                }
+            }
+
             const btnCrear = document.getElementById('btnCrear');
             btnCrear.disabled = true;
             btnCrear.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Registrando en BD...';
 
             try {
                 const token = localStorage.getItem('token');
+                const payload = {
+                    nombre, apellido, dni, password, rol, nivel,
+                    edad, genero,
+                    id_curso,
+                    id_tutor, tutor_dni, tutor_nombre, tutor_apellido, tutor_telefono
+                };
+
                 const res = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': token ? `Bearer ${token}` : ''
                     },
-                    body: JSON.stringify({ nombre, apellido, dni, password, rol, nivel })
+                    body: JSON.stringify(payload)
                 });
 
                 const data = await res.json();
@@ -419,12 +648,21 @@
                 }
 
                 formCrear.reset();
+                document.getElementById('datosNuevoTutor')?.classList.add('d-none');
+                document.getElementById('cursoDetalleInfo')?.classList.add('d-none');
                 const nivelCont = document.getElementById('nivelContainer');
                 if (nivelCont) nivelCont.style.display = 'block';
+                const cursoCont = document.getElementById('cursoContainer');
+                if (cursoCont) cursoCont.style.display = 'block';
+                const tutorCont = document.getElementById('tutorContainer');
+                if (tutorCont) tutorCont.style.display = 'block';
+                actualizarSelectCursos();
 
                 mostrarAlerta(`¡Usuario ${nombre} ${apellido} registrado con éxito en PostgreSQL!`, 'success');
                 listaUsuariosCache = [];
                 await renderizarTablaUsuarios(document.getElementById('inputBuscarUsuario')?.value || '');
+                await cargarTutores();
+                await cargarCursos();
             } catch (err) {
                 console.error(err);
                 mostrarAlerta(err.message || 'Error al conectar con el servidor', 'danger');
@@ -445,6 +683,8 @@
 
     // Render inicial al cargar la página
     renderizarTablaUsuarios();
+    cargarTutores();
+    cargarCursos();
 </script>
 </body>
 </html>

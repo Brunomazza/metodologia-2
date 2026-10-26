@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -76,9 +76,12 @@
                         <span class="material-symbols-outlined display-4">face_4</span>
                     </div>
                     <div>
-                        <h1 class="h3 fw-bold mb-1">Sofía Fernández</h1>
-                        <p class="text-muted mb-1">2do Año - Ciclo Básico Secundario</p>
-                        <span class="badge bg-success">Alumna Regular</span>
+                        <h1 class="h3 fw-bold mb-1">Sofía González</h1>
+                        <p class="text-muted mb-1">
+                            <span>1° Año — Ciclo Básico Secundario</span>
+                            <span class="badge bg-light text-primary border ms-2">15 años • Femenino</span>
+                        </p>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">Alumna Regular</span>
                     </div>
                 </header>
 
@@ -86,20 +89,32 @@
                 <div class="row g-4">
                     <div class="col-lg-8 dash-reveal delay-100">
                         <div class="card card-dash p-4 bg-white border-0 shadow-sm h-100">
-                            <h5 class="fw-bold text-dark mb-4 d-flex align-items-center gap-2">
-                                <span class="material-symbols-outlined text-primary">menu_book</span> Rendimiento Académico
-                            </h5>
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary">menu_book</span> Rendimiento Académico Oficial
+                                </h5>
+                                <a href="calificaciones.html" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                    <span class="material-symbols-outlined align-middle fs-6 me-1">visibility</span> Ver Boletín Completo
+                                </a>
+                            </div>
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle">
                                     <thead class="table-light">
-                                        <tr><th>Asignatura</th><th>Nota 1° Trim.</th><th>Estado</th></tr>
+                                        <tr>
+                                            <th>Asignatura</th>
+                                            <th>1° Trim</th>
+                                            <th>2° Trim</th>
+                                            <th>Promedio</th>
+                                            <th>Estado</th>
+                                        </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr><td class="fw-bold">Lengua y Literatura</td><td>8.50</td><td><span class="badge bg-success-subtle text-success border border-success-subtle">Regular</span></td></tr>
-                                        <tr><td class="fw-bold">Matemática</td><td>9.00</td><td><span class="badge bg-success-subtle text-success border border-success-subtle">Regular</span></td></tr>
-                                        <tr><td class="fw-bold">Biología</td><td>7.50</td><td><span class="badge bg-success-subtle text-success border border-success-subtle">Regular</span></td></tr>
-                                        <tr><td class="fw-bold">Geografía</td><td>8.00</td><td><span class="badge bg-success-subtle text-success border border-success-subtle">Regular</span></td></tr>
-                                        <tr><td class="fw-bold text-primary">Educación Tecnológica</td><td>10.00</td><td><span class="badge bg-success-subtle text-success border border-success-subtle">Sobresaliente</span></td></tr>
+                                    <tbody id="tablaRendimientoSofia">
+                                        <tr>
+                                            <td colspan="5" class="text-center py-3 text-muted">
+                                                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                                Cargando materias desde la base de datos...
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -209,7 +224,8 @@ import {
     DEPORTES_CATALOGO, RUTAS_CATALOGO,
     getDeportesAlumno, getRutaAlumno,
     inscribirDeporte, desinscribirDeporte,
-    asignarTransporte, quitarTransporte
+    asignarTransporte, quitarTransporte,
+    sincronizarServiciosAlumno
 } from '../js/servicios-escolares.js';
 
 const ALUMNO_ID = 'sofia';
@@ -239,6 +255,7 @@ function renderDeportesActivos() {
     }
     container.innerHTML = actuales.map(id => {
         const d = DEPORTES_CATALOGO.find(x => x.id === id);
+        if (!d) return '';
         return `<div class="d-flex align-items-center gap-3 mb-3 p-2 bg-light rounded-4">
             <div class="sport-badge-icon bg-${d.color} text-white">
                 <span class="material-symbols-outlined">${d.icono}</span>
@@ -349,31 +366,63 @@ function renderCatalogoTransporte() {
         : '';
 }
 
-window._handleDeporteSofia = function(deporteId, estaInscripto) {
+window._handleDeporteSofia = async function(deporteId, estaInscripto) {
     const resultado = estaInscripto
-        ? desinscribirDeporte(ALUMNO_ID, deporteId)
-        : inscribirDeporte(ALUMNO_ID, deporteId);
+        ? await desinscribirDeporte(ALUMNO_ID, deporteId)
+        : await inscribirDeporte(ALUMNO_ID, deporteId);
     mostrarToast(resultado.mensaje, resultado.ok ? 'success' : 'danger');
     if (resultado.ok) { renderDeportesActivos(); renderCatalogoDeportes(); }
 };
 
-window._handleRutaSofia = function(rutaId) {
-    const resultado = asignarTransporte(ALUMNO_ID, rutaId);
+window._handleRutaSofia = async function(rutaId) {
+    const resultado = await asignarTransporte(ALUMNO_ID, rutaId);
     mostrarToast(resultado.mensaje, resultado.ok ? 'success' : 'danger');
     if (resultado.ok) { renderTransporteActivo(); renderCatalogoTransporte(); }
 };
 
-window._quitarRutaSofia = function() {
-    const resultado = quitarTransporte(ALUMNO_ID);
-    mostrarToast(resultado.mensaje, 'warning');
-    renderTransporteActivo();
-    renderCatalogoTransporte();
+window._quitarRutaSofia = async function() {
+    const resultado = await quitarTransporte(ALUMNO_ID);
+    mostrarToast(resultado.mensaje, resultado.ok ? 'warning' : 'danger');
+    if (resultado.ok) { renderTransporteActivo(); renderCatalogoTransporte(); }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await sincronizarServiciosAlumno(ALUMNO_ID);
     renderDeportesActivos();
     renderTransporteActivo();
+    cargarRendimientoAcademicoSofia();
 });
+
+async function cargarRendimientoAcademicoSofia() {
+    const tbody = document.getElementById('tablaRendimientoSofia');
+    if (!tbody) return;
+    try {
+        const res = await fetch(`http://localhost:3000/api/alumnos/${ALUMNO_ID}/calificaciones`);
+        const data = await res.json();
+        if (data.ok && data.data && Array.isArray(data.data.boletin)) {
+            const b = data.data.boletin;
+            if (b.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No hay materias asignadas.</td></tr>';
+            } else {
+                tbody.innerHTML = b.map(m => `
+                    <tr>
+                        <td class="fw-bold text-dark">${m.materia}</td>
+                        <td>${m.trimestre_1 !== null ? Number(m.trimestre_1).toFixed(2) : '-'}</td>
+                        <td>${m.trimestre_2 !== null ? Number(m.trimestre_2).toFixed(2) : '-'}</td>
+                        <td class="fw-bold ${m.promedio >= 7 ? 'text-success' : 'text-primary'}">${m.promedio !== null ? Number(m.promedio).toFixed(2) : '-'}</td>
+                        <td>
+                            <span class="badge ${m.estado === 'Promocionado' ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-primary-subtle text-primary border border-primary-subtle'}">
+                                ${m.estado}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+    } catch (e) {
+        console.warn('Error cargando notas de Sofía:', e);
+    }
+}
 
 document.getElementById('modalDeportesSofia').addEventListener('show.bs.modal', renderCatalogoDeportes);
 document.getElementById('modalTransporteSofia').addEventListener('show.bs.modal', renderCatalogoTransporte);

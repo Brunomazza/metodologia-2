@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -88,9 +88,12 @@
                         <span class="material-symbols-outlined display-4">face</span>
                     </div>
                     <div>
-                        <h1 class="h3 fw-bold mb-1">Tomás Fernández</h1>
-                        <p class="text-muted mb-1">4to Grado - Nivel Primario</p>
-                        <span class="badge bg-success">Alumno Regular</span>
+                        <h1 class="h3 fw-bold mb-1">Tomás González</h1>
+                        <p class="text-muted mb-1">
+                            <span id="txtTomasCurso">4° Grado — Segundo Ciclo Primario</span>
+                            <span class="badge bg-light text-primary border ms-2" id="txtTomasFicha">10 años • Masculino</span>
+                        </p>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">Alumno Regular</span>
                     </div>
                 </header>
 
@@ -98,19 +101,32 @@
                 <div class="row g-4">
                     <div class="col-lg-8 dash-reveal delay-100">
                         <div class="card card-dash p-4 bg-white border-0 shadow-sm h-100">
-                            <h5 class="fw-bold text-dark mb-4 d-flex align-items-center gap-2">
-                                <span class="material-symbols-outlined text-primary">menu_book</span> Rendimiento Académico
-                            </h5>
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary">menu_book</span> Rendimiento Académico Oficial
+                                </h5>
+                                <a href="calificaciones.html" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                    <span class="material-symbols-outlined align-middle fs-6 me-1">visibility</span> Ver Boletín Completo
+                                </a>
+                            </div>
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle">
                                     <thead class="table-light">
-                                        <tr><th>Asignatura</th><th>Estado</th><th>Concepto</th></tr>
+                                        <tr>
+                                            <th>Asignatura</th>
+                                            <th>1° Trim</th>
+                                            <th>2° Trim</th>
+                                            <th>Promedio</th>
+                                            <th>Estado</th>
+                                        </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr><td class="fw-bold">Prácticas del Lenguaje</td><td><span class="badge bg-success-subtle text-success border border-success-subtle">Aprobado</span></td><td>Muy Bueno</td></tr>
-                                        <tr><td class="fw-bold">Matemática</td><td><span class="badge bg-success-subtle text-success border border-success-subtle">Aprobado</span></td><td>Excelente</td></tr>
-                                        <tr><td class="fw-bold">Ciencias Naturales y Soc.</td><td><span class="badge bg-success-subtle text-success border border-success-subtle">Aprobado</span></td><td>Bueno</td></tr>
-                                        <tr><td class="fw-bold text-primary">Inglés (Prep. Cambridge)</td><td><span class="badge bg-success-subtle text-success border border-success-subtle">Aprobado</span></td><td>Sobresaliente</td></tr>
+                                    <tbody id="tablaRendimientoTomas">
+                                        <tr>
+                                            <td colspan="5" class="text-center py-3 text-muted">
+                                                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                                Cargando materias desde la base de datos...
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -229,7 +245,8 @@ import {
     DEPORTES_CATALOGO, RUTAS_CATALOGO,
     getDeportesAlumno, getRutaAlumno,
     inscribirDeporte, desinscribirDeporte,
-    asignarTransporte, quitarTransporte
+    asignarTransporte, quitarTransporte,
+    sincronizarServiciosAlumno
 } from '../js/servicios-escolares.js';
 
 const ALUMNO_ID = 'tomas';
@@ -263,6 +280,7 @@ function renderDeportesActivos() {
     }
     container.innerHTML = actuales.map(id => {
         const d = DEPORTES_CATALOGO.find(x => x.id === id);
+        if (!d) return '';
         return `<div class="d-flex align-items-center gap-3 mb-3 p-2 bg-light rounded-4">
             <div class="sport-badge-icon bg-${d.color} text-white">
                 <span class="material-symbols-outlined">${d.icono}</span>
@@ -379,10 +397,10 @@ function renderCatalogoTransporte() {
 }
 
 // ── Handlers globales (llamados desde onclick inline) ─────────────────────────
-window._handleDeporte = function(deporteId, estaInscripto) {
+window._handleDeporte = async function(deporteId, estaInscripto) {
     const resultado = estaInscripto
-        ? desinscribirDeporte(ALUMNO_ID, deporteId)
-        : inscribirDeporte(ALUMNO_ID, deporteId);
+        ? await desinscribirDeporte(ALUMNO_ID, deporteId)
+        : await inscribirDeporte(ALUMNO_ID, deporteId);
     mostrarToast(resultado.mensaje, resultado.ok ? 'success' : 'danger');
     if (resultado.ok) {
         renderDeportesActivos();
@@ -390,8 +408,8 @@ window._handleDeporte = function(deporteId, estaInscripto) {
     }
 };
 
-window._handleRuta = function(rutaId) {
-    const resultado = asignarTransporte(ALUMNO_ID, rutaId);
+window._handleRuta = async function(rutaId) {
+    const resultado = await asignarTransporte(ALUMNO_ID, rutaId);
     mostrarToast(resultado.mensaje, resultado.ok ? 'success' : 'danger');
     if (resultado.ok) {
         renderTransporteActivo();
@@ -399,18 +417,53 @@ window._handleRuta = function(rutaId) {
     }
 };
 
-window._quitarRuta = function() {
-    const resultado = quitarTransporte(ALUMNO_ID);
-    mostrarToast(resultado.mensaje, 'warning');
-    renderTransporteActivo();
-    renderCatalogoTransporte();
+window._quitarRuta = async function() {
+    const resultado = await quitarTransporte(ALUMNO_ID);
+    mostrarToast(resultado.mensaje, resultado.ok ? 'warning' : 'danger');
+    if (resultado.ok) {
+        renderTransporteActivo();
+        renderCatalogoTransporte();
+    }
 };
 
 // ── Inicialización ────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await sincronizarServiciosAlumno(ALUMNO_ID);
     renderDeportesActivos();
     renderTransporteActivo();
+    cargarRendimientoAcademico();
 });
+
+async function cargarRendimientoAcademico() {
+    const tbody = document.getElementById('tablaRendimientoTomas');
+    if (!tbody) return;
+    try {
+        const res = await fetch(`http://localhost:3000/api/alumnos/${ALUMNO_ID}/calificaciones`);
+        const data = await res.json();
+        if (data.ok && data.data && Array.isArray(data.data.boletin)) {
+            const b = data.data.boletin;
+            if (b.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No hay materias asignadas.</td></tr>';
+            } else {
+                tbody.innerHTML = b.map(m => `
+                    <tr>
+                        <td class="fw-bold text-dark">${m.materia}</td>
+                        <td>${m.trimestre_1 !== null ? Number(m.trimestre_1).toFixed(2) : '-'}</td>
+                        <td>${m.trimestre_2 !== null ? Number(m.trimestre_2).toFixed(2) : '-'}</td>
+                        <td class="fw-bold ${m.promedio >= 7 ? 'text-success' : 'text-primary'}">${m.promedio !== null ? Number(m.promedio).toFixed(2) : '-'}</td>
+                        <td>
+                            <span class="badge ${m.estado === 'Promocionado' ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-primary-subtle text-primary border border-primary-subtle'}">
+                                ${m.estado}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+    } catch (e) {
+        console.warn('Error cargando notas de Tomás:', e);
+    }
+}
 
 document.getElementById('modalDeportes').addEventListener('show.bs.modal', renderCatalogoDeportes);
 document.getElementById('modalTransporte').addEventListener('show.bs.modal', renderCatalogoTransporte);

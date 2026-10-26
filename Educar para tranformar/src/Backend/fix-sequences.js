@@ -1,6 +1,12 @@
 const db = require('./db');
 
 async function fixSequences() {
+  await db.query(`
+    INSERT INTO deportes (id_deporte, nombre, id_nivel, dia_semana, hora_inicio, hora_fin, cupo_maximo, id_profesor)
+    VALUES (5, 'Atletismo', 2, 'Viernes', '14:00:00', '16:00:00', 25, 1)
+    ON CONFLICT (id_deporte) DO NOTHING;
+  `);
+
   const tablas = [
     { tabla: 'usuarios', col: 'id_usuario' },
     { tabla: 'alumnos', col: 'id_alumno' },

@@ -103,19 +103,45 @@
 
                         <div class="col-lg-4">
                             <div class="card card-dash p-4 bg-white shadow-sm border-0 h-100">
-                                <h6 class="text-muted text-uppercase small fw-bold mb-3">Información del Perfil</h6>
+                                <h6 class="text-muted text-uppercase small fw-bold mb-3">Ficha del Estudiante</h6>
                                 <div class="d-flex align-items-center gap-3 mb-3">
-                                    <span class="material-symbols-outlined display-6 text-primary">account_circle</span>
+                                    <div class="bg-primary-subtle text-primary rounded-circle p-2 d-flex align-items-center justify-content-center" style="width:52px;height:52px;">
+                                        <span class="material-symbols-outlined fs-2">school</span>
+                                    </div>
                                     <div>
                                         <h6 id="perfilNombreCompleto" class="fw-bold mb-0">Cargando...</h6>
-                                        <small id="perfilRol" class="text-muted">Nivel Académico</small>
+                                        <small id="perfilRol" class="text-muted">Estudiante</small>
                                     </div>
                                 </div>
                                 <hr class="text-muted my-3">
-                                <div class="d-flex justify-content-between small mb-2"><span>Legajo Activo:</span><span
-                                        class="fw-bold text-dark">A001</span></div>
-                                <div class="d-flex justify-content-between small"><span>Condición General:</span><span
-                                        class="badge bg-success">Regular</span></div>
+                                <div class="d-flex justify-content-between small mb-2">
+                                    <span class="text-muted">Legajo Activo:</span>
+                                    <span id="perfilLegajo" class="fw-bold text-dark">-</span>
+                                </div>
+                                <div class="d-flex justify-content-between small mb-2">
+                                    <span class="text-muted">Curso y División:</span>
+                                    <span id="perfilCurso" class="fw-bold text-primary">-</span>
+                                </div>
+                                <div class="d-flex justify-content-between small mb-2">
+                                    <span class="text-muted">Ciclo Formativo:</span>
+                                    <span id="perfilCiclo" class="text-secondary">-</span>
+                                </div>
+                                <div class="d-flex justify-content-between small mb-2">
+                                    <span class="text-muted">Edad:</span>
+                                    <span id="perfilEdad" class="fw-bold text-dark">-</span>
+                                </div>
+                                <div class="d-flex justify-content-between small mb-2">
+                                    <span class="text-muted">Género:</span>
+                                    <span id="perfilGenero" class="text-dark">-</span>
+                                </div>
+                                <div class="d-flex justify-content-between small mb-3">
+                                    <span class="text-muted">Tutor a Cargo:</span>
+                                    <span id="perfilTutor" class="fw-bold text-dark">-</span>
+                                </div>
+                                <div class="d-flex justify-content-between small align-items-center pt-2 border-top">
+                                    <span class="text-muted">Condición General:</span>
+                                    <span id="perfilCondicion" class="badge bg-success-subtle text-success border border-success-subtle">Regular</span>
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -126,19 +152,84 @@
 
     <script>
         // Seguridad y Control de sesión por LocalStorage
-        const usuario = JSON.parse(localStorage.getItem('usuario'));
+        const usuario = JSON.parse(localStorage.getItem('usuario')) || {
+            id: 6,
+            nombre: 'Tomás',
+            apellido: 'González',
+            rol: 'ESTUDIANTE',
+            edad: 10,
+            genero: 'Masculino'
+        };
+
         if (!usuario) {
             window.location.href = 'login.html';
         } else {
-            // Inyección dinámica del nombre del usuario logueado en todas las partes de la pantalla
             document.getElementById('txtBienvenida').innerText = `Bienvenido, ${usuario.nombre}`;
             document.getElementById('txtNombreSidebar').innerText = usuario.nombre;
-            document.getElementById('navNombreAlumno').innerText = usuario.nombre;
-            document.getElementById('perfilNombreCompleto').innerText = `${usuario.nombre}`;
-            document.getElementById('perfilRol').innerText = `Rol verificado: ${usuario.rol.toUpperCase()}`;
+            document.getElementById('navNombreAlumno').innerText = `${usuario.nombre} ${usuario.apellido || ''}`.trim();
+            document.getElementById('perfilNombreCompleto').innerText = `${usuario.nombre} ${usuario.apellido || ''}`.trim();
+            document.getElementById('perfilRol').innerText = `Estudiante Oficial • ${usuario.email || ''}`;
         }
 
-        document.getElementById('btnCerrarSesionTop').addEventListener('click', () => window.cerrarSesion());
+        async function cargarDatosEstudiante() {
+            try {
+                // 1. Obtener perfil de alumno por id_usuario
+                const resAl = await fetch(`http://localhost:3000/api/alumnos/${usuario.id}?byUser=true`);
+                const dataAl = await resAl.json();
+
+                let idAlumno = 1;
+                if (dataAl.ok && dataAl.data) {
+                    const al = dataAl.data;
+                    idAlumno = al.id_alumno;
+                    document.getElementById('perfilLegajo').innerText = al.legajo || 'S/D';
+                    document.getElementById('perfilCurso').innerText = `${al.curso || 'Sin curso'} '${al.division || 'A'}'`;
+                    document.getElementById('perfilCiclo').innerText = al.ciclo || al.nivel || 'General';
+                    document.getElementById('perfilEdad').innerText = al.edad ? `${al.edad} años` : 'S/D';
+                    document.getElementById('perfilGenero').innerText = al.genero || 'S/D';
+                    document.getElementById('perfilTutor').innerText = al.tutorNombre || 'Sin asignar';
+                    if (al.estado) {
+                        document.getElementById('perfilCondicion').innerText = al.estado;
+                    }
+                }
+
+                // 2. Obtener materias del plan de estudios de su curso
+                const resCal = await fetch(`http://localhost:3000/api/alumnos/${idAlumno}/calificaciones`);
+                const dataCal = await resCal.json();
+                const tbody = document.getElementById('tablaMateriasAlumno');
+
+                if (dataCal.ok && dataCal.data && Array.isArray(dataCal.data.boletin)) {
+                    const materias = dataCal.data.boletin;
+                    if (materias.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">No hay asignaturas asociadas a tu curso.</td></tr>';
+                    } else {
+                        tbody.innerHTML = materias.map(m => `
+                            <tr>
+                                <td><code>${m.codigo}</code></td>
+                                <td class="fw-bold">${m.materia}</td>
+                                <td>${m.carga_horaria || 4} Horas semanales</td>
+                                <td>
+                                    <span class="badge ${m.estado === 'Promocionado' ? 'bg-success-subtle text-success border border-success-subtle' : m.estado === 'En Riesgo' ? 'bg-danger-subtle text-danger border border-danger-subtle' : 'bg-primary-subtle text-primary border border-primary-subtle'}">
+                                        ${m.estado || 'Cursando Regular'}
+                                    </span>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
+                }
+            } catch (e) {
+                console.error('Error al cargar datos del alumno:', e);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', cargarDatosEstudiante);
+        document.getElementById('btnCerrarSesionTop').addEventListener('click', () => {
+            if (window.cerrarSesion) window.cerrarSesion();
+            else {
+                localStorage.removeItem('usuario');
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+        });
     </script>
 
     <script type="module" src="../js/auth-guard.js"></script>

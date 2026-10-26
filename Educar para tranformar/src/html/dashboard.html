@@ -25,8 +25,7 @@
                 <li class="nav-item"><a class="nav-link" href="#seccionNoticias"><span class="material-symbols-outlined me-2">campaign</span> Publicar Noticias</a></li>
                 <li class="nav-item"><a class="nav-link" href="admin-usuarios.html"><span class="material-symbols-outlined me-2">manage_accounts</span> Gestión Usuarios</a></li>
                 <li class="nav-item"><a class="nav-link" href="#"><span class="material-symbols-outlined me-2">group</span> Control Alumnos</a></li>
-                <li class="nav-item"><a class="nav-link" href="#"><span class="material-symbols-outlined me-2">badge</span> Legajos Docentes</a></li>
-                <li class="nav-item"><a class="nav-link" href="asignacion-docentes.html"><span class="material-symbols-outlined me-2">menu_book</span> Oferta Académica</a></li>
+                <li class="nav-item"><a class="nav-link" href="asignacion-docentes.html"><span class="material-symbols-outlined me-2">menu_book</span> Asignación Materias</a></li>
                 <li class="nav-item mt-3 border-top border-white border-opacity-10 pt-3">
                     <a class="nav-link" href="index.html">
                         <span class="material-symbols-outlined me-2">public</span> Ver Sitio Web
@@ -456,21 +455,30 @@
     // Inicializar listado al cargar
     renderizarTablaNoticias();
 
+    // Cargar métricas dinámicas desde PostgreSQL
+    async function cargarMetricasDashboard() {
+        try {
+            const res = await fetch('http://localhost:3000/api/dashboard');
+            const data = await res.json();
+            if(data.ok && data.data) {
+                if (document.getElementById('totalAlumnosAdmin')) {
+                    document.getElementById('totalAlumnosAdmin').innerText = data.data.alumnosActivos;
+                }
+                if (document.getElementById('totalDocentesAdmin')) {
+                    document.getElementById('totalDocentesAdmin').innerText = data.data.docentesRegistrados;
+                }
+            }
+        } catch (err) {
+            console.log('Usando datos estáticos de respaldo para el dashboard.');
+        }
+    }
+
+    cargarMetricasDashboard();
+
     // Botón refrescar
     const btnRefrescar = document.getElementById('btnRefrescarAdmin');
     if (btnRefrescar) {
-        btnRefrescar.addEventListener('click', async () => {
-            try {
-                const res = await fetch('http://localhost:3000/api/dashboard');
-                const data = await res.json();
-                if(data.ok) {
-                    document.getElementById('totalAlumnosAdmin').innerText = data.data.alumnosActivos;
-                    document.getElementById('totalDocentesAdmin').innerText = data.data.docentesRegistrados;
-                }
-            } catch (err) {
-                console.log('Usando datos estáticos de respaldo.');
-            }
-        });
+        btnRefrescar.addEventListener('click', cargarMetricasDashboard);
     }
 </script>
 
