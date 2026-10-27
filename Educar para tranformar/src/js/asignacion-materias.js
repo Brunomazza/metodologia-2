@@ -18,15 +18,17 @@ const MAX_HORAS_DOCENTE = 200;
 // Caché en memoria para acceso rápido y renderizado fluido
 let _docentes = [];
 let _materias = [];
+let _asignaciones = [];
 
 /**
- * Carga o refresca docentes y materias desde la base de datos PostgreSQL
+ * Carga o refresca docentes, materias y asignaciones desde la base de datos PostgreSQL
  */
 export async function sincronizarConServidor() {
   try {
-    const [resDocentes, resMaterias] = await Promise.all([
+    const [resDocentes, resMaterias, resAsig] = await Promise.all([
       fetch(`${API_BASE}/docentes`),
-      fetch(`${API_BASE}/materias`)
+      fetch(`${API_BASE}/materias`),
+      fetch(`${API_BASE}/asignaciones`)
     ]);
 
     if (resDocentes.ok) {
@@ -61,6 +63,9 @@ export async function sincronizarConServidor() {
             nombre: m.nombre,
             cargaHoraria: m.cargaHoraria || 4,
             nivel: (niv.includes('ini') || niv.includes('jard')) ? 'inicial' : (niv.includes('prim') ? 'primaria' : 'secundaria'),
+            id_nivel: m.id_nivel || (niv.includes('ini') ? 1 : niv.includes('prim') ? 2 : 3),
+            id_curso: m.id_curso || null,
+            cursoNombre: m.cursoNombre || null,
             cicloLectivo: 2027,
             docenteId: m.docenteId || null,
             docenteNombre: m.docenteNombre || null,
@@ -70,7 +75,14 @@ export async function sincronizarConServidor() {
       }
     }
 
-    return { ok: true, docentes: _docentes, materias: _materias };
+    if (resAsig.ok) {
+      const dataAsig = await resAsig.json();
+      if (dataAsig.ok) {
+        _asignaciones = dataAsig.data;
+      }
+    }
+
+    return { ok: true, docentes: _docentes, materias: _materias, asignaciones: _asignaciones };
   } catch (error) {
     console.warn('[HU-04] Servidor local no disponible, utilizando caché/fallback local:', error.message);
     return { ok: false, error: error.message };
@@ -92,30 +104,48 @@ export function getDocenteById(id) {
   return _docentes.find(d => Number(d.id) === Number(id));
 }
 
+/** Devuelve todas las asignaciones de un docente específico */
+export function getAsignacionesPorDocente(docenteId) {
+  return _asignaciones.filter(a => Number(a.docenteId) === Number(docenteId));
+}
+
 /** Devuelve los IDs de materias asignadas a un docente */
 export function getMateriasPorDocente(docenteId) {
-  return _materias
-    .filter(m => Number(m.docenteId) === Number(docenteId))
-    .map(m => m.id);
+  return _asignaciones
+    .filter(a => Number(a.docenteId) === Number(docenteId))
+    .map(a => a.materiaId);
 }
 
 /** Devuelve los objetos Materia completos asignados a un docente */
 export function getMateriasCompletasPorDocente(docenteId) {
-  return _materias.filter(m => Number(m.docenteId) === Number(docenteId));
+  const asigs = getAsignacionesPorDocente(docenteId);
+  return asigs.map(a => ({
+    id: a.materiaId,
+    codigo: a.materiaCodigo,
+    nombre: a.materiaNombre,
+    cargaHoraria: a.cargaHoraria || 4,
+    nivel: a.nivel,
+    id_curso: a.cursoId,
+    cursoNombre: a.cursoNombre,
+    id_asignacion: a.id_asignacion
+  }));
 }
 
-/** Devuelve el ID del docente asignado a una materia (o null) */
-export function getDocentePorMateria(materiaId) {
-  const m = _materias.find(mat => Number(mat.id) === Number(materiaId));
-  return m ? m.docenteId : null;
+/** Devuelve el ID del docente asignado a una materia (opcionalmente en un curso específico) */
+export function getDocentePorMateria(materiaId, cursoId = null) {
+  const asig = _asignaciones.find(a => 
+    Number(a.materiaId) === Number(materiaId) &&
+    (cursoId === null || Number(a.cursoId) === Number(cursoId))
+  );
+  return asig ? asig.docenteId : null;
 }
 
 /**
  * Calcula la carga horaria acumulada y el porcentaje sobre el límite de 200h
  */
 export function getCargaHorariaDocente(docenteId) {
-  const materiasDocente = getMateriasCompletasPorDocente(docenteId);
-  const horasUsadas = materiasDocente.reduce((acc, m) => acc + (m.cargaHoraria || 0), 0);
+  const asigs = getAsignacionesPorDocente(docenteId);
+  const horasUsadas = asigs.reduce((acc, a) => acc + (a.cargaHoraria || 0), 0);
   const porcentaje = Math.min(100, Math.round((horasUsadas / MAX_HORAS_DOCENTE) * 100));
 
   return {
@@ -128,32 +158,28 @@ export function getCargaHorariaDocente(docenteId) {
 
 /** Devuelve todas las asignaciones activas */
 export function getAsignaciones() {
-  return _materias
-    .filter(m => m.docenteId !== null)
-    .map(m => ({
-      id: `${m.docenteId}-${m.id}`,
-      docenteId: m.docenteId,
-      materiaId: m.id,
-      docenteNombre: m.docenteNombre
-    }));
+  return _asignaciones;
 }
 
 /**
  * Asigna una materia a un docente en PostgreSQL mediante la API
  */
-export async function asignarMateria(docenteId, materiaId) {
+export async function asignarMateria(docenteId, materiaId, cursoId = null) {
   try {
     const token = localStorage.getItem('token');
+    const body = {
+      id_profesor: Number(docenteId),
+      id_materia: Number(materiaId)
+    };
+    if (cursoId) body.id_curso = Number(cursoId);
+
     const res = await fetch(`${API_BASE}/asignaciones`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': token ? `Bearer ${token}` : ''
       },
-      body: JSON.stringify({
-        id_profesor: Number(docenteId),
-        id_materia: Number(materiaId)
-      })
+      body: JSON.stringify(body)
     });
 
     const data = await res.json();
@@ -172,12 +198,47 @@ export async function asignarMateria(docenteId, materiaId) {
 }
 
 /**
- * Quita la asignación de una materia en PostgreSQL
+ * Asigna un bloque pedagógico de materias de un curso a un maestro titular
+ * (Jardín: actividades de sala; Primaria 1°-3°: troncales de grado; Primaria 4°-6°: pareja pedagógica).
  */
-export async function desasignarMateria(docenteId, materiaId) {
+export async function asignarBloqueDocente(docenteId, cursoId, materiasIds) {
   try {
     const token = localStorage.getItem('token');
-    const res = await fetch(`${API_BASE}/asignaciones/${materiaId}`, {
+    const res = await fetch(`${API_BASE}/asignaciones/bloque`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+      },
+      body: JSON.stringify({
+        id_profesor: Number(docenteId),
+        id_curso: Number(cursoId),
+        materias_ids: materiasIds.map(Number)
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      return { ok: false, mensaje: data.error || 'No se pudo asignar el bloque pedagógico' };
+    }
+
+    await sincronizarConServidor();
+    return { ok: true, mensaje: data.data.mensaje || 'Bloque pedagógico asignado con éxito. ✓' };
+
+  } catch (error) {
+    console.error('Error al asignar bloque pedagógico:', error);
+    return { ok: false, mensaje: 'Error al conectar con el servidor: ' + error.message };
+  }
+}
+
+/**
+ * Quita la asignación de una materia en PostgreSQL
+ */
+export async function desasignarMateria(docenteId, materiaId, cursoId = null) {
+  try {
+    const token = localStorage.getItem('token');
+    const url = cursoId ? `${API_BASE}/asignaciones/${materiaId}?cursoId=${cursoId}` : `${API_BASE}/asignaciones/${materiaId}`;
+    const res = await fetch(url, {
       method: 'DELETE',
       headers: {
         'Authorization': token ? `Bearer ${token}` : ''
@@ -195,6 +256,33 @@ export async function desasignarMateria(docenteId, materiaId) {
 
   } catch (error) {
     console.error('Error al desasignar materia:', error);
+    return { ok: false, mensaje: 'Error al conectar con el servidor: ' + error.message };
+  }
+}
+
+/**
+ * Quita una asignación por su id_asignacion primario en PostgreSQL
+ */
+export async function desasignarAsignacion(idAsignacion) {
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_BASE}/asignaciones/id/${idAsignacion}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : ''
+      }
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      return { ok: false, mensaje: data.error || 'No se pudo eliminar la asignación' };
+    }
+
+    await sincronizarConServidor();
+    return { ok: true, mensaje: 'Asignación eliminada correctamente en PostgreSQL.' };
+
+  } catch (error) {
+    console.error('Error al eliminar asignación:', error);
     return { ok: false, mensaje: 'Error al conectar con el servidor: ' + error.message };
   }
 }

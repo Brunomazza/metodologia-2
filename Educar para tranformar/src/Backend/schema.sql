@@ -358,7 +358,7 @@ INSERT INTO asignaciones_docente (id_profesor, id_materia, id_curso) VALUES
 (2,  8, 7),  -- Carlos Martínez: Lengua 2°Ciclo en 4° Grado
 (3,  1, 2),  -- María Suárez: Juego y Exploración en Sala 4 años
 (3,  3, 3);  -- María Suárez: Iniciación a la Lectura en Sala 5 años
-
+1
 -- 11. Deportes
 INSERT INTO deportes (id_deporte, nombre, id_nivel, dia_semana, hora_inicio, hora_fin, cupo_maximo, id_profesor) VALUES
 (1, 'Fútbol',   2, 'Lunes y Miércoles', '15:00:00', '16:30:00', 30, 2),

@@ -150,6 +150,11 @@
     if (!usuario) {
         window.location.href = 'login.html';
     } else {
+        const rol = (usuario.rol || '').toUpperCase();
+        if (['PADRE', 'TUTOR', 'FAMILIA'].includes(rol)) {
+            window.location.replace('hijo.html?tab=horarios');
+            return;
+        }
         document.getElementById('txtNombreSidebar').innerText = usuario.nombre;
         document.getElementById('navNombreAlumno').innerText = usuario.nombre;
     }

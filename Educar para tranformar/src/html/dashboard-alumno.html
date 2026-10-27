@@ -24,12 +24,20 @@
                     <small class="text-white-50">Portal Académico</small>
                 </div>
                 <ul class="nav flex-column mt-3">
-                    <li class="nav-item"><a class="nav-link active" href="#"><span
+                    <li id="itemVolverFamiliaSidebar" class="nav-item mb-2 d-none">
+                        <a class="nav-link bg-primary text-white rounded-pill fw-bold shadow-sm" href="dashboard-familia.html">
+                            <span class="material-symbols-outlined me-2">arrow_back</span> Portal Familia
+                        </a>
+                    </li>
+                    <li class="nav-item"><a id="linkMisMateriasSidebar" class="nav-link active" href="#"><span
                                 class="material-symbols-outlined me-2">school</span> Mis Materias</a></li>
-                    <li class="nav-item"><a class="nav-link" href="calificaciones.html"><span
+                    <li class="nav-item"><a id="linkCalificacionesSidebar" class="nav-link" href="calificaciones.html"><span
                                 class="material-symbols-outlined me-2">task_alt</span> Calificaciones</a></li>
                     <li class="nav-item"><a class="nav-link" href="horarios.html"><span
                                 class="material-symbols-outlined me-2">calendar_month</span> Horarios y Fechas</a></li>
+                    <li id="itemPanelAdmin" class="nav-item mt-3 border-top border-secondary pt-2 d-none">
+                        <a class="nav-link text-white-50" href="dashboard.html"><span class="material-symbols-outlined me-2">dashboard</span> Panel Administrativo</a>
+                    </li>
                 </ul>
             </aside>
 
@@ -37,7 +45,10 @@
 
                 <nav
                     class="navbar-dashboard bg-white shadow-sm px-4 py-3 d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <a id="btnVolverFamiliaTop" href="dashboard-familia.html" class="btn btn-outline-primary btn-sm rounded-pill fw-bold d-none align-items-center gap-1 me-2">
+                            <span class="material-symbols-outlined fs-6">arrow_back</span> Volver a Portal Familia
+                        </a>
                         <span
                             class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill">
                             <span class="material-symbols-outlined fs-6 align-middle me-1">calendar_today</span> Ciclo
@@ -163,24 +174,81 @@
 
         if (!usuario) {
             window.location.href = 'login.html';
-        } else {
-            document.getElementById('txtBienvenida').innerText = `Bienvenido, ${usuario.nombre}`;
-            document.getElementById('txtNombreSidebar').innerText = usuario.nombre;
-            document.getElementById('navNombreAlumno').innerText = `${usuario.nombre} ${usuario.apellido || ''}`.trim();
-            document.getElementById('perfilNombreCompleto').innerText = `${usuario.nombre} ${usuario.apellido || ''}`.trim();
-            document.getElementById('perfilRol').innerText = `Estudiante Oficial • ${usuario.email || ''}`;
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const alumnoIdParam = urlParams.get('alumnoId') || urlParams.get('id');
+        const rolUsuario = (usuario.rol || '').toUpperCase();
+        const esTutor = ['PADRE', 'TUTOR', 'FAMILIA'].includes(rolUsuario);
+        const esAdmin = ['ADMIN', 'SUPERADMIN', 'ADMINISTRADOR'].includes(rolUsuario);
+
+        // Si el usuario es tutor, redirigir al portal unificado de tutores (hijo.html)
+        if (esTutor) {
+            window.location.replace(`hijo.html?alumnoId=${alumnoIdParam || ''}`);
+            return;
+        }
+
+        // Control de vistas para Admin
+        if (alumnoIdParam) {
+            const btnVolver = document.getElementById('btnVolverFamiliaTop');
+            const itemVolver = document.getElementById('itemVolverFamiliaSidebar');
+            if (btnVolver) {
+                btnVolver.classList.remove('d-none');
+                btnVolver.classList.add('d-inline-flex');
+            }
+            if (itemVolver) {
+                itemVolver.classList.remove('d-none');
+            }
+        }
+
+        if (esAdmin) {
+            const itemAdmin = document.getElementById('itemPanelAdmin');
+            if (itemAdmin) itemAdmin.classList.remove('d-none');
+        }
+
+        if (alumnoIdParam) {
+            const linkCal = document.getElementById('linkCalificacionesSidebar');
+            if (linkCal) linkCal.href = `calificaciones.html?alumnoId=${alumnoIdParam}`;
+            const linkMat = document.getElementById('linkMisMateriasSidebar');
+            if (linkMat) linkMat.href = `dashboard-alumno.html?alumnoId=${alumnoIdParam}`;
         }
 
         async function cargarDatosEstudiante() {
             try {
-                // 1. Obtener perfil de alumno por id_usuario
-                const resAl = await fetch(`http://localhost:3000/api/alumnos/${usuario.id}?byUser=true`);
-                const dataAl = await resAl.json();
+                let idAlumno = alumnoIdParam || null;
+                let al = null;
 
-                let idAlumno = 1;
-                if (dataAl.ok && dataAl.data) {
-                    const al = dataAl.data;
-                    idAlumno = al.id_alumno;
+                // 1. Obtener perfil del alumno
+                if (alumnoIdParam) {
+                    const resAl = await fetch(`http://localhost:3000/api/alumnos/${alumnoIdParam}`);
+                    const dataAl = await resAl.json();
+                    if (dataAl.ok && dataAl.data) {
+                        al = dataAl.data;
+                        idAlumno = al.id_alumno;
+                    }
+                } else {
+                    const resAl = await fetch(`http://localhost:3000/api/alumnos/${usuario.id}?byUser=true`);
+                    const dataAl = await resAl.json();
+                    if (dataAl.ok && dataAl.data) {
+                        al = dataAl.data;
+                        idAlumno = al.id_alumno;
+                    }
+                }
+
+                if (al) {
+                    const nombreCompleto = `${al.nombre} ${al.apellido || ''}`.trim();
+                    if (esTutor) {
+                        document.getElementById('txtBienvenida').innerText = `Materias de ${nombreCompleto}`;
+                        const pHeader = document.querySelector('header p');
+                        if (pHeader) pHeader.innerText = `Vista del tutor a cargo (${usuario.nombre} ${usuario.apellido || ''}) • Ficha oficial del estudiante.`;
+                    } else {
+                        document.getElementById('txtBienvenida').innerText = `Bienvenido, ${al.nombre}`;
+                        document.getElementById('txtNombreSidebar').innerText = al.nombre;
+                    }
+                    document.getElementById('navNombreAlumno').innerText = nombreCompleto;
+                    document.getElementById('perfilNombreCompleto').innerText = nombreCompleto;
+                    document.getElementById('perfilRol').innerText = `Estudiante Oficial • ${al.email || al.correo || ''}`;
+
                     document.getElementById('perfilLegajo').innerText = al.legajo || 'S/D';
                     document.getElementById('perfilCurso').innerText = `${al.curso || 'Sin curso'} '${al.division || 'A'}'`;
                     document.getElementById('perfilCiclo').innerText = al.ciclo || al.nivel || 'General';
@@ -190,17 +258,25 @@
                     if (al.estado) {
                         document.getElementById('perfilCondicion').innerText = al.estado;
                     }
+                } else if (!esTutor) {
+                    // Fallback si no se encontró registro específico de alumno
+                    document.getElementById('txtBienvenida').innerText = `Bienvenido, ${usuario.nombre}`;
+                    document.getElementById('txtNombreSidebar').innerText = usuario.nombre;
+                    document.getElementById('navNombreAlumno').innerText = `${usuario.nombre} ${usuario.apellido || ''}`.trim();
+                    document.getElementById('perfilNombreCompleto').innerText = `${usuario.nombre} ${usuario.apellido || ''}`.trim();
+                    document.getElementById('perfilRol').innerText = `Estudiante Oficial • ${usuario.email || ''}`;
                 }
 
                 // 2. Obtener materias del plan de estudios de su curso
-                const resCal = await fetch(`http://localhost:3000/api/alumnos/${idAlumno}/calificaciones`);
+                const targetId = idAlumno || 1;
+                const resCal = await fetch(`http://localhost:3000/api/alumnos/${targetId}/calificaciones`);
                 const dataCal = await resCal.json();
                 const tbody = document.getElementById('tablaMateriasAlumno');
 
                 if (dataCal.ok && dataCal.data && Array.isArray(dataCal.data.boletin)) {
                     const materias = dataCal.data.boletin;
                     if (materias.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">No hay asignaturas asociadas a tu curso.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">No hay asignaturas asociadas al curso del estudiante.</td></tr>';
                     } else {
                         tbody.innerHTML = materias.map(m => `
                             <tr>

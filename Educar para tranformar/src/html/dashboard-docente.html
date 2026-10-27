@@ -352,17 +352,14 @@
     document.getElementById('filtroMateria').addEventListener('change', function () {
         const valor = this.value;
         document.querySelectorAll('#tablaAlumnos tr').forEach(tr => {
-            tr.style.display = (!valor || tr.dataset.materia === valor) ? '' : 'none';
+            if (!valor) {
+                tr.style.display = '';
+            } else {
+                const mats = tr.dataset.materia || '';
+                tr.style.display = mats.includes(valor) ? '' : 'none';
+            }
         });
     });
-
-    // --- Cargar notas en el modal ---
-    window.abrirCargarNotaDirecta = function(idAlumno, nombreCompleto) {
-        const modalSelect = document.getElementById('modalAlumno');
-        if (modalSelect) modalSelect.value = idAlumno;
-        const modalEl = new bootstrap.Modal(document.getElementById('modalNota'));
-        modalEl.show();
-    };
 
     // --- Guardar nota en PostgreSQL desde el modal de calificaciones ---
     const btnGuardarNota = document.getElementById('btnGuardarNota');
@@ -513,100 +510,169 @@
 
         // Cargar alumnos reales vinculados desde PostgreSQL y poblar modal
         try {
-            const resAl = await fetch('http://localhost:3000/api/alumnos');
+            const resAl = await fetch(`http://localhost:3000/api/docentes/${usuario.id}/alumnos?byUser=true`);
             const dataAl = await resAl.json();
             const tablaAlumnos = document.getElementById('tablaAlumnos');
             const filtroMateria = document.getElementById('filtroMateria');
             const modalAlumno = document.getElementById('modalAlumno');
             const modalMateriaSelect = document.getElementById('modalMateriaSelect');
 
-            if (modalMateriaSelect && materias.length > 0) {
-                modalMateriaSelect.innerHTML = materias.map(m => `
-                    <option value="${m.id}">${m.nombre} (${m.codigo})</option>
-                `).join('');
+            const alumnosDocente = (dataAl.ok && Array.isArray(dataAl.data)) ? dataAl.data : [];
+            window._alumnosDocenteCache = alumnosDocente;
+
+            // Adaptar títulos de bienvenida según nivel pedagógico (Maestro/a vs Profesor/a)
+            const tieneInicial = materias.some(m => m.nivel === 'inicial');
+            const tienePrimaria = materias.some(m => m.nivel === 'primaria');
+            const rolDocenteTitulo = tieneInicial ? 'Maestra/o de Sala' : tienePrimaria ? 'Maestro/a de Grado' : 'Profesor/a';
+            const saludoDocente = tieneInicial ? `Bienvenida/o, Maestra/o ${usuario.nombre}` : tienePrimaria ? `Bienvenido/a, Maestro/a ${usuario.nombre}` : `Bienvenido/a, Prof. ${usuario.nombre}`;
+            
+            const txtBienv = document.getElementById('txtBienvenida');
+            const txtSub = document.querySelector('header p');
+            const perfilRolEl = document.getElementById('perfilRol');
+            if (txtBienv) txtBienv.innerText = saludoDocente;
+            if (txtSub) txtSub.innerText = `Panel de gestión de ${rolDocenteTitulo} — materias, alumnos a cargo y calificaciones oficiales.`;
+            if (perfilRolEl) perfilRolEl.innerText = `${rolDocenteTitulo} • Ciclo Lectivo Oficial`;
+
+            // Función para actualizar modalMateriaSelect según el alumno seleccionado
+            function actualizarMateriasModalSegunAlumno(idAlumno) {
+                if (!modalMateriaSelect) return;
+                const al = alumnosDocente.find(a => Number(a.id_alumno) === Number(idAlumno));
+                if (al && Array.isArray(al.materias_con_docente) && al.materias_con_docente.length > 0) {
+                    modalMateriaSelect.innerHTML = al.materias_con_docente.map(m => `
+                        <option value="${m.id_materia}">${m.nombre} (${m.codigo})</option>
+                    `).join('');
+                } else if (materias.length > 0) {
+                    modalMateriaSelect.innerHTML = '<option value="">-- Selecciona un estudiante primero --</option>' +
+                        materias.map(m => `<option value="${m.id}">${m.nombre} (${m.codigo})</option>`).join('');
+                } else {
+                    modalMateriaSelect.innerHTML = '<option value="">Sin materias asignadas</option>';
+                }
             }
 
-            if (dataAl.ok && Array.isArray(dataAl.data)) {
-                if (modalAlumno) {
+            if (modalAlumno) {
+                if (alumnosDocente.length === 0) {
+                    modalAlumno.innerHTML = '<option value="">No tienes alumnos asignados a tus materias</option>';
+                } else {
                     modalAlumno.innerHTML = '<option value="">-- Seleccionar Estudiante --</option>' +
-                        dataAl.data.map(a => `
-                            <option value="${a.id}">
-                                ${a.apellido}, ${a.nombre} (${a.curso || 'Sin curso'}${a.edad ? ' • ' + a.edad + ' años' : ''})
+                        alumnosDocente.map(a => `
+                            <option value="${a.id_alumno}">
+                                ${a.apellido}, ${a.nombre} — ${a.curso || 'Sin curso'} (${(a.materias_con_docente || []).map(m => m.nombre).join(', ')})
                             </option>
                         `).join('');
                 }
 
-                if (filtroMateria) {
-                    filtroMateria.innerHTML = '<option value="">Todos los cursos y alumnos</option>' +
-                        materias.map(m => `<option value="${m.codigo}">${m.nombre}</option>`).join('');
-                }
+                modalAlumno.addEventListener('change', (e) => {
+                    actualizarMateriasModalSegunAlumno(e.target.value);
+                });
+            }
 
-                if (tablaAlumnos) {
-                    if (dataAl.data.length === 0) {
-                        tablaAlumnos.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No hay alumnos registrados actualmente.</td></tr>';
-                    } else {
-                        tablaAlumnos.innerHTML = dataAl.data.map(a => `
-                            <tr>
+            // Actualizar modal al abrir directamente desde la tabla de alumnos
+            window.abrirCargarNotaDirecta = function(idAlumno, nombreCompleto) {
+                const modalSelect = document.getElementById('modalAlumno');
+                if (modalSelect) {
+                    modalSelect.value = idAlumno;
+                    actualizarMateriasModalSegunAlumno(idAlumno);
+                }
+                const modalEl = new bootstrap.Modal(document.getElementById('modalNota'));
+                modalEl.show();
+            };
+
+            if (filtroMateria) {
+                filtroMateria.innerHTML = '<option value="">Todos los cursos y alumnos</option>' +
+                    materias.map(m => `<option value="${m.codigo}">${m.nombre}</option>`).join('');
+            }
+
+            if (tablaAlumnos) {
+                if (alumnosDocente.length === 0) {
+                    tablaAlumnos.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4"><span class="material-symbols-outlined fs-2 d-block text-muted mb-1">groups</span>No tienes alumnos cursando tus materias actualmente.</td></tr>';
+                } else {
+                    tablaAlumnos.innerHTML = alumnosDocente.map(a => {
+                        const mats = (a.materias_con_docente || []).map(m => `
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-1 mb-1 d-inline-block">
+                                <span class="material-symbols-outlined align-middle" style="font-size:12px;">menu_book</span> ${m.nombre}
+                            </span>
+                        `).join('');
+
+                        const codigosMaterias = (a.materias_con_docente || []).map(m => m.codigo).join(' ');
+
+                        return `
+                            <tr data-materia="${codigosMaterias}">
                                 <td><code>${a.legajo}</code></td>
                                 <td class="fw-bold">
                                     ${a.apellido}, ${a.nombre}
                                     ${(a.edad || a.genero) ? `<div class="text-secondary small fw-normal" style="font-size:11px;"><span class="material-symbols-outlined align-middle" style="font-size:12px;">person</span> ${a.edad ? a.edad + ' años' : ''} ${a.edad && a.genero ? '•' : ''} ${a.genero || ''}</div>` : ''}
                                 </td>
-                                <td>${a.curso || 'Sin curso'} <small class="text-muted d-block" style="font-size:11px;">${a.ciclo || a.nivel || ''}</small></td>
+                                <td>
+                                    <span class="badge bg-light text-dark border mb-1 d-inline-block">
+                                        <span class="material-symbols-outlined align-middle" style="font-size:12px;">school</span> ${a.curso || 'Sin curso'}
+                                    </span>
+                                    <div>${mats || '<span class="text-muted small">Sin materia</span>'}</div>
+                                </td>
                                 <td><span class="badge bg-success-subtle text-success border border-success-subtle">${a.estado || 'Regular'}</span></td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="window.abrirCargarNotaDirecta(${a.id}, '${a.nombre} ${a.apellido}')">
+                                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="window.abrirCargarNotaDirecta(${a.id_alumno}, '${a.nombre} ${a.apellido}')">
                                         <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">grading</span> Calificar
                                     </button>
                                 </td>
                             </tr>
-                        `).join('');
-                    }
+                        `;
+                    }).join('');
+                }
+            }
+
+            // Cargar tabla de calificaciones SOLO para los alumnos y materias de este docente
+            window.recargarCalificacionesDocente = async function() {
+                const tbodyCal = document.getElementById('tablaCalificaciones');
+                if (!tbodyCal) return;
+
+                if (alumnosDocente.length === 0) {
+                    tbodyCal.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-3">No hay alumnos asignados a tus materias.</td></tr>';
+                    return;
                 }
 
-                // Cargar tabla de calificaciones
-                window.recargarCalificacionesDocente = async function() {
-                    const tbodyCal = document.getElementById('tablaCalificaciones');
-                    if (!tbodyCal) return;
+                try {
+                    const idsMateriasDocente = new Set(materias.map(m => Number(m.id)));
+                    const boletines = await Promise.all(
+                        alumnosDocente.map(async al => {
+                            const r = await fetch(`http://localhost:3000/api/alumnos/${al.id_alumno}/calificaciones`);
+                            const d = await r.json();
+                            return { al, boletin: (d.ok && d.data && Array.isArray(d.data.boletin)) ? d.data.boletin : [] };
+                        })
+                    );
 
-                    try {
-                        const boletines = await Promise.all(
-                            dataAl.data.map(async al => {
-                                const r = await fetch(`http://localhost:3000/api/alumnos/${al.id}/calificaciones`);
-                                const d = await r.json();
-                                return { al, boletin: (d.ok && d.data) ? d.data.boletin : [] };
-                            })
-                        );
-
-                        const filas = [];
-                        boletines.forEach(({ al, boletin }) => {
-                            boletin.forEach(m => {
-                                filas.push(`
-                                    <tr>
-                                        <td class="text-start ps-3"><code>${al.legajo}</code></td>
-                                        <td class="text-start fw-bold">${al.apellido}, ${al.nombre}</td>
-                                        <td><small class="text-muted">${al.edad ? al.edad + 'a' : '-'} • ${al.genero || '-'}</small></td>
-                                        <td class="text-start">${m.materia}</td>
-                                        <td>${m.trimestre_1 !== null ? Number(m.trimestre_1).toFixed(2) : '-'}</td>
-                                        <td>${m.trimestre_2 !== null ? Number(m.trimestre_2).toFixed(2) : '-'}</td>
-                                        <td>${m.trimestre_3 !== null ? Number(m.trimestre_3).toFixed(2) : '-'}</td>
-                                        <td class="fw-bold ${m.promedio >= 7 ? 'text-success' : 'text-primary'}">${m.promedio !== null ? Number(m.promedio).toFixed(2) : '-'}</td>
-                                        <td><span class="badge ${m.estado === 'Promocionado' ? 'bg-success-subtle text-success border' : 'bg-primary-subtle text-primary border'}">${m.estado}</span></td>
-                                    </tr>
-                                `);
-                            });
+                    const filas = [];
+                    boletines.forEach(({ al, boletin }) => {
+                        // Filtrar estrictamente solo las materias asignadas a este docente
+                        const boletinDocente = boletin.filter(m => idsMateriasDocente.has(Number(m.id_materia)));
+                        boletinDocente.forEach(m => {
+                            filas.push(`
+                                <tr>
+                                    <td class="text-start ps-3"><code>${al.legajo}</code></td>
+                                    <td class="text-start fw-bold">
+                                        ${al.apellido}, ${al.nombre}
+                                        <small class="text-muted d-block" style="font-size:11px;">${al.curso || ''}</small>
+                                    </td>
+                                    <td><small class="text-muted">${al.edad ? al.edad + 'a' : '-'} • ${al.genero || '-'}</small></td>
+                                    <td class="text-start fw-bold text-primary">${m.materia}</td>
+                                    <td>${m.trimestre_1 !== null ? Number(m.trimestre_1).toFixed(2) : '-'}</td>
+                                    <td>${m.trimestre_2 !== null ? Number(m.trimestre_2).toFixed(2) : '-'}</td>
+                                    <td>${m.trimestre_3 !== null ? Number(m.trimestre_3).toFixed(2) : '-'}</td>
+                                    <td class="fw-bold ${m.promedio >= 7 ? 'text-success' : 'text-primary'}">${m.promedio !== null ? Number(m.promedio).toFixed(2) : '-'}</td>
+                                    <td><span class="badge ${m.estado === 'Promocionado' ? 'bg-success-subtle text-success border' : 'bg-primary-subtle text-primary border'}">${m.estado}</span></td>
+                                </tr>
+                            `);
                         });
+                    });
 
-                        tbodyCal.innerHTML = filas.length > 0
-                            ? filas.join('')
-                            : '<tr><td colspan="9" class="text-center text-muted py-3">No hay calificaciones registradas aún.</td></tr>';
-                    } catch (err) {
-                        console.error('Error al recargar calificaciones docente:', err);
-                    }
-                };
+                    tbodyCal.innerHTML = filas.length > 0
+                        ? filas.join('')
+                        : '<tr><td colspan="9" class="text-center text-muted py-3">No hay calificaciones registradas aún en tus materias.</td></tr>';
+                } catch (err) {
+                    console.error('Error al recargar calificaciones docente:', err);
+                }
+            };
 
-                await window.recargarCalificacionesDocente();
-            }
+            await window.recargarCalificacionesDocente();
         } catch (err) {
             console.warn('No se pudo cargar la lista de alumnos en el dashboard docente:', err);
         }

@@ -45,10 +45,15 @@
                 <small id="txtRolSidebar" class="text-white-50">Portal Académico</small>
             </div>
             <ul class="nav flex-column mt-3">
-                <li class="nav-item"><a class="nav-link" href="dashboard-alumno.html"><span class="material-symbols-outlined me-2">school</span> Mis Materias</a></li>
+                <li id="itemVolverFamiliaSidebar" class="nav-item mb-2 d-none">
+                    <a class="nav-link bg-primary text-white rounded-pill fw-bold shadow-sm" href="dashboard-familia.html">
+                        <span class="material-symbols-outlined me-2">arrow_back</span> Portal Familia
+                    </a>
+                </li>
+                <li class="nav-item"><a id="linkMisMateriasSidebar" class="nav-link" href="dashboard-alumno.html"><span class="material-symbols-outlined me-2">school</span> Mis Materias</a></li>
                 <li class="nav-item"><a class="nav-link active" href="calificaciones.html"><span class="material-symbols-outlined me-2">task_alt</span> Calificaciones</a></li>
                 <li class="nav-item"><a class="nav-link" href="horarios.html"><span class="material-symbols-outlined me-2">calendar_month</span> Horarios y Fechas</a></li>
-                <li class="nav-item mt-3 border-top border-secondary pt-2">
+                <li id="itemPanelAdmin" class="nav-item mt-3 border-top border-secondary pt-2 d-none">
                     <a class="nav-link text-white-50" href="dashboard.html"><span class="material-symbols-outlined me-2">dashboard</span> Panel Administrativo</a>
                 </li>
             </ul>
@@ -58,6 +63,9 @@
         <main class="col-md-10 main-content p-0">
             <nav class="navbar-dashboard bg-white shadow-sm px-4 py-3 d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-2">
+                    <a id="btnVolverFamiliaTop" href="dashboard-familia.html" class="btn btn-outline-primary btn-sm rounded-pill fw-bold d-none align-items-center gap-1 me-1">
+                        <span class="material-symbols-outlined fs-6">arrow_back</span> Volver a Portal Familia
+                    </a>
                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill">
                         <span class="material-symbols-outlined fs-6 align-middle me-1">calendar_today</span> Ciclo Lectivo Oficial
                     </span>
@@ -236,19 +244,71 @@
         }
     });
 
-    let idAlumnoConsultar = 1; // Tomás por defecto
+    // Mostrar Panel Administrativo solo si el usuario activo es ADMIN
+    const rolUsuarioActivo = (usuarioSesion.rol || '').toUpperCase();
+    if (rolUsuarioActivo === 'ADMIN') {
+        document.getElementById('itemPanelAdmin')?.classList.remove('d-none');
+    }
+
+    let idAlumnoConsultar = null;
 
     async function initBoletin() {
-        const esAdminODocenteOPadre = ['ADMIN', 'DOCENTE', 'PADRE'].includes((usuarioSesion.rol || '').toUpperCase());
+        const urlParams = new URLSearchParams(window.location.search);
+        const alumnoIdParam = urlParams.get('alumnoId') || urlParams.get('id');
 
-        if (esAdminODocenteOPadre) {
+        const esAdmin = rolUsuarioActivo === 'ADMIN';
+        const esDocente = rolUsuarioActivo === 'DOCENTE';
+        const esPadre = rolUsuarioActivo === 'PADRE' || rolUsuarioActivo === 'TUTOR' || rolUsuarioActivo === 'FAMILIA';
+
+        if (esPadre) {
+            window.location.replace(`hijo.html?alumnoId=${alumnoIdParam || ''}&tab=boletin`);
+            return;
+        }
+
+        if (alumnoIdParam) {
+            idAlumnoConsultar = parseInt(alumnoIdParam, 10);
+            const linkMat = document.getElementById('linkMisMateriasSidebar');
+            if (linkMat) linkMat.href = `dashboard-alumno.html?alumnoId=${idAlumnoConsultar}`;
+
+            if (esAdmin || esDocente) {
+                const selectorCont = document.getElementById('selectorAlumnoContainer');
+                if (selectorCont) selectorCont.classList.remove('d-none');
+                await cargarSelectorAlumnos(idAlumnoConsultar);
+            }
+            await cargarBoletin(idAlumnoConsultar);
+            return;
+        }
+
+        if (esAdmin || esDocente) {
             const selectorCont = document.getElementById('selectorAlumnoContainer');
             if (selectorCont) selectorCont.classList.remove('d-none');
             await cargarSelectorAlumnos();
+        } else if (esPadre) {
+            // Es PADRE: obtener sus hijos y cargar el primero
+            try {
+                const userId = usuarioSesion.id || usuarioSesion.uid;
+                const resTutor = await fetch(`http://localhost:3000/api/tutores/${userId}/alumnos?byUser=true`);
+                const dataTutor = await resTutor.json();
+                if (dataTutor.ok && dataTutor.data && dataTutor.data.hijos && dataTutor.data.hijos.length > 0) {
+                    const selectorCont = document.getElementById('selectorAlumnoContainer');
+                    if (selectorCont && dataTutor.data.hijos.length > 1) {
+                        selectorCont.classList.remove('d-none');
+                        const select = document.getElementById('selectAlumnoActivo');
+                        select.innerHTML = dataTutor.data.hijos.map(h => `<option value="${h.id_alumno}">${h.nombre} ${h.apellido} (${h.curso} - ${h.nivel})</option>`).join('');
+                        select.addEventListener('change', (e) => cargarBoletin(e.target.value));
+                    }
+                    idAlumnoConsultar = dataTutor.data.hijos[0].id_alumno;
+                }
+            } catch (e) {
+                console.warn('Error al obtener hijos del tutor:', e);
+            }
+            if (!idAlumnoConsultar) idAlumnoConsultar = 1;
+            await cargarBoletin(idAlumnoConsultar);
         } else {
             // Es ESTUDIANTE: buscar su id_alumno a partir de su id_usuario
             try {
-                const res = await fetch(`http://localhost:3000/api/alumnos/${usuarioSesion.id}?byUser=true`);
+                const userId = usuarioSesion.id || usuarioSesion.uid;
+                const res = await fetch(`http://localhost:3000/api/alumnos/${userId}?byUser=true`);
                 const data = await res.json();
                 if (data.ok && data.data) {
                     idAlumnoConsultar = data.data.id_alumno;
@@ -256,23 +316,24 @@
             } catch (e) {
                 console.warn('No se pudo mapear id_usuario a id_alumno:', e);
             }
+            if (!idAlumnoConsultar) idAlumnoConsultar = 1;
             await cargarBoletin(idAlumnoConsultar);
         }
     }
 
-    async function cargarSelectorAlumnos() {
+    async function cargarSelectorAlumnos(alumnoPreseleccionado = null) {
         const select = document.getElementById('selectAlumnoActivo');
         try {
             const res = await fetch('http://localhost:3000/api/alumnos');
             const data = await res.json();
             if (data.ok && Array.isArray(data.data)) {
                 select.innerHTML = data.data.map(a => `
-                    <option value="${a.id}">
+                    <option value="${a.id}" ${alumnoPreseleccionado && Number(a.id) === Number(alumnoPreseleccionado) ? 'selected' : ''}>
                         ${a.apellido}, ${a.nombre} (DNI ${a.dni}) — ${a.curso || 'Sin curso'} (${a.ciclo || a.nivel || ''})${a.edad ? ' • ' + a.edad + ' años' : ''}
                     </option>
                 `).join('');
 
-                idAlumnoConsultar = select.value || 1;
+                idAlumnoConsultar = alumnoPreseleccionado || select.value || 1;
                 await cargarBoletin(idAlumnoConsultar);
 
                 select.addEventListener('change', async (e) => {

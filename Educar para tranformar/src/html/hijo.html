@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguimiento de Hijo | Portal Familia | NovaSYS</title>
+    <link rel="icon" href="../img/logo.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #f8fafc;
+        }
+
+        /* ── Header Perfil Alumno ── */
+        .child-hero-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 1.25rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .child-hero-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background: linear-gradient(180deg, #0d6efd, #0b2545);
+        }
+        .child-avatar-lg {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0d6efd 0%, #0b2545 100%);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 2rem;
+            box-shadow: 0 8px 16px rgba(13, 110, 253, 0.2);
+            flex-shrink: 0;
+        }
+
+        /* ── Pestañas Modernas (Nav Pills) ── */
+        .nav-tutor-pills {
+            background: #ffffff;
+            padding: 0.4rem;
+            border-radius: 1rem;
+            border: 1px solid #e2e8f0;
+            display: inline-flex;
+            gap: 0.35rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        }
+        .nav-tutor-pills .nav-link {
+            border-radius: 0.75rem;
+            color: #475569;
+            font-weight: 600;
+            padding: 0.65rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+        .nav-tutor-pills .nav-link:hover {
+            color: #0d6efd;
+            background: #f1f5f9;
+        }
+        .nav-tutor-pills .nav-link.active {
+            background: #0d6efd;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
+        }
+
+        /* ── Tarjetas de Servicios y Materias ── */
+        .service-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.1rem;
+            transition: all 0.2s ease;
+        }
+        .service-card:hover {
+            box-shadow: 0 6px 20px rgba(11, 37, 69, 0.06);
+            border-color: #cbd5e1;
+        }
+
+        /* ── Catálogo de Deportes en Modal ── */
+        .sport-card {
+            border: 2px solid transparent;
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #fff;
+        }
+        .sport-card:hover {
+            box-shadow: 0 6px 20px rgba(11, 37, 69, 0.1);
+            transform: translateY(-2px);
+        }
+        .sport-card.inscripto {
+            border-color: #0d6efd;
+            background: #eff6ff;
+        }
+        .sport-badge-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* ── Catálogo de Rutas en Modal ── */
+        .ruta-card {
+            border: 2px solid transparent;
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #fff;
+        }
+        .ruta-card:hover {
+            box-shadow: 0 6px 20px rgba(11, 37, 69, 0.1);
+            transform: translateY(-2px);
+        }
+        .ruta-card.seleccionada {
+            border-color: #0d6efd;
+            background: #eff6ff;
+        }
+
+        /* ── Toast de feedback ── */
+        .toast-feedback {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 1090;
+            min-width: 320px;
+        }
+
+        /* ── Vista de Impresión ── */
+        @media print {
+            aside, nav.navbar-dashboard, .nav-tutor-pills, .btn-no-print, #btnImprimirBoletin, #selectorHijoContainer {
+                display: none !important;
+            }
+            main {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .child-hero-card, .card {
+                border: 1px solid #ccc !important;
+                box-shadow: none !important;
+            }
+            .tab-pane {
+                display: none !important;
+            }
+            #tab-boletin {
+                display: block !important;
+                opacity: 1 !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light pt-0 m-0">
+
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <!-- ═══ SIDEBAR DEL TUTOR ═══ -->
+        <aside class="col-md-2 d-none d-md-block sidebar p-0 vh-100 position-sticky top-0">
+            <div class="p-4 text-center border-bottom border-secondary">
+                <span class="material-symbols-outlined display-4 text-white mb-2">family_home</span>
+                <h5 id="txtFamiliaTitulo" class="text-white mb-0">Portal Familia</h5>
+                <small id="txtTutorSubtitulo" class="text-white-50">Portal de Tutores</small>
+            </div>
+            
+            <ul class="nav flex-column mt-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard-familia.html">
+                        <span class="material-symbols-outlined me-2">dashboard</span> Inicio Portal Familia
+                    </a>
+                </li>
+                
+                <div class="sidebar-heading">Mis Hijos</div>
+                <div id="contenedorHijosSidebar">
+                    <li class="nav-item px-3 py-2 text-white-50 small">
+                        <span class="spinner-border spinner-border-sm me-2"></span>Cargando hijos...
+                    </li>
+                </div>
+
+                <div class="sidebar-heading mt-3">Gestión</div>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><span class="material-symbols-outlined me-2">payments</span> Estado de Cuenta</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><span class="material-symbols-outlined me-2">mail</span> Mensajes <span class="badge bg-danger ms-2">1</span></a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- ═══ CONTENIDO PRINCIPAL ═══ -->
+        <main class="col-md-10 main-content p-0">
+            <!-- Navbar Superior -->
+            <nav class="navbar-dashboard bg-white shadow-sm px-4 py-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <a href="dashboard-familia.html" class="btn btn-outline-primary btn-sm rounded-pill fw-bold d-inline-flex align-items-center gap-1 me-2 btn-no-print">
+                        <span class="material-symbols-outlined fs-6">arrow_back</span> Volver a Portal Familia
+                    </a>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill fw-bold">
+                        <span class="material-symbols-outlined fs-6 align-middle me-1">calendar_today</span> Ciclo Lectivo Oficial
+                    </span>
+                </div>
+                
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Selector rápido de hijo -->
+                    <div id="selectorHijoContainer" class="d-none d-lg-flex align-items-center gap-2 border-end pe-3">
+                        <span class="small text-muted fw-bold">Alumno:</span>
+                        <select id="selectHijoRapido" class="form-select form-select-sm rounded-pill" style="min-width: 190px;">
+                            <option value="">Cargando alumnos...</option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 border-start ps-3">
+                        <span class="material-symbols-outlined fs-3 text-secondary">family_restroom</span>
+                        <span id="navNombreTutor" class="fw-bold small text-dark d-none d-sm-inline">Cargando tutor...</span>
+                    </div>
+                    <button id="btnCerrarSesionTop" class="btn btn-outline-danger btn-sm rounded-pill fw-bold ms-2 btn-no-print">Salir</button>
+                </div>
+            </nav>
+
+            <div class="p-4 p-md-5">
+
+                <!-- ═══ BANNER PERFIL DEL ALUMNO ═══ -->
+                <div class="child-hero-card p-4 p-md-4 mb-4 shadow-sm">
+                    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div id="avatarAlumno" class="child-avatar-lg">
+                                <span class="material-symbols-outlined fs-1">face</span>
+                            </div>
+                            <div>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <h2 id="txtNombreAlumno" class="h3 fw-bold mb-0 text-dark">Cargando alumno...</h2>
+                                    <span id="badgeCondicionAlumno" class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
+                                        Alumno Regular
+                                    </span>
+                                </div>
+                                <p id="txtCursoDetalle" class="text-muted mb-2 small fw-medium">
+                                    Cargando grado y ciclo escolar...
+                                </p>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="badge bg-white text-secondary border px-2 py-1">
+                                        <span class="material-symbols-outlined align-middle" style="font-size:14px;">badge</span>
+                                        Legajo: <strong id="lblLegajo" class="text-dark ms-1">-</strong>
+                                    </span>
+                                    <span class="badge bg-white text-secondary border px-2 py-1">
+                                        <span class="material-symbols-outlined align-middle" style="font-size:14px;">pin</span>
+                                        DNI: <strong id="lblDni" class="text-dark ms-1">-</strong>
+                                    </span>
+                                    <span class="badge bg-white text-secondary border px-2 py-1">
+                                        <span class="material-symbols-outlined align-middle" style="font-size:14px;">cake</span>
+                                        Edad: <strong id="lblEdad" class="text-dark ms-1">-</strong>
+                                    </span>
+                                    <span class="badge bg-white text-secondary border px-2 py-1">
+                                        <span class="material-symbols-outlined align-middle" style="font-size:14px;">wc</span>
+                                        Género: <strong id="lblGenero" class="text-dark ms-1">-</strong>
+                                    </span>
+                                    <span class="badge bg-white text-secondary border px-2 py-1">
+                                        <span class="material-symbols-outlined align-middle" style="font-size:14px;">supervisor_account</span>
+                                        Tutor: <strong id="lblTutor" class="text-dark ms-1">-</strong>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-md-column gap-2 align-items-end justify-content-center">
+                            <button id="btnImprimirBoletin" class="btn btn-outline-secondary btn-sm rounded-pill fw-bold d-inline-flex align-items-center gap-1 px-3 shadow-sm bg-white">
+                                <span class="material-symbols-outlined fs-6">print</span> Imprimir Ficha / Boletín
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ NAVEGACIÓN POR PESTAÑAS (TABS) ═══ -->
+                <div class="mb-4">
+                    <ul class="nav nav-tutor-pills" id="tutorTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="tab-materias-btn" data-bs-toggle="pill" data-bs-target="#pane-materias" type="button" role="tab">
+                                <span class="material-symbols-outlined fs-5">school</span>
+                                Materias & Servicios
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-boletin-btn" data-bs-toggle="pill" data-bs-target="#pane-boletin" type="button" role="tab">
+                                <span class="material-symbols-outlined fs-5">assignment</span>
+                                Boletín Oficial
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-horarios-btn" data-bs-toggle="pill" data-bs-target="#pane-horarios" type="button" role="tab">
+                                <span class="material-symbols-outlined fs-5">calendar_month</span>
+                                Horarios de Clases
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- ═══ CONTENIDO DE LAS PESTAÑAS ═══ -->
+                <div class="tab-content" id="tutorTabsContent">
+
+                    <!-- ══════════════════════════════════════════════════════════
+                         PESTAÑA 1: MATERIAS & SERVICIOS (PRINCIPAL)
+                    ══════════════════════════════════════════════════════════ -->
+                    <div class="tab-pane fade show active" id="pane-materias" role="tabpanel">
+                        
+                        <!-- 1. Materias que cursa el alumno -->
+                        <div class="card service-card p-4 shadow-sm mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary">menu_book</span>
+                                        Plan de Estudios y Materias en Curso
+                                    </h5>
+                                    <p class="text-muted small mb-0">
+                                        Asignaturas oficiales correspondientes al curso actual del estudiante, con su docente o maestro titular asignado.
+                                    </p>
+                                </div>
+                                <span id="badgeTotalMaterias" class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-bold">
+                                    0 Asignaturas
+                                </span>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 110px;">Código</th>
+                                            <th>Asignatura Oficial</th>
+                                            <th>Docente / Maestro a Cargo</th>
+                                            <th>Carga Horaria</th>
+                                            <th>Condición</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaMateriasInscriptas">
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-muted">
+                                                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                                Cargando materias del plan de estudios...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 2. Servicios Escolares Oficiales (Deportes + Transporte) -->
+                        <div class="row g-4 mb-4">
+                            <!-- Deportes Extracurriculares -->
+                            <div class="col-lg-6">
+                                <div class="card service-card p-4 shadow-sm h-100">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                                <span class="material-symbols-outlined text-warning">emoji_events</span>
+                                                Deportes Extracurriculares
+                                            </h5>
+                                            <small class="text-muted">Inscripción en hasta 2 disciplinas deportivas</small>
+                                        </div>
+                                        <button class="btn btn-sm btn-primary rounded-pill px-3 fw-bold d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#modalDeportes">
+                                            <span class="material-symbols-outlined fs-6">edit</span> Gestionar
+                                        </button>
+                                    </div>
+
+                                    <!-- Contador de cupos -->
+                                    <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-3 border">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="material-symbols-outlined text-primary fs-3">fitness_center</span>
+                                            <div>
+                                                <div class="fw-bold text-dark">Cupo Disponible</div>
+                                                <small class="text-muted">Máximo 2 deportes por alumno</small>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <span id="contadorCuposDeportes" class="h4 fw-bold text-primary mb-0">0 / 2</span>
+                                            <small class="d-block text-muted" style="font-size:11px;">seleccionados</small>
+                                        </div>
+                                    </div>
+
+                                    <!-- Contenedor lista de deportes activos -->
+                                    <div id="listaDeportesActivos">
+                                        <div class="text-center py-3 text-muted small">
+                                            <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                            Consultando deportes inscriptos...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Transporte Escolar -->
+                            <div class="col-lg-6">
+                                <div class="card service-card p-4 shadow-sm h-100">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                                <span class="material-symbols-outlined text-success">directions_bus</span>
+                                                Transporte Escolar Oficial
+                                            </h5>
+                                            <small class="text-muted">Servicio puerta a puerta de traslado escolar</small>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#modalTransporte">
+                                            <span class="material-symbols-outlined fs-6">edit</span> Gestionar
+                                        </button>
+                                    </div>
+
+                                    <!-- Contenedor transporte activo -->
+                                    <div id="infoTransporteActivo" class="mt-2">
+                                        <div class="text-center py-4 text-muted small">
+                                            <div class="spinner-border spinner-border-sm text-success me-2"></div>
+                                            Consultando ruta de transporte...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ══════════════════════════════════════════════════════════
+                         PESTAÑA 2: BOLETÍN OFICIAL DE CALIFICACIONES
+                    ══════════════════════════════════════════════════════════ -->
+                    <div class="tab-pane fade" id="pane-boletin" role="tabpanel">
+                        
+                        <!-- Tarjetas de Métricas Académicas -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <div class="card p-3 bg-white border rounded-4 shadow-sm">
+                                    <small class="text-muted text-uppercase fw-bold" style="font-size:11px;">Promedio General</small>
+                                    <div class="d-flex align-items-baseline gap-2 mt-1">
+                                        <span id="txtPromedioGeneral" class="h2 fw-bold text-primary mb-0">-</span>
+                                        <span class="text-muted">/ 10.00</span>
+                                    </div>
+                                    <small class="text-muted" style="font-size:12px;">Sobre trimestres cerrados</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card p-3 bg-white border rounded-4 shadow-sm">
+                                    <small class="text-muted text-uppercase fw-bold" style="font-size:11px;">Total Asignaturas</small>
+                                    <div class="d-flex align-items-baseline gap-2 mt-1">
+                                        <span id="txtTotalAsignaturasBoletin" class="h2 fw-bold text-dark mb-0">0</span>
+                                        <span class="text-muted">materias</span>
+                                    </div>
+                                    <small class="text-muted" style="font-size:12px;">Plan de estudios oficial</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card p-3 bg-white border rounded-4 shadow-sm">
+                                    <small class="text-muted text-uppercase fw-bold" style="font-size:11px;">Estado de Cursada</small>
+                                    <div class="d-flex align-items-center gap-2 mt-2">
+                                        <span class="material-symbols-outlined text-success fs-3">verified</span>
+                                        <span class="fw-bold text-dark h5 mb-0">Ciclo Lectivo en Curso</span>
+                                    </div>
+                                    <small class="text-success fw-medium" style="font-size:12px;">Calificaciones sincronizadas con PostgreSQL</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabla Detalle del Boletín -->
+                        <div class="card service-card p-4 shadow-sm mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary">analytics</span>
+                                        Calificaciones Oficiales por Período
+                                    </h5>
+                                    <p class="text-muted small mb-0">
+                                        Registro trimestral de notas y condición pedagógica del estudiante.
+                                    </p>
+                                </div>
+                                <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill">
+                                    Aprobación mínima: 7.00
+                                </span>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Asignatura</th>
+                                            <th class="text-center">Carga Horaria</th>
+                                            <th class="text-center">1° Trimestre</th>
+                                            <th class="text-center">2° Trimestre</th>
+                                            <th class="text-center">3° Trimestre</th>
+                                            <th class="text-center">Promedio</th>
+                                            <th class="text-center">Condición</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaBoletinOficial">
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4 text-muted">
+                                                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                                Cargando calificaciones desde la base de datos...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Bloque de Firmas y Validez Oficial (para impresión y pantalla) -->
+                        <div class="card p-4 bg-white border rounded-4">
+                            <div class="row text-center pt-3 g-4">
+                                <div class="col-4">
+                                    <div class="border-top pt-2 text-muted small">Firma del Maestro/Profesor Titular</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="border-top pt-2 text-muted small">Sello de Dirección y Secretaría</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="border-top pt-2 text-muted small">Firma del Tutor a Cargo</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ══════════════════════════════════════════════════════════
+                         PESTAÑA 3: HORARIOS DE CLASES
+                    ══════════════════════════════════════════════════════════ -->
+                    <div class="tab-pane fade" id="pane-horarios" role="tabpanel">
+                        <div class="card service-card p-4 shadow-sm mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary">schedule</span>
+                                        Grilla Horaria Semanal
+                                    </h5>
+                                    <p class="text-muted small mb-0">
+                                        Distribución de materias presenciales, recreos y talleres por día lectivo.
+                                    </p>
+                                </div>
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill fw-bold">
+                                    Turno Mañana (07:45 - 12:45)
+                                </span>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle text-center mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 140px;">Horario</th>
+                                            <th>Lunes</th>
+                                            <th>Martes</th>
+                                            <th>Miércoles</th>
+                                            <th>Jueves</th>
+                                            <th>Viernes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaHorariosAlumno">
+                                        <tr>
+                                            <td class="fw-bold text-muted bg-light">07:45 - 08:30</td>
+                                            <td><div class="fw-bold text-primary">Matemática</div><small class="text-muted">Aula Principal</small></td>
+                                            <td><div class="fw-bold text-dark">Lengua y Literatura</div><small class="text-muted">Aula Principal</small></td>
+                                            <td><div class="fw-bold text-primary">Matemática</div><small class="text-muted">Aula Principal</small></td>
+                                            <td><div class="fw-bold text-success">Ciencias Naturales</div><small class="text-muted">Laboratorio</small></td>
+                                            <td><div class="fw-bold text-info">Inglés</div><small class="text-muted">Lab. Idiomas</small></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold text-muted bg-light">08:30 - 09:15</td>
+                                            <td><div class="fw-bold text-primary">Matemática</div><small class="text-muted">Aula Principal</small></td>
+                                            <td><div class="fw-bold text-dark">Lengua y Literatura</div><small class="text-muted">Aula Principal</small></td>
+                                            <td><div class="fw-bold text-primary">Matemática</div><small class="text-muted">Aula Principal</small></td>
+                                            <td><div class="fw-bold text-success">Ciencias Naturales</div><small class="text-muted">Laboratorio</small></td>
+                                            <td><div class="fw-bold text-info">Inglés</div><small class="text-muted">Lab. Idiomas</small></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold text-muted bg-light">09:15 - 09:30</td>
+                                            <td colspan="5" class="bg-warning-subtle text-warning-emphasis fw-bold py-1">
+                                                <span class="material-symbols-outlined align-middle me-1" style="font-size:16px;">restaurant</span>
+                                                Primer Recreo y Refrigerio
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold text-muted bg-light">09:30 - 10:15</td>
+                                            <td><div class="fw-bold text-dark">Lengua y Literatura</div><small class="text-muted">Aula Principal</small></td>
+                                            <td><div class="fw-bold text-danger">Ciencias Sociales</div><small class="text-muted">Aula Principal</small></td>
+                                            <td><div class="fw-bold text-dark">Lengua y Literatura</div><small class="text-muted">Aula Principal</small></td>
+                                            <td><div class="fw-bold text-danger">Ciencias Sociales</div><small class="text-muted">Aula Principal</small></td>
+                                            <td><div class="fw-bold text-primary">Matemática</div><small class="text-muted">Aula Principal</small></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold text-muted bg-light">10:15 - 11:00</td>
+                                            <td><div class="fw-bold text-dark">Lengua y Literatura</div><small class="text-muted">Aula Principal</small></td>
+                                            <td><div class="fw-bold text-danger">Ciencias Sociales</div><small class="text-muted">Aula Principal</small></td>
+                                            <td><div class="fw-bold text-dark">Lengua y Literatura</div><small class="text-muted">Aula Principal</small></td>
+                                            <td><div class="fw-bold text-danger">Ciencias Sociales</div><small class="text-muted">Aula Principal</small></td>
+                                            <td><div class="fw-bold text-primary">Matemática</div><small class="text-muted">Aula Principal</small></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold text-muted bg-light">11:00 - 11:15</td>
+                                            <td colspan="5" class="bg-warning-subtle text-warning-emphasis fw-bold py-1">
+                                                <span class="material-symbols-outlined align-middle me-1" style="font-size:16px;">nature_people</span>
+                                                Segundo Recreo en Patio Central
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold text-muted bg-light">11:15 - 12:45</td>
+                                            <td><div class="fw-bold text-warning-emphasis">Educación Física</div><small class="text-muted">Campo de Deportes</small></td>
+                                            <td><div class="fw-bold text-success">Ciencias Naturales</div><small class="text-muted">Aula Principal</small></td>
+                                            <td><div class="fw-bold text-warning-emphasis">Educación Física</div><small class="text-muted">Campo de Deportes</small></td>
+                                            <td><div class="fw-bold text-info">Inglés</div><small class="text-muted">Lab. Idiomas</small></td>
+                                            <td><div class="fw-bold text-secondary">Taller Artístico</div><small class="text-muted">Salón de Arte</small></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODAL: Gestión de Deportes (HU-02)
+════════════════════════════════════════════════ -->
+<div class="modal fade" id="modalDeportes" tabindex="-1" aria-labelledby="modalDeportesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="modalDeportesLabel">
+                    <span class="material-symbols-outlined text-warning me-2 align-middle">emoji_events</span>
+                    Inscripción a Deportes Extracurriculares
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <p class="text-muted small mb-3">
+                    Podés inscribir a tu hijo/a en hasta <strong>2 deportes</strong>. Las inscripciones se guardan directamente en el sistema institucional.
+                </p>
+                <div class="row g-3" id="catalogoDeportesModal">
+                    <!-- Generado dinámicamente -->
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODAL: Gestión de Transporte (HU-03)
+════════════════════════════════════════════════ -->
+<div class="modal fade" id="modalTransporte" tabindex="-1" aria-labelledby="modalTransporteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="modalTransporteLabel">
+                    <span class="material-symbols-outlined text-success me-2 align-middle">directions_bus</span>
+                    Gestión de Transporte Escolar
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <p class="text-muted small mb-3">
+                    Solo puede asignarse <strong>una ruta de transporte</strong> por alumno. Al seleccionar una nueva, la anterior queda reemplazada automáticamente.
+                </p>
+                <div class="row g-3" id="catalogoTransporteModal">
+                    <!-- Generado dinámicamente -->
+                </div>
+                <div class="mt-4" id="contenedorBtnQuitarTransporte"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast de Feedback Dinámico -->
+<div class="toast-feedback" id="toastContainer" aria-live="polite"></div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Lógica Principal del Portal Tutor -->
+<script type="module">
+import {
+    DEPORTES_CATALOGO, RUTAS_CATALOGO,
+    getDeportesAlumno, getRutaAlumno,
+    inscribirDeporte, desinscribirDeporte,
+    asignarTransporte, quitarTransporte,
+    sincronizarServiciosAlumno
+} from '../js/servicios-escolares.js';
+
+let ALUMNO_ID = null;
+let DATOS_ALUMNO = null;
+let HIJOS_TUTOR = [];
+
+// ── Toast helper ──────────────────────────────────────────────────────────────
+function mostrarToast(mensaje, tipo = 'success') {
+    const container = document.getElementById('toastContainer');
+    const id = 'toast-' + Date.now();
+    const icon = tipo === 'success' ? 'check_circle' : (tipo === 'warning' ? 'warning' : 'error');
+    container.insertAdjacentHTML('beforeend', `
+        <div id="${id}" class="toast align-items-center text-bg-${tipo} border-0 mb-2 show shadow-lg" role="alert">
+            <div class="d-flex align-items-center p-3 gap-2">
+                <span class="material-symbols-outlined">${icon}</span>
+                <div class="toast-body p-0 flex-grow-1">${mensaje}</div>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>`);
+    setTimeout(() => document.getElementById(id)?.remove(), 4000);
+}
+
+// ── Render: Deportes Activos en Tab 1 ─────────────────────────────────────────
+function renderDeportesActivos() {
+    const container = document.getElementById('listaDeportesActivos');
+    const contador = document.getElementById('contadorCuposDeportes');
+    if (!container) return;
+
+    const inscriptosIds = getDeportesAlumno(ALUMNO_ID);
+    const inscriptos = DEPORTES_CATALOGO.filter(d => inscriptosIds.includes(d.id));
+
+    if (contador) {
+        contador.innerText = `${inscriptos.length} / 2`;
+    }
+
+    if (inscriptos.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4 bg-light rounded-3 border border-dashed">
+                <span class="material-symbols-outlined display-6 text-muted mb-1">sports_and_outdoors</span>
+                <p class="text-muted small mb-0">Sin deportes registrados actualmente.</p>
+                <small class="text-secondary d-block mt-1">Haz click en "Gestionar" para inscribir hasta 2 disciplinas.</small>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = inscriptos.map(d => `
+        <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3 border mb-2">
+            <div class="sport-badge-icon bg-${d.color} text-white">
+                <span class="material-symbols-outlined">${d.icono}</span>
+            </div>
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-start">
+                    <h6 class="fw-bold mb-0 text-dark">${d.nombre}</h6>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle">Inscripto</span>
+                </div>
+                <small class="text-muted d-block">${d.dias.join(', ')} • ${d.horaInicio} a ${d.horaFin} hs</small>
+                <small class="text-secondary">📍 ${d.lugar}</small>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ── Render: Catálogo de Deportes en Modal ─────────────────────────────────────
+function renderCatalogoDeportes() {
+    const container = document.getElementById('catalogoDeportesModal');
+    if (!container) return;
+
+    const inscriptos = getDeportesAlumno(ALUMNO_ID);
+    const cupoLleno = inscriptos.length >= 2;
+
+    container.innerHTML = DEPORTES_CATALOGO.map(d => {
+        const estaInscripto = inscriptos.includes(d.id);
+        const deshabilitado = !estaInscripto && cupoLleno;
+
+        return `
+        <div class="col-md-6">
+            <div class="sport-card p-3 border ${estaInscripto ? 'inscripto' : ''} ${deshabilitado ? 'opacity-50' : ''}">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <div class="sport-badge-icon bg-${d.color} text-white">
+                        <span class="material-symbols-outlined">${d.icono}</span>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">${d.nombre}</h6>
+                        <small class="text-muted">${d.lugar}</small>
+                    </div>
+                    ${estaInscripto ? '<span class="badge bg-primary ms-auto">Inscripto</span>' : ''}
+                </div>
+                <p class="text-muted small mb-2">
+                    <span class="material-symbols-outlined align-middle" style="font-size:14px;">calendar_today</span> ${d.dias.join(', ')}<br>
+                    <span class="material-symbols-outlined align-middle" style="font-size:14px;">schedule</span> ${d.horaInicio} – ${d.horaFin} hs
+                </p>
+                <button class="btn w-100 rounded-pill btn-sm fw-bold ${estaInscripto ? 'btn-outline-danger' : 'btn-primary'}"
+                    ${deshabilitado ? 'disabled' : ''}
+                    onclick="window._handleDeporte('${d.id}', ${estaInscripto})">
+                    ${estaInscripto ? 'Dar de baja' : (deshabilitado ? 'Cupo completo (máx. 2)' : 'Inscribirse')}
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ── Render: Transporte Activo en Tab 1 ────────────────────────────────────────
+function renderTransporteActivo() {
+    const container = document.getElementById('infoTransporteActivo');
+    if (!container) return;
+
+    const rutaId = getRutaAlumno(ALUMNO_ID);
+    const ruta = RUTAS_CATALOGO.find(r => r.id === rutaId);
+
+    if (!ruta) {
+        container.innerHTML = `
+            <div class="text-center py-4 bg-light rounded-3 border border-dashed">
+                <span class="material-symbols-outlined display-6 text-muted mb-1">directions_bus</span>
+                <p class="text-muted small mb-0">Sin servicio de transporte asignado.</p>
+                <small class="text-secondary d-block mt-1">Podés seleccionar una de las 4 rutas institucionales.</small>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="p-3 bg-light rounded-3 border">
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <div class="sport-badge-icon bg-${ruta.color} text-white">
+                    <span class="material-symbols-outlined">${ruta.icono}</span>
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <h6 class="fw-bold mb-0 text-dark">Ruta ${ruta.nombre}</h6>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">Activa</span>
+                    </div>
+                    <small class="text-muted">Zona ${ruta.zona}</small>
+                </div>
+            </div>
+            <p class="small text-muted mb-2">
+                <strong>Paradas / Recorrido:</strong> ${ruta.descripcion}
+            </p>
+            <div class="d-flex gap-3 small bg-white p-2 rounded-2 border">
+                <div><span class="material-symbols-outlined align-middle fs-6 text-primary">schedule</span> <strong>Ida:</strong> ${ruta.horarioIda} hs</div>
+                <div><span class="material-symbols-outlined align-middle fs-6 text-primary">schedule</span> <strong>Vuelta:</strong> ${ruta.horarioVuelta} hs</div>
+            </div>
+        </div>`;
+}
+
+// ── Render: Catálogo de Rutas en Modal ────────────────────────────────────────
+function renderCatalogoTransporte() {
+    const rutaActualId = getRutaAlumno(ALUMNO_ID);
+    const container = document.getElementById('catalogoTransporteModal');
+    const btnQuitar = document.getElementById('contenedorBtnQuitarTransporte');
+
+    container.innerHTML = RUTAS_CATALOGO.map(r => {
+        const seleccionada = r.id === rutaActualId;
+        return `
+        <div class="col-md-6">
+            <div class="ruta-card p-3 border ${seleccionada ? 'seleccionada' : ''}">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <div class="sport-badge-icon bg-${r.color} text-white">
+                        <span class="material-symbols-outlined">${r.icono}</span>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">${r.nombre}</h6>
+                        <small class="text-muted">Zona ${r.zona}</small>
+                    </div>
+                    ${seleccionada ? '<span class="badge bg-primary ms-auto">Ruta Activa</span>' : ''}
+                </div>
+                <p class="text-muted small mb-2">
+                    ${r.descripcion}
+                </p>
+                <div class="small text-secondary mb-3">
+                    🕐 Ida: <strong>${r.horarioIda}</strong> • Vuelta: <strong>${r.horarioVuelta}</strong>
+                </div>
+                <button class="btn w-100 rounded-pill btn-sm fw-bold ${seleccionada ? 'btn-outline-secondary' : 'btn-success'}"
+                    ${seleccionada ? 'disabled' : ''}
+                    onclick="window._handleRuta('${r.id}')">
+                    ${seleccionada ? '✓ Ruta actualmente asignada' : 'Seleccionar esta ruta'}
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+
+    btnQuitar.innerHTML = rutaActualId
+        ? `<button class="btn btn-outline-danger rounded-pill btn-sm w-100 fw-bold py-2" onclick="window._quitarRuta()">
+               <span class="material-symbols-outlined align-middle fs-6 me-1">cancel</span>
+               Dar de baja servicio de transporte escolar
+           </button>`
+        : '';
+}
+
+// ── Handlers Globales de Servicios ───────────────────────────────────────────
+window._handleDeporte = async function(deporteId, estaInscripto) {
+    const resultado = estaInscripto
+        ? await desinscribirDeporte(ALUMNO_ID, deporteId)
+        : await inscribirDeporte(ALUMNO_ID, deporteId);
+
+    mostrarToast(resultado.mensaje, resultado.ok ? 'success' : 'danger');
+    if (resultado.ok) {
+        renderDeportesActivos();
+        renderCatalogoDeportes();
+    }
+};
+
+window._handleRuta = async function(rutaId) {
+    const resultado = await asignarTransporte(ALUMNO_ID, rutaId);
+    mostrarToast(resultado.mensaje, resultado.ok ? 'success' : 'danger');
+    if (resultado.ok) {
+        renderTransporteActivo();
+        renderCatalogoTransporte();
+    }
+};
+
+window._quitarRuta = async function() {
+    const resultado = await quitarTransporte(ALUMNO_ID);
+    mostrarToast(resultado.mensaje, resultado.ok ? 'warning' : 'danger');
+    if (resultado.ok) {
+        renderTransporteActivo();
+        renderCatalogoTransporte();
+    }
+};
+
+// ── Cargar Materias del Plan de Estudios ──────────────────────────────────────
+async function cargarMateriasPlan(idCurso) {
+    const tbody = document.getElementById('tablaMateriasInscriptas');
+    const badgeTotal = document.getElementById('badgeTotalMaterias');
+    if (!tbody) return;
+
+    if (!idCurso) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-3 text-muted">El alumno no tiene un curso asignado actualmente.</td></tr>`;
+        return;
+    }
+
+    try {
+        const res = await fetch(`http://localhost:3000/api/cursos/${idCurso}/materias`);
+        const data = await res.json();
+
+        if (!res.ok || !data.ok || !Array.isArray(data.data)) {
+            throw new Error(data.error || 'Error al obtener materias');
+        }
+
+        const materias = data.data;
+        if (badgeTotal) badgeTotal.innerText = `${materias.length} Asignaturas`;
+
+        if (materias.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-3 text-muted">No hay materias asignadas en el plan de este curso.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = materias.map(m => {
+            const tieneDocente = !!m.docenteNombre;
+            const docenteBadge = tieneDocente
+                ? `<span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill me-1">Titular</span>`
+                : '';
+            const docenteTxt = tieneDocente
+                ? `<span class="fw-semibold text-dark">${m.docenteNombre}</span>`
+                : `<span class="text-muted fst-italic">A confirmar por secretaría</span>`;
+
+            return `
+                <tr>
+                    <td><code>${m.codigo || '-'}</code></td>
+                    <td class="fw-bold text-dark">${m.nombre}</td>
+                    <td>${docenteBadge} ${docenteTxt}</td>
+                    <td><span class="badge bg-light text-secondary border">${m.cargaHoraria || 4} hs semanales</span></td>
+                    <td><span class="badge bg-success-subtle text-success border border-success-subtle">Cursando Regular</span></td>
+                </tr>
+            `;
+        }).join('');
+
+    } catch (e) {
+        console.error('Error cargando materias del plan:', e);
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-3 text-danger">Error al cargar materias: ${e.message}</td></tr>`;
+    }
+}
+
+// ── Cargar Boletín Oficial de Calificaciones ──────────────────────────────────
+async function cargarBoletinOficial() {
+    const tbody = document.getElementById('tablaBoletinOficial');
+    const txtPromedio = document.getElementById('txtPromedioGeneral');
+    const txtTotal = document.getElementById('txtTotalAsignaturasBoletin');
+    if (!tbody) return;
+
+    try {
+        const res = await fetch(`http://localhost:3000/api/alumnos/${ALUMNO_ID}/calificaciones`);
+        const data = await res.json();
+
+        if (!res.ok || !data.ok || !data.data || !Array.isArray(data.data.boletin)) {
+            throw new Error(data.error || 'Error al obtener calificaciones');
+        }
+
+        const boletin = data.data.boletin;
+        if (txtTotal) txtTotal.innerText = boletin.length;
+
+        // Calcular promedio general de materias con notas
+        const promediosValidos = boletin
+            .map(m => m.promedio !== null ? Number(m.promedio) : null)
+            .filter(n => n !== null);
+
+        if (txtPromedio) {
+            if (promediosValidos.length > 0) {
+                const promedioGral = (promediosValidos.reduce((a, b) => a + b, 0) / promediosValidos.length).toFixed(2);
+                txtPromedio.innerText = promedioGral;
+            } else {
+                txtPromedio.innerText = '-';
+            }
+        }
+
+        if (boletin.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-3 text-muted">No se registran asignaturas evaluadas en este ciclo.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = boletin.map(m => {
+            const t1 = m.trimestre_1 !== null ? Number(m.trimestre_1).toFixed(2) : '-';
+            const t2 = m.trimestre_2 !== null ? Number(m.trimestre_2).toFixed(2) : '-';
+            const t3 = m.trimestre_3 !== null ? Number(m.trimestre_3).toFixed(2) : '-';
+            const prom = m.promedio !== null ? Number(m.promedio).toFixed(2) : '-';
+
+            let badgeEstado = 'bg-primary-subtle text-primary border-primary-subtle';
+            if (m.estado === 'Promocionado') badgeEstado = 'bg-success-subtle text-success border-success-subtle';
+            else if (m.estado === 'Regular') badgeEstado = 'bg-info-subtle text-info border-info-subtle';
+            else if (m.estado === 'En Riesgo') badgeEstado = 'bg-danger-subtle text-danger border-danger-subtle';
+
+            return `
+                <tr>
+                    <td class="fw-bold text-dark">${m.materia}</td>
+                    <td class="text-center"><small class="text-muted">${m.carga_horaria || 4} hs</small></td>
+                    <td class="text-center">${t1}</td>
+                    <td class="text-center">${t2}</td>
+                    <td class="text-center">${t3}</td>
+                    <td class="text-center fw-bold ${m.promedio && m.promedio >= 7 ? 'text-success' : 'text-primary'}">${prom}</td>
+                    <td class="text-center">
+                        <span class="badge ${badgeEstado} border">
+                            ${m.estado || 'Cursando'}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+    } catch (e) {
+        console.error('Error cargando boletín oficial:', e);
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-3 text-danger">Error al cargar boletín: ${e.message}</td></tr>`;
+    }
+}
+
+// ── Inicialización General ───────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Obtener usuario de la sesión activa
+    let usuarioSesion = null;
+    try {
+        usuarioSesion = JSON.parse(localStorage.getItem('usuario'));
+    } catch (e) {
+        console.warn('Error al leer sesión:', e);
+    }
+
+    if (!usuarioSesion) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const btnCerrar = document.getElementById('btnCerrarSesionTop');
+    if (btnCerrar) {
+        btnCerrar.addEventListener('click', () => {
+            localStorage.removeItem('usuario');
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        });
+    }
+
+    const btnPrint = document.getElementById('btnImprimirBoletin');
+    if (btnPrint) {
+        btnPrint.addEventListener('click', () => {
+            window.print();
+        });
+    }
+
+    const userId = usuarioSesion.id || usuarioSesion.uid;
+    const nombreTutor = usuarioSesion.nombre || 'Tutor';
+    const apellidoTutor = usuarioSesion.apellido || '';
+
+    // Actualizar nombres del tutor
+    document.getElementById('navNombreTutor').innerText = `${nombreTutor} ${apellidoTutor} (Tutor)`.trim();
+    document.getElementById('txtFamiliaTitulo').innerText = apellidoTutor ? `Familia ${apellidoTutor}` : `Familia ${nombreTutor}`;
+    document.getElementById('txtTutorSubtitulo').innerText = `${nombreTutor} ${apellidoTutor}`.trim();
+
+    // 2. Obtener lista de hijos a cargo del tutor
+    const contSidebar = document.getElementById('contenedorHijosSidebar');
+    const selectRapido = document.getElementById('selectHijoRapido');
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let requestedAlumnoId = urlParams.get('alumnoId') || urlParams.get('id');
+
+    try {
+        const res = await fetch(`http://localhost:3000/api/tutores/${userId}/alumnos?byUser=true`);
+        const data = await res.json();
+
+        if (res.ok && data.ok && data.data) {
+            const tutor = data.data.tutor || {};
+            HIJOS_TUTOR = Array.isArray(data.data.hijos) ? data.data.hijos : [];
+
+            if (tutor.apellido) {
+                document.getElementById('txtFamiliaTitulo').innerText = `Familia ${tutor.apellido}`;
+                document.getElementById('navNombreTutor').innerText = `${tutor.nombre} ${tutor.apellido} (Tutor)`;
+            }
+        }
+    } catch (e) {
+        console.warn('Error al consultar hijos del tutor:', e);
+    }
+
+    // Si no se pasó alumnoId en la URL, tomar el primer hijo disponible
+    if (!requestedAlumnoId && HIJOS_TUTOR.length > 0) {
+        requestedAlumnoId = HIJOS_TUTOR[0].id_alumno;
+    }
+
+    ALUMNO_ID = requestedAlumnoId ? parseInt(requestedAlumnoId, 10) : null;
+
+    // Renderizar lista en Sidebar
+    if (HIJOS_TUTOR.length > 0) {
+        contSidebar.innerHTML = HIJOS_TUTOR.map(h => {
+            const esActivo = h.id_alumno === ALUMNO_ID;
+            const icono = (h.genero && h.genero.toLowerCase() === 'femenino') ? 'face_4' : 'face';
+            return `
+                <li class="nav-item">
+                    <a class="nav-link d-flex align-items-center gap-2 text-truncate ${esActivo ? 'active fw-bold' : ''}" 
+                       href="hijo.html?alumnoId=${h.id_alumno}" 
+                       title="Ver a ${h.nombre}">
+                        <span class="material-symbols-outlined fs-5">${icono}</span>
+                        <span class="text-truncate">${h.nombre}</span>
+                    </a>
+                </li>
+            `;
+        }).join('');
+
+        // Selector rápido en el Navbar
+        selectRapido.innerHTML = HIJOS_TUTOR.map(h => `
+            <option value="${h.id_alumno}" ${h.id_alumno === ALUMNO_ID ? 'selected' : ''}>
+                ${h.nombre} ${h.apellido} (${h.curso || h.nivel || 'Alumno'})
+            </option>
+        `).join('');
+
+        selectRapido.addEventListener('change', (e) => {
+            window.location.href = `hijo.html?alumnoId=${e.target.value}`;
+        });
+    } else {
+        contSidebar.innerHTML = `<li class="nav-item px-3 py-2 text-white-50 small fst-italic">Sin alumnos vinculados</li>`;
+    }
+
+    if (!ALUMNO_ID) {
+        document.getElementById('txtNombreAlumno').innerText = 'No se encontró el alumno';
+        return;
+    }
+
+    // 3. Cargar información oficial del Alumno
+    try {
+        const resAl = await fetch(`http://localhost:3000/api/alumnos/${ALUMNO_ID}`);
+        const dataAl = await resAl.json();
+
+        if (resAl.ok && dataAl.ok && dataAl.data) {
+            DATOS_ALUMNO = dataAl.data;
+
+            // Renderizar Banner
+            const nombreCompleto = `${DATOS_ALUMNO.nombre} ${DATOS_ALUMNO.apellido}`;
+            document.getElementById('txtNombreAlumno').innerText = nombreCompleto;
+            document.title = `${DATOS_ALUMNO.nombre} | Portal Familia | NovaSYS`;
+
+            const cursoStr = [
+                DATOS_ALUMNO.curso ? `${DATOS_ALUMNO.curso}${DATOS_ALUMNO.division ? ' "' + DATOS_ALUMNO.division + '"' : ''}` : '',
+                DATOS_ALUMNO.nivel || '',
+                DATOS_ALUMNO.ciclo ? `— ${DATOS_ALUMNO.ciclo}` : ''
+            ].filter(Boolean).join(' • ');
+
+            document.getElementById('txtCursoDetalle').innerText = cursoStr || 'Estudiante Regular';
+            document.getElementById('lblLegajo').innerText = DATOS_ALUMNO.legajo || 'S/D';
+            document.getElementById('lblDni').innerText = DATOS_ALUMNO.dni || 'S/D';
+            document.getElementById('lblEdad').innerText = DATOS_ALUMNO.edad ? `${DATOS_ALUMNO.edad} años` : 'S/D';
+            document.getElementById('lblGenero').innerText = DATOS_ALUMNO.genero || 'S/D';
+            document.getElementById('lblTutor').innerText = DATOS_ALUMNO.tutorNombre || `${nombreTutor} ${apellidoTutor}`;
+
+            // Avatar icono según género
+            const avatar = document.getElementById('avatarAlumno');
+            if (DATOS_ALUMNO.genero && DATOS_ALUMNO.genero.toLowerCase() === 'femenino') {
+                avatar.innerHTML = `<span class="material-symbols-outlined fs-1">face_4</span>`;
+            } else {
+                avatar.innerHTML = `<span class="material-symbols-outlined fs-1">face</span>`;
+            }
+
+            // Cargar materias del curso del alumno
+            await cargarMateriasPlan(DATOS_ALUMNO.id_curso);
+        }
+    } catch (e) {
+        console.error('Error al cargar datos del alumno:', e);
+    }
+
+    // 4. Sincronizar deportes y transporte desde PostgreSQL
+    await sincronizarServiciosAlumno(ALUMNO_ID);
+    renderDeportesActivos();
+    renderTransporteActivo();
+
+    // 5. Cargar boletín de calificaciones
+    await cargarBoletinOficial();
+
+    // 6. Activar pestaña si viene indicada por query param (?tab=boletin o ?tab=horarios)
+    const tabParam = urlParams.get('tab');
+    if (tabParam === 'boletin') {
+        const tabBoletinBtn = document.getElementById('tab-boletin-btn');
+        if (tabBoletinBtn) bootstrap.Tab.getOrCreateInstance(tabBoletinBtn).show();
+    } else if (tabParam === 'horarios') {
+        const tabHorariosBtn = document.getElementById('tab-horarios-btn');
+        if (tabHorariosBtn) bootstrap.Tab.getOrCreateInstance(tabHorariosBtn).show();
+    }
+});
+
+// Modales listeners
+document.getElementById('modalDeportes').addEventListener('show.bs.modal', renderCatalogoDeportes);
+document.getElementById('modalTransporte').addEventListener('show.bs.modal', renderCatalogoTransporte);
+</script>
+</body>
+</html>

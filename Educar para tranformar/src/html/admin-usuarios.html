@@ -256,9 +256,57 @@
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div>
                                     <h5 class="fw-bold mb-0 text-dark">Usuarios Registrados en el Sistema</h5>
-                                    <small class="text-muted">Cuentas activas en la memoria local de la plataforma.</small>
+                                    <small class="text-muted">Cuentas y perfiles activos en la plataforma institucional.</small>
                                 </div>
                                 <span id="badgeTotalUsuarios" class="badge bg-primary rounded-pill px-3 py-2">0 usuarios</span>
+                            </div>
+
+                            <!-- ═══ CLASIFICACIÓN POR ROL (PILLS / TABS) ═══ -->
+                            <div class="d-flex flex-wrap gap-2 mb-3 pb-2 border-bottom">
+                                <button type="button" class="btn btn-sm rounded-pill btn-primary filter-rol-btn fw-bold px-3 active" data-rol="todos">
+                                    Todos <span class="badge bg-white text-dark ms-1" id="badgeCountTodos">0</span>
+                                </button>
+                                <button type="button" class="btn btn-sm rounded-pill btn-outline-secondary filter-rol-btn fw-bold px-3" data-rol="alumno">
+                                    <span class="material-symbols-outlined align-middle fs-6 me-1 text-primary">school</span> Alumnos <span class="badge bg-primary-subtle text-primary ms-1" id="badgeCountAlumnos">0</span>
+                                </button>
+                                <button type="button" class="btn btn-sm rounded-pill btn-outline-secondary filter-rol-btn fw-bold px-3" data-rol="docente">
+                                    <span class="material-symbols-outlined align-middle fs-6 me-1 text-success">local_library</span> Docentes <span class="badge bg-success-subtle text-success ms-1" id="badgeCountDocentes">0</span>
+                                </button>
+                                <button type="button" class="btn btn-sm rounded-pill btn-outline-secondary filter-rol-btn fw-bold px-3" data-rol="tutor">
+                                    <span class="material-symbols-outlined align-middle fs-6 me-1 text-warning">family_restroom</span> Tutores <span class="badge bg-warning-subtle text-warning ms-1" id="badgeCountTutores">0</span>
+                                </button>
+                                <button type="button" class="btn btn-sm rounded-pill btn-outline-secondary filter-rol-btn fw-bold px-3" data-rol="admin">
+                                    <span class="material-symbols-outlined align-middle fs-6 me-1 text-dark">admin_panel_settings</span> Admins <span class="badge bg-secondary-subtle text-dark ms-1" id="badgeCountAdmins">0</span>
+                                </button>
+                            </div>
+
+                            <!-- ═══ FILTROS AVANZADOS (NIVEL, DOCENTE Y MATERIA QUE DICTA) ═══ -->
+                            <div class="p-3 bg-light rounded-4 mb-3 border">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-sm-4">
+                                        <label class="form-label small fw-bold text-secondary mb-1">Nivel Académico:</label>
+                                        <select id="filtroNivelSelect" class="form-select form-select-sm rounded-pill">
+                                            <option value="todos">Todos los niveles</option>
+                                            <option value="inicial">Nivel Inicial (Jardín)</option>
+                                            <option value="primario">Nivel Primario</option>
+                                            <option value="secundario">Nivel Secundario</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="form-label small fw-bold text-secondary mb-1">Docentes: Estado:</label>
+                                        <select id="filtroDocenteAsigSelect" class="form-select form-select-sm rounded-pill">
+                                            <option value="todos">Cualquier estado</option>
+                                            <option value="con_materias">Con materias asignadas</option>
+                                            <option value="sin_materias">Sin materias asignadas</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="form-label small fw-bold text-secondary mb-1">Materia que dicta:</label>
+                                        <select id="filtroMateriaDocenteSelect" class="form-select form-select-sm rounded-pill">
+                                            <option value="todas">Todas las materias</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="table-responsive rounded-3 border">
@@ -293,6 +341,14 @@
     // --- GESTIÓN DE USUARIOS CONECTADA A POSTGRESQL (API REST) ---
     const API_URL = 'http://localhost:3000/api/usuarios';
     let listaUsuariosCache = [];
+    let materiasCatalogoCache = [];
+
+    // Estados de filtros interactivos
+    let rolFiltroActivo = 'todos';
+    let nivelFiltroActivo = 'todos';
+    let docenteAsigFiltroActivo = 'todos';
+    let docenteMateriaFiltroActiva = 'todas';
+    let busquedaTextoActiva = '';
 
     // Obtener usuarios desde la base de datos PostgreSQL
     async function obtenerUsuarios() {
@@ -309,15 +365,116 @@
         return data.data;
     }
 
-    // Renderizar la tabla de usuarios en pantalla
-    async function renderizarTablaUsuarios(filtro = '') {
-        const tabla = document.getElementById('tablaUsuariosAdmin');
+    // Cargar catálogo de materias para el dropdown de filtro
+    async function cargarCatalogoMateriasFiltro() {
+        const select = document.getElementById('filtroMateriaDocenteSelect');
+        if (!select) return;
+        try {
+            const res = await fetch('http://localhost:3000/api/materias');
+            const data = await res.json();
+            if (data.ok && Array.isArray(data.data)) {
+                materiasCatalogoCache = data.data;
+                select.innerHTML = '<option value="todas">Todas las materias</option>';
+                materiasCatalogoCache.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m.id;
+                    opt.textContent = `${m.nombre} (${m.nivel})`;
+                    select.appendChild(opt);
+                });
+            }
+        } catch (e) {
+            console.warn('No se pudo cargar catálogo de materias para filtro:', e);
+        }
+    }
+
+    // Actualizar contadores numéricos en las pastillas de rol
+    function actualizarContadoresRoles() {
+        const total = listaUsuariosCache.length;
+        let cAlumnos = 0, cDocentes = 0, cTutores = 0, cAdmins = 0;
+
+        listaUsuariosCache.forEach(u => {
+            const r = (u.rol || '').toUpperCase();
+            if (r === 'ESTUDIANTE' || r === 'ALUMNO') cAlumnos++;
+            else if (r === 'DOCENTE') cDocentes++;
+            else if (r === 'PADRE' || r === 'TUTOR') cTutores++;
+            else if (r === 'ADMIN') cAdmins++;
+        });
+
+        document.getElementById('badgeCountTodos').innerText = total;
+        document.getElementById('badgeCountAlumnos').innerText = cAlumnos;
+        document.getElementById('badgeCountDocentes').innerText = cDocentes;
+        document.getElementById('badgeCountTutores').innerText = cTutores;
+        document.getElementById('badgeCountAdmins').innerText = cAdmins;
+    }
+
+    // Aplicar filtros combinados (Rol, Nivel, Materias dictadas, Búsqueda libre)
+    function aplicarFiltrosUsuarios() {
+        const query = busquedaTextoActiva.trim().toLowerCase();
+
+        const usuariosFiltrados = listaUsuariosCache.filter(u => {
+            const r = (u.rol || '').toUpperCase();
+
+            // 1. Filtro por Rol
+            if (rolFiltroActivo === 'alumno' && r !== 'ESTUDIANTE' && r !== 'ALUMNO') return false;
+            if (rolFiltroActivo === 'docente' && r !== 'DOCENTE') return false;
+            if (rolFiltroActivo === 'tutor' && r !== 'PADRE' && r !== 'TUTOR') return false;
+            if (rolFiltroActivo === 'admin' && r !== 'ADMIN') return false;
+
+            // 2. Filtro por Nivel Académico
+            if (nivelFiltroActivo !== 'todos') {
+                const niv = (u.nivel || '').toLowerCase();
+                if (nivelFiltroActivo === 'inicial' && !niv.includes('inicial') && !niv.includes('jard')) return false;
+                if (nivelFiltroActivo === 'primario' && !niv.includes('primar')) return false;
+                if (nivelFiltroActivo === 'secundario' && !niv.includes('secundar')) return false;
+            }
+
+            // 3. Filtro específico de Docentes (materias asignadas)
+            const mats = Array.isArray(u.materiasDictadas) ? u.materiasDictadas : [];
+            if (docenteAsigFiltroActivo === 'con_materias') {
+                if (r !== 'DOCENTE' || mats.length === 0) return false;
+            } else if (docenteAsigFiltroActivo === 'sin_materias') {
+                if (r !== 'DOCENTE' || mats.length > 0) return false;
+            }
+
+            // 4. Filtro por materia específica que dicta el docente
+            if (docenteMateriaFiltroActiva !== 'todas') {
+                if (r !== 'DOCENTE') return false;
+                const tieneMateria = mats.some(m => String(m.id) === String(docenteMateriaFiltroActiva) || (m.nombre && m.nombre.toLowerCase().includes(docenteMateriaFiltroActiva.toLowerCase())));
+                if (!tieneMateria) return false;
+            }
+
+            // 5. Búsqueda por texto (Nombre, Apellido, DNI, Email, Curso, Tutor, Materias)
+            if (query) {
+                const matchNombre = (u.nombre && u.nombre.toLowerCase().includes(query)) || (u.apellido && u.apellido.toLowerCase().includes(query));
+                const matchDni = u.dni && u.dni.toLowerCase().includes(query);
+                const matchEmail = u.email && u.email.toLowerCase().includes(query);
+                const matchCurso = u.curso && u.curso.toLowerCase().includes(query);
+                const matchTutor = u.tutorNombre && u.tutorNombre.toLowerCase().includes(query);
+                const matchMats = mats.some(m => (m.nombre && m.nombre.toLowerCase().includes(query)) || (m.codigo && m.codigo.toLowerCase().includes(query)));
+                if (!matchNombre && !matchDni && !matchEmail && !matchCurso && !matchTutor && !matchMats) return false;
+            }
+
+            return true;
+        });
+
         const badge = document.getElementById('badgeTotalUsuarios');
+        if (badge) {
+            badge.innerText = `${usuariosFiltrados.length} de ${listaUsuariosCache.length} usuario(s)`;
+        }
+
+        renderizarFilasTabla(usuariosFiltrados);
+    }
+
+    // Renderizar la tabla de usuarios en pantalla
+    async function renderizarTablaUsuarios() {
+        const tabla = document.getElementById('tablaUsuariosAdmin');
 
         try {
-            if (listaUsuariosCache.length === 0 || !filtro) {
+            if (listaUsuariosCache.length === 0) {
                 listaUsuariosCache = await obtenerUsuarios();
             }
+            actualizarContadoresRoles();
+            aplicarFiltrosUsuarios();
         } catch (e) {
             console.error('Error leyendo usuarios de PostgreSQL:', e);
             if (tabla) {
@@ -326,34 +483,20 @@
                     Error al conectar con la base de datos: ${e.message}
                 </td></tr>`;
             }
-            return;
         }
+    }
 
-        const query = (typeof filtro === 'string' ? filtro : '').trim().toLowerCase();
-        const usuariosFiltrados = query
-            ? listaUsuariosCache.filter(u =>
-                (u.nombre && u.nombre.toLowerCase().includes(query)) ||
-                (u.apellido && u.apellido.toLowerCase().includes(query)) ||
-                (u.dni && u.dni.toLowerCase().includes(query)) ||
-                (u.rol && u.rol.toLowerCase().includes(query)) ||
-                (u.email && u.email.toLowerCase().includes(query))
-              )
-            : listaUsuariosCache;
-
-        if (badge) {
-            badge.innerText = query
-                ? `${usuariosFiltrados.length} de ${listaUsuariosCache.length} usuario(s)`
-                : `${listaUsuariosCache.length} usuario(s)`;
-        }
+    function renderizarFilasTabla(usuarios) {
+        const tabla = document.getElementById('tablaUsuariosAdmin');
         if (!tabla) return;
-
         tabla.innerHTML = '';
-        if (usuariosFiltrados.length === 0) {
-            tabla.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No se encontraron usuarios coincidentes.</td></tr>';
+
+        if (usuarios.length === 0) {
+            tabla.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No se encontraron usuarios coincidentes con los filtros seleccionados.</td></tr>';
             return;
         }
 
-        usuariosFiltrados.forEach((u) => {
+        usuarios.forEach((u) => {
             const tr = document.createElement('tr');
 
             // Normalización de roles para etiquetas visuales
@@ -374,6 +517,8 @@
             const nivelTexto = u.nivel || 'General';
             const estadoTexto = u.estado || 'ACTIVO';
             const esAdmin = rolKey === 'ADMIN';
+            const esDocente = rolKey === 'DOCENTE';
+            const mats = Array.isArray(u.materiasDictadas) ? u.materiasDictadas : [];
 
             tr.innerHTML = `
                 <td class="ps-3 py-3">
@@ -382,6 +527,14 @@
                     ${(u.edad || u.genero) ? `<div class="text-secondary small mt-1" style="font-size:0.75rem;"><span class="material-symbols-outlined align-middle" style="font-size:13px;">person</span> ${u.edad ? u.edad + ' años' : ''} ${u.edad && u.genero ? '•' : ''} ${u.genero || ''}</div>` : ''}
                     ${u.curso ? `<div class="mt-1"><span class="badge bg-primary-subtle text-primary border border-primary-subtle"><span class="material-symbols-outlined align-middle" style="font-size:13px;">school</span> ${u.curso}${u.ciclo ? ' • ' + u.ciclo : ''}</span></div>` : ''}
                     ${u.tutorNombre ? `<div class="mt-1"><span class="badge bg-light text-primary border"><span class="material-symbols-outlined align-middle" style="font-size:13px;">family_restroom</span> Tutor: ${u.tutorNombre}</span></div>` : ''}
+                    ${esDocente ? (
+                        mats.length > 0 
+                            ? `<div class="mt-1 d-flex flex-wrap gap-1 align-items-center">
+                                <span class="small text-muted fw-bold" style="font-size:11px;">Dicta:</span>
+                                ${mats.map(m => `<span class="badge bg-info-subtle text-dark border border-info-subtle" style="font-size:11px;" title="${m.cargaHoraria || 4} hs"><span class="material-symbols-outlined align-middle" style="font-size:12px;">menu_book</span> ${m.nombre}</span>`).join('')}
+                               </div>`
+                            : `<div class="mt-1"><span class="badge bg-light text-secondary border" style="font-size:11px;">Sin materias asignadas</span></div>`
+                    ) : ''}
                 </td>
                 <td><span class="badge rounded-pill ${badgeRolClase} border">${rolTexto}</span></td>
                 <td><small class="text-secondary fw-medium">${nivelTexto}</small></td>
@@ -562,7 +715,14 @@
             const dni = document.getElementById('dni').value.trim();
             const password = document.getElementById('password').value;
             const edadInput = document.getElementById('edad')?.value;
-            const edad = edadInput ? parseInt(edadInput, 10) : null;
+            let edad = null;
+            if (edadInput !== undefined && edadInput !== null && edadInput.trim() !== '') {
+                edad = parseInt(edadInput.trim(), 10);
+                if (isNaN(edad) || edad < 2 || edad > 120) {
+                    mostrarAlerta('La edad debe ser un número válido entre 2 y 120 años.', 'danger');
+                    return;
+                }
+            }
             const genero = document.getElementById('genero')?.value || null;
             const rol = document.querySelector('input[name="rol"]:checked')?.value || 'alumno';
             const nivel = rol === 'familia' ? null : (document.querySelector('input[name="nivel"]:checked')?.value || 'primaria');
@@ -677,14 +837,49 @@
     const inputBuscar = document.getElementById('inputBuscarUsuario');
     if (inputBuscar) {
         inputBuscar.addEventListener('input', (e) => {
-            renderizarTablaUsuarios(e.target.value);
+            busquedaTextoActiva = e.target.value;
+            aplicarFiltrosUsuarios();
         });
     }
+
+    // Eventos de selección de pestañas de rol
+    document.querySelectorAll('.filter-rol-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-rol-btn').forEach(b => {
+                b.classList.remove('active', 'btn-primary');
+                b.classList.add('btn-outline-secondary');
+            });
+            btn.classList.add('active', 'btn-primary');
+            btn.classList.remove('btn-outline-secondary');
+
+            rolFiltroActivo = btn.dataset.rol;
+            aplicarFiltrosUsuarios();
+        });
+    });
+
+    // Evento de cambio de filtro de nivel
+    document.getElementById('filtroNivelSelect')?.addEventListener('change', (e) => {
+        nivelFiltroActivo = e.target.value;
+        aplicarFiltrosUsuarios();
+    });
+
+    // Evento de cambio de estado de asignación de docentes
+    document.getElementById('filtroDocenteAsigSelect')?.addEventListener('change', (e) => {
+        docenteAsigFiltroActivo = e.target.value;
+        aplicarFiltrosUsuarios();
+    });
+
+    // Evento de selección de materia específica
+    document.getElementById('filtroMateriaDocenteSelect')?.addEventListener('change', (e) => {
+        docenteMateriaFiltroActiva = e.target.value;
+        aplicarFiltrosUsuarios();
+    });
 
     // Render inicial al cargar la página
     renderizarTablaUsuarios();
     cargarTutores();
     cargarCursos();
+    cargarCatalogoMateriasFiltro();
 </script>
 </body>
 </html>

@@ -229,12 +229,15 @@
                         // Guardar token JWT y sesión
                         localStorage.setItem('token', data.data.token);
                         localStorage.setItem('usuario', JSON.stringify({
+                            id: u.id,
                             uid: u.id,
                             email: u.email,
                             nombre: u.nombre,
                             apellido: u.apellido,
                             rol: rolDetectado,
-                            nivel: nivel
+                            nivel: nivel,
+                            edad: u.edad || null,
+                            genero: u.genero || null
                         }));
 
                         if (rol === 'alumno')  window.location.href = 'dashboard-alumno.html';

@@ -142,20 +142,42 @@
                                 <p class="fst-italic small">Ningún docente seleccionado. Hacé clic en uno para ver las materias disponibles.</p>
                             </div>
 
-                            <!-- Lista de materias: se genera dinámicamente cuando se selecciona un docente -->
+                            <!-- Lista de materias y asignación guiada: se genera dinámicamente cuando se selecciona un docente -->
                             <div id="listaMaterias" class="d-none">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <small class="text-muted fw-bold text-uppercase">Materias del Ciclo 2027</small>
-                                    <!-- Filtro rápido por nivel: Primaria / Secundaria -->
-                                    <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-secondary active" id="filtroTodos" onclick="filtrarMaterias('todos')">Todos</button>
-                                        <button class="btn btn-outline-secondary" id="filtroInicial" onclick="filtrarMaterias('inicial')">Inicial</button>
-                                        <button class="btn btn-outline-secondary" id="filtroPrimaria" onclick="filtrarMaterias('primaria')">Primaria</button>
-                                        <button class="btn btn-outline-secondary" id="filtroSecundaria" onclick="filtrarMaterias('secundaria')">Secundaria</button>
+                                <!-- Selector de Curso / Grado Escolar -->
+                                <div class="bg-light p-3 rounded-4 border mb-3">
+                                    <div class="row align-items-center g-2">
+                                        <div class="col-md-7">
+                                            <label class="form-label fw-bold text-dark mb-0 d-flex align-items-center gap-1 small">
+                                                <span class="material-symbols-outlined text-primary" style="font-size:18px;">school</span> Curso / Grado a Gestionar:
+                                            </label>
+                                            <small class="text-muted d-block" style="font-size:0.75rem;">Configurá la titularidad pedagógica o materias de cátedra para este curso específico.</small>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <select id="selectCursoAsignacion" class="form-select form-select-sm fw-semibold border-primary-subtle shadow-sm" onchange="window._cambiarCursoAsignacion(this.value)">
+                                                <!-- Poblado dinámicamente según el nivel del docente -->
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
-                                <!-- Contenedor de filas de materias -->
-                                <div id="contenedorMaterias" class="d-flex flex-column gap-2 mt-3"></div>
+
+                                <!-- Contenedor de la asignación pedagógica guiada (Maestro de Sala / Maestro de Grado / Pareja Pedagógica / Cátedra) -->
+                                <div id="contenedorAsignacionPedagogica" class="mb-4"></div>
+
+                                <div class="border-top pt-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <small class="text-muted fw-bold text-uppercase" style="font-size:0.75rem;">Catálogo General de Materias</small>
+                                        <!-- Filtro rápido por nivel: Primaria / Secundaria -->
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-secondary active" id="filtroTodos" onclick="filtrarMaterias('todos')">Todos</button>
+                                            <button class="btn btn-outline-secondary" id="filtroInicial" onclick="filtrarMaterias('inicial')">Inicial</button>
+                                            <button class="btn btn-outline-secondary" id="filtroPrimaria" onclick="filtrarMaterias('primaria')">Primaria</button>
+                                            <button class="btn btn-outline-secondary" id="filtroSecundaria" onclick="filtrarMaterias('secundaria')">Secundaria</button>
+                                        </div>
+                                    </div>
+                                    <!-- Contenedor de filas de materias -->
+                                    <div id="contenedorMaterias" class="d-flex flex-column gap-2 mt-2"></div>
+                                </div>
                             </div>
 
                         </div>
@@ -175,6 +197,7 @@
                                         <tr>
                                             <th>Docente</th>
                                             <th>Legajo</th>
+                                            <th>Curso / Grado</th>
                                             <th>Materia</th>
                                             <th>Nivel</th>
                                             <th>Carga Horaria</th>
@@ -184,7 +207,7 @@
                                     </thead>
                                     <!-- Cuerpo generado dinámicamente por JS -->
                                     <tbody id="tablaResumen">
-                                        <tr><td colspan="7" class="text-center text-muted fst-italic py-3">Sin asignaciones todavía.</td></tr>
+                                        <tr><td colspan="8" class="text-center text-muted fst-italic py-3">Sin asignaciones todavía.</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -298,24 +321,27 @@ import {
     getMaterias,
     getDocentes,
     getAsignaciones,
+    getAsignacionesPorDocente,
     getMateriasPorDocente,
     getMateriasCompletasPorDocente,
     getDocentePorMateria,
     getCargaHorariaDocente,
     asignarMateria,
+    asignarBloqueDocente,
     desasignarMateria,
+    desasignarAsignacion,
     agregarMateria
 } from '../js/asignacion-materias.js';
 
 // ── Estado de la interfaz ─────────────────────────────────────────────────────
 let docenteSeleccionadoId = null;   // ID del docente actualmente visible en el panel derecho
+let cursoSeleccionadoId   = null;   // ID del curso actualmente seleccionado para asignación
 let filtroNivelActual     = 'todos'; // Filtro de nivel académico activo
 
 // ── Función: mostrar toast de notificación ────────────────────────────────────
 function mostrarToast(mensaje, tipo = 'success') {
     const container = document.getElementById('toastContainer');
     const id        = 'toast-' + Date.now();
-    // Elegir icono según el tipo de mensaje
     const icon = tipo === 'success' ? 'check_circle' : (tipo === 'warning' ? 'warning' : 'error');
     container.insertAdjacentHTML('beforeend', `
         <div id="${id}" class="toast align-items-center text-bg-${tipo} border-0 mb-2 show" role="alert">
@@ -325,7 +351,6 @@ function mostrarToast(mensaje, tipo = 'success') {
                 <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>`);
-    // Auto-eliminar después de 4 segundos
     setTimeout(() => document.getElementById(id)?.remove(), 4000);
 }
 
@@ -335,7 +360,6 @@ function renderDocentes() {
     const container  = document.getElementById('listaDocentes');
     const badge      = document.getElementById('badgeDocentesCount');
 
-    // Obtener el término de búsqueda para filtrar
     const busqueda = document.getElementById('inputBuscar').value.toLowerCase();
     const filtrados = busqueda
         ? docentes.filter(d =>
@@ -351,31 +375,32 @@ function renderDocentes() {
         return;
     }
 
-    // Generar una tarjeta por cada docente
     container.innerHTML = filtrados.map(d => {
         const carga     = getCargaHorariaDocente(d.id);
         const isSelected = Number(d.id) === Number(docenteSeleccionadoId);
-        // Color de la barra de carga horaria según porcentaje
         const colorBarra = carga.porcentaje >= 90 ? 'carga-full' : carga.porcentaje >= 70 ? 'carga-warn' : 'carga-ok';
+
+        const rolPedagogico = d.nivel === 'inicial' 
+            ? 'Maestro/a de Sala' 
+            : d.nivel === 'primaria' 
+                ? 'Maestro/a de Grado' 
+                : 'Profesor/a';
 
         return `
         <div class="docente-card p-3 ${isSelected ? 'seleccionado' : ''}"
              onclick="window._seleccionarDocente(${d.id})">
             <div class="d-flex align-items-center gap-3">
-                <!-- Avatar con inicial del nombre -->
                 <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
                      style="width:42px;height:42px;font-size:1.1rem;">${(d.nombre ? d.nombre[0] : 'D')}${(d.apellido ? d.apellido[0] : '')}</div>
                 <div class="flex-grow-1 min-w-0">
                     <h6 class="fw-bold mb-0 text-truncate">${d.apellido}, ${d.nombre}</h6>
-                    <small class="text-muted d-block">${d.legajo} · <span class="text-capitalize">${d.nivel}</span></small>
+                    <small class="text-muted d-block">${d.legajo} · <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size:10px;">${rolPedagogico}</span></small>
                     ${(d.edad || d.genero) ? `<small class="text-secondary" style="font-size:0.75rem;"><span class="material-symbols-outlined align-middle" style="font-size:12px;">person</span> ${d.edad ? d.edad + ' años' : ''} ${d.edad && d.genero ? '•' : ''} ${d.genero || ''}</small>` : ''}
                 </div>
-                <!-- Badge: cantidad de materias asignadas -->
                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle flex-shrink-0">
                     ${getMateriasPorDocente(d.id).length} mat.
                 </span>
             </div>
-            <!-- Mini barra de carga horaria en la tarjeta -->
             <div class="progress mt-2" style="height:4px;">
                 <div class="progress-bar ${colorBarra}" style="width:${carga.porcentaje}%"></div>
             </div>
@@ -388,31 +413,546 @@ function renderDocentes() {
 window._seleccionarDocente = function(docenteId) {
     docenteSeleccionadoId = Number(docenteId);
 
-    // Obtener datos del docente seleccionado
     const docentes = getDocentes();
     const docente  = docentes.find(d => Number(d.id) === Number(docenteId));
     if (!docente) return;
 
-    // Actualizar el encabezado del panel de materias
+    const rolPedagogico = docente.nivel === 'inicial' 
+        ? 'Maestro/a de Sala (Nivel Inicial)' 
+        : docente.nivel === 'primaria' 
+            ? 'Maestro/a de Grado (Nivel Primario)' 
+            : 'Profesor/a de Cátedra (Nivel Secundario)';
+
     document.getElementById('panelDocenteNombre').textContent   = `${docente.nombre} ${docente.apellido}`;
     const extraInfo = (docente.edad || docente.genero) ? ` · ${docente.edad ? docente.edad + ' años' : ''} ${docente.genero ? '(' + docente.genero + ')' : ''}` : '';
-    document.getElementById('panelDocenteDetalle').textContent  = `${docente.legajo} · Nivel ${docente.nivel}${extraInfo}`;
+    document.getElementById('panelDocenteDetalle').textContent  = `${docente.legajo} · ${rolPedagogico}${extraInfo}`;
 
-    // Mostrar la barra de carga horaria
     const cargaEl = document.getElementById('panelCargaHoraria');
-    cargaEl.style.removeProperty('display'); // quitar el display:none inline
+    cargaEl.style.removeProperty('display');
     cargaEl.classList.remove('d-none');
     actualizarBarraHoras();
 
-    // Ocultar el placeholder y mostrar la lista de materias
+    // Poblar el selector de cursos según el nivel del docente
+    poblarSelectorCursosDocente(docente.nivel);
+
+    // Sincronizar automáticamente el filtro visual al nivel pedagógico del docente seleccionado
+    if (docente.nivel) {
+        filtroNivelActual = docente.nivel;
+        ['filtroTodos', 'filtroInicial', 'filtroPrimaria', 'filtroSecundaria'].forEach(id => {
+            document.getElementById(id)?.classList.remove('active');
+        });
+        const mapa = { inicial: 'filtroInicial', primaria: 'filtroPrimaria', secundaria: 'filtroSecundaria' };
+        if (mapa[docente.nivel]) document.getElementById(mapa[docente.nivel])?.classList.add('active');
+    }
+
     document.getElementById('placeholderSinDocente').classList.add('d-none');
     document.getElementById('listaMaterias').classList.remove('d-none');
 
-    // Actualizar tarjetas de docentes (para resaltar el seleccionado)
     renderDocentes();
-    // Renderizar las materias del panel derecho
+    renderAsignacionPedagogica();
     renderMaterias();
 };
+
+// ── Poblar Selector de Cursos según nivel del docente ─────────────────────────
+function poblarSelectorCursosDocente(nivelDocente) {
+    const select = document.getElementById('selectCursoAsignacion');
+    if (!select) return;
+
+    let idNivelEsperado = 3;
+    if (nivelDocente === 'inicial') idNivelEsperado = 1;
+    else if (nivelDocente === 'primaria') idNivelEsperado = 2;
+
+    const cursosNivel = cursosPlanCache.filter(c => Number(c.id_nivel) === idNivelEsperado);
+
+    select.innerHTML = cursosNivel.map(c => 
+        `<option value="${c.id_curso}">${c.nombre} ${c.ciclo ? '· ' + c.ciclo : ''}</option>`
+    ).join('');
+
+    const cursoExiste = cursosNivel.some(c => Number(c.id_curso) === Number(cursoSeleccionadoId));
+    if (!cursoExiste && cursosNivel.length > 0) {
+        cursoSeleccionadoId = Number(cursosNivel[0].id_curso);
+    }
+    if (cursoSeleccionadoId) select.value = String(cursoSeleccionadoId);
+}
+
+window._cambiarCursoAsignacion = function(cursoId) {
+    cursoSeleccionadoId = Number(cursoId);
+    renderAsignacionPedagogica();
+};
+
+// ── Función: renderizar asignación pedagógica guiada ──────────────────────────
+function renderAsignacionPedagogica() {
+    const contenedor = document.getElementById('contenedorAsignacionPedagogica');
+    if (!contenedor || !docenteSeleccionadoId) return;
+
+    const docentes = getDocentes();
+    const docente = docentes.find(d => Number(d.id) === Number(docenteSeleccionadoId));
+    if (!docente) return;
+
+    const curso = cursosPlanCache.find(c => Number(c.id_curso) === Number(cursoSeleccionadoId));
+    if (!curso) {
+        contenedor.innerHTML = '<div class="alert alert-info py-2 small">Selecciona un curso para gestionar la modalidad pedagógica.</div>';
+        return;
+    }
+
+    const todasAsignaciones = getAsignaciones();
+    const asigsCurso = todasAsignaciones.filter(a => Number(a.cursoId) === Number(curso.id_curso));
+    const idNivelCurso = Number(curso.id_nivel);
+
+    // CASO 1: NIVEL INICIAL (Jardín)
+    if (idNivelCurso === 1) {
+        const idsTroncales = [1, 2, 3]; // Juego, Expresión, Lectura
+        const asigsTroncales = asigsCurso.filter(a => idsTroncales.includes(Number(a.materiaId)));
+        const esTitularDeEstaSala = asigsTroncales.some(a => Number(a.docenteId) === Number(docente.id));
+        const titularOtro = asigsTroncales.find(a => Number(a.docenteId) !== Number(docente.id));
+
+        const asigEf = asigsCurso.find(a => Number(a.materiaId) === 28);
+        const efAsignadaAEste = asigEf && Number(asigEf.docenteId) === Number(docente.id);
+        const efDocente = asigEf ? `${asigEf.docenteNombre} ${asigEf.docenteApellido}` : null;
+
+        contenedor.innerHTML = `
+            <div class="card border-warning border-opacity-50 rounded-4 shadow-sm overflow-hidden mb-3">
+                <div class="card-header bg-warning bg-opacity-10 border-0 p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined text-warning fs-3">child_care</span>
+                        <div>
+                            <h6 class="fw-bold mb-0 text-dark">Maestro/a de Sala Titular · ${curso.nombre}</h6>
+                            <small class="text-muted">En Nivel Inicial, el/la maestro/a es dueño/a de su sala y dicta las materias troncales en bloque integrado.</small>
+                        </div>
+                    </div>
+                    <div>
+                        ${esTitularDeEstaSala
+                            ? `<span class="badge bg-success text-white py-2 px-3 rounded-pill d-inline-flex align-items-center gap-1 shadow-sm">
+                                   <span class="material-symbols-outlined" style="font-size:16px;">verified</span> Titular Asignado/a
+                               </span>`
+                            : titularOtro
+                                ? `<span class="badge bg-secondary text-white py-2 px-3 rounded-pill d-inline-flex align-items-center gap-1">
+                                       <span class="material-symbols-outlined" style="font-size:16px;">person</span> A cargo de: ${titularOtro.docenteNombre} ${titularOtro.docenteApellido}
+                                   </span>`
+                                : `<span class="badge bg-warning text-dark py-2 px-3 rounded-pill d-inline-flex align-items-center gap-1">
+                                       <span class="material-symbols-outlined" style="font-size:16px;">error</span> Sala Vacante
+                                   </span>`
+                        }
+                    </div>
+                </div>
+                <div class="card-body p-3 bg-white">
+                    <div class="p-3 bg-light rounded-3 mb-3 border">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                            <strong class="small text-secondary text-uppercase">Bloque Troncal de Sala:</strong>
+                            ${esTitularDeEstaSala
+                                ? `<button class="btn btn-outline-danger btn-sm rounded-pill fw-bold" onclick="window._quitarBloqueSala(${docente.id}, ${curso.id_curso})">
+                                       <span class="material-symbols-outlined align-middle" style="font-size:16px;">link_off</span> Quitar Titularidad de Sala
+                                   </button>`
+                                : titularOtro
+                                    ? `<button class="btn btn-warning btn-sm rounded-pill fw-bold text-dark shadow-sm" onclick="window._asignarBloqueSala(${docente.id}, ${curso.id_curso})">
+                                           <span class="material-symbols-outlined align-middle" style="font-size:16px;">swap_horiz</span> Reasignar Sala a ${docente.nombre}
+                                       </button>`
+                                    : `<button class="btn btn-primary btn-sm rounded-pill fw-bold px-3 shadow-sm" onclick="window._asignarBloqueSala(${docente.id}, ${curso.id_curso})">
+                                           <span class="material-symbols-outlined align-middle" style="font-size:16px;">how_to_reg</span> Asignar como Maestro/a Titular de Sala
+                                       </button>`
+                            }
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-white text-dark border p-2"><span class="material-symbols-outlined align-middle me-1 text-warning" style="font-size:15px;">toys</span> Juego y Exploración</span>
+                            <span class="badge bg-white text-dark border p-2"><span class="material-symbols-outlined align-middle me-1 text-primary" style="font-size:15px;">palette</span> Expresión Artística</span>
+                            <span class="badge bg-white text-dark border p-2"><span class="material-symbols-outlined align-middle me-1 text-success" style="font-size:15px;">menu_book</span> Iniciación a la Lectura</span>
+                        </div>
+                    </div>
+
+                    <div class="border rounded-3 p-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle mb-1">Materia Especial</span>
+                                <h6 class="fw-bold mb-0 text-dark">Educación Física Inicial <code class="text-muted small">(INI-EF)</code></h6>
+                                <small class="text-muted">A cargo de profesor/a especialista en educación física.</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                ${asigEf ? `<span class="badge ${efAsignadaAEste ? 'bg-success-subtle text-success' : 'bg-light text-muted border'}">${efAsignadaAEste ? 'Dictada por este docente' : 'A cargo de ' + efDocente}</span>` : '<span class="badge bg-light text-muted border">Sin docente</span>'}
+                                ${efAsignadaAEste
+                                    ? `<button class="btn btn-outline-danger btn-sm rounded-pill" onclick="window._handleAsignacionIndividual(28, ${curso.id_curso}, true)"><span class="material-symbols-outlined align-middle" style="font-size:15px;">link_off</span> Quitar</button>`
+                                    : `<button class="btn btn-outline-primary btn-sm rounded-pill" onclick="window._handleAsignacionIndividual(28, ${curso.id_curso}, false)"><span class="material-symbols-outlined align-middle" style="font-size:15px;">add_link</span> Asignar</button>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    // CASO 2: PRIMARIA 1° CICLO (1° a 3° Grado)
+    if (idNivelCurso === 2 && [4, 5, 6].includes(Number(curso.id_curso))) {
+        const idsTroncales = [4, 5, 6]; // Matemática 1°, Lengua 1°, Conocimiento del Entorno
+        const asigsTroncales = asigsCurso.filter(a => idsTroncales.includes(Number(a.materiaId)));
+        const esTitularDeEsteGrado = asigsTroncales.some(a => Number(a.docenteId) === Number(docente.id));
+        const titularOtro = asigsTroncales.find(a => Number(a.docenteId) !== Number(docente.id));
+
+        const asigEf = asigsCurso.find(a => Number(a.materiaId) === 29);
+        const efAsignadaAEste = asigEf && Number(asigEf.docenteId) === Number(docente.id);
+        const efDocente = asigEf ? `${asigEf.docenteNombre} ${asigEf.docenteApellido}` : null;
+
+        contenedor.innerHTML = `
+            <div class="card border-info border-opacity-50 rounded-4 shadow-sm overflow-hidden mb-3">
+                <div class="card-header bg-info bg-opacity-10 border-0 p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined text-info fs-3">school</span>
+                        <div>
+                            <h6 class="fw-bold mb-0 text-dark">Maestro/a de Grado Único · ${curso.nombre} (1° Ciclo)</h6>
+                            <small class="text-muted">Hasta 3° grado de primaria, un solo maestro/a es dueño/a de su curso y dicta todas las materias troncales.</small>
+                        </div>
+                    </div>
+                    <div>
+                        ${esTitularDeEsteGrado
+                            ? `<span class="badge bg-success text-white py-2 px-3 rounded-pill d-inline-flex align-items-center gap-1 shadow-sm">
+                                   <span class="material-symbols-outlined" style="font-size:16px;">verified</span> Maestro/a Titular Asignado/a
+                               </span>`
+                            : titularOtro
+                                ? `<span class="badge bg-secondary text-white py-2 px-3 rounded-pill d-inline-flex align-items-center gap-1">
+                                       <span class="material-symbols-outlined" style="font-size:16px;">person</span> A cargo de: ${titularOtro.docenteNombre} ${titularOtro.docenteApellido}
+                                   </span>`
+                                : `<span class="badge bg-warning text-dark py-2 px-3 rounded-pill d-inline-flex align-items-center gap-1">
+                                       <span class="material-symbols-outlined" style="font-size:16px;">error</span> Grado Vacante
+                                   </span>`
+                        }
+                    </div>
+                </div>
+                <div class="card-body p-3 bg-white">
+                    <div class="p-3 bg-light rounded-3 mb-3 border">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                            <strong class="small text-secondary text-uppercase">Materias Troncales a Cargo del Maestro/a Titular:</strong>
+                            ${esTitularDeEsteGrado
+                                ? `<button class="btn btn-outline-danger btn-sm rounded-pill fw-bold" onclick="window._quitarBloqueGrado(${docente.id}, ${curso.id_curso})">
+                                       <span class="material-symbols-outlined align-middle" style="font-size:16px;">link_off</span> Quitar Titularidad de Grado
+                                   </button>`
+                                : titularOtro
+                                    ? `<button class="btn btn-warning btn-sm rounded-pill fw-bold text-dark shadow-sm" onclick="window._asignarBloqueGrado(${docente.id}, ${curso.id_curso})">
+                                           <span class="material-symbols-outlined align-middle" style="font-size:16px;">swap_horiz</span> Reasignar Grado a ${docente.nombre}
+                                       </button>`
+                                    : `<button class="btn btn-primary btn-sm rounded-pill fw-bold px-3 shadow-sm" onclick="window._asignarBloqueGrado(${docente.id}, ${curso.id_curso})">
+                                           <span class="material-symbols-outlined align-middle" style="font-size:16px;">how_to_reg</span> Asignar como Maestro/a Titular del Grado
+                                       </button>`
+                            }
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-white text-dark border p-2"><span class="material-symbols-outlined align-middle me-1 text-primary" style="font-size:15px;">calculate</span> Matemática 1° Ciclo</span>
+                            <span class="badge bg-white text-dark border p-2"><span class="material-symbols-outlined align-middle me-1 text-success" style="font-size:15px;">menu_book</span> Lengua 1° Ciclo</span>
+                            <span class="badge bg-white text-dark border p-2"><span class="material-symbols-outlined align-middle me-1 text-info" style="font-size:15px;">public</span> Conocimiento del Entorno</span>
+                        </div>
+                    </div>
+
+                    <div class="border rounded-3 p-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <span class="badge bg-info-subtle text-info border border-info-subtle mb-1">Materia Especial</span>
+                                <h6 class="fw-bold mb-0 text-dark">Educación Física Primaria <code class="text-muted small">(PRI-EF)</code></h6>
+                                <small class="text-muted">A cargo de profesor/a especialista en educación física.</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                ${asigEf ? `<span class="badge ${efAsignadaAEste ? 'bg-success-subtle text-success' : 'bg-light text-muted border'}">${efAsignadaAEste ? 'Dictada por este docente' : 'A cargo de ' + efDocente}</span>` : '<span class="badge bg-light text-muted border">Sin docente</span>'}
+                                ${efAsignadaAEste
+                                    ? `<button class="btn btn-outline-danger btn-sm rounded-pill" onclick="window._handleAsignacionIndividual(29, ${curso.id_curso}, true)"><span class="material-symbols-outlined align-middle" style="font-size:15px;">link_off</span> Quitar</button>`
+                                    : `<button class="btn btn-outline-primary btn-sm rounded-pill" onclick="window._handleAsignacionIndividual(29, ${curso.id_curso}, false)"><span class="material-symbols-outlined align-middle" style="font-size:15px;">add_link</span> Asignar</button>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    // CASO 3: PRIMARIA 2° CICLO (4° a 6° Grado - Pareja Pedagógica)
+    if (idNivelCurso === 2 && [7, 8, 9].includes(Number(curso.id_curso))) {
+        const idsHum = [8, 10]; // Lengua 2°, Ciencias Sociales
+        const asigsHum = asigsCurso.filter(a => idsHum.includes(Number(a.materiaId)));
+        const esHumAEste = asigsHum.some(a => Number(a.docenteId) === Number(docente.id));
+        const titularHumOtro = asigsHum.find(a => Number(a.docenteId) !== Number(docente.id));
+
+        const idsCien = [7, 9]; // Matemática 2°, Ciencias Naturales
+        const asigsCien = asigsCurso.filter(a => idsCien.includes(Number(a.materiaId)));
+        const esCienAEste = asigsCien.some(a => Number(a.docenteId) === Number(docente.id));
+        const titularCienOtro = asigsCien.find(a => Number(a.docenteId) !== Number(docente.id));
+
+        const asigIng = asigsCurso.find(a => Number(a.materiaId) === 11);
+        const ingAsignadaAEste = asigIng && Number(asigIng.docenteId) === Number(docente.id);
+        const ingDocente = asigIng ? `${asigIng.docenteNombre} ${asigIng.docenteApellido}` : null;
+
+        const asigEf = asigsCurso.find(a => Number(a.materiaId) === 29);
+        const efAsignadaAEste = asigEf && Number(asigEf.docenteId) === Number(docente.id);
+        const efDocente = asigEf ? `${asigEf.docenteNombre} ${asigEf.docenteApellido}` : null;
+
+        contenedor.innerHTML = `
+            <div class="card border-primary border-opacity-50 rounded-4 shadow-sm overflow-hidden mb-3">
+                <div class="card-header bg-primary bg-opacity-10 border-0 p-3">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="material-symbols-outlined text-primary fs-3">groups</span>
+                        <div>
+                            <h6 class="fw-bold mb-0 text-dark">Modalidad Pareja Pedagógica · ${curso.nombre} (2° Ciclo)</h6>
+                            <small class="text-muted">En 4°, 5° y 6° grado son <strong>dos maestros</strong>: cada uno dueño y responsable de su área pedagógica dentro del mismo curso.</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 bg-white">
+                    <div class="row g-3 mb-3">
+                        <!-- Área Humanística -->
+                        <div class="col-md-6">
+                            <div class="border rounded-4 p-3 h-100 ${esHumAEste ? 'border-success bg-success-subtle bg-opacity-10' : 'bg-light'}">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Área Humanística</span>
+                                        <h6 class="fw-bold text-dark mt-1 mb-0">Maestro/a Humanístico/a</h6>
+                                    </div>
+                                    ${esHumAEste ? '<span class="badge bg-success text-white">✓ Asignado/a</span>' : titularHumOtro ? `<span class="badge bg-secondary text-white" title="${titularHumOtro.docenteNombre}">A cargo de otro</span>` : '<span class="badge bg-warning text-dark">Vacante</span>'}
+                                </div>
+                                <small class="text-muted d-block mb-2">Materias troncales del área:</small>
+                                <ul class="list-unstyled small mb-3">
+                                    <li class="py-1 border-bottom d-flex align-items-center gap-1"><span class="material-symbols-outlined text-success" style="font-size:16px;">book</span> Lengua y Literatura 2° Ciclo</li>
+                                    <li class="py-1 d-flex align-items-center gap-1"><span class="material-symbols-outlined text-success" style="font-size:16px;">public</span> Ciencias Sociales</li>
+                                </ul>
+                                <div>
+                                    ${esHumAEste
+                                        ? `<button class="btn btn-outline-danger btn-sm w-100 rounded-pill fw-bold" onclick="window._quitarAreaHumanistica(${docente.id}, ${curso.id_curso})">
+                                               <span class="material-symbols-outlined align-middle" style="font-size:15px;">link_off</span> Quitar Área Humanística
+                                           </button>`
+                                        : titularHumOtro
+                                            ? `<button class="btn btn-warning btn-sm w-100 rounded-pill fw-bold text-dark shadow-sm" onclick="window._asignarAreaHumanistica(${docente.id}, ${curso.id_curso})">
+                                                   <span class="material-symbols-outlined align-middle" style="font-size:15px;">swap_horiz</span> Reasignar a ${docente.nombre}
+                                               </button>`
+                                            : `<button class="btn btn-success btn-sm w-100 rounded-pill fw-bold shadow-sm" onclick="window._asignarAreaHumanistica(${docente.id}, ${curso.id_curso})">
+                                                   <span class="material-symbols-outlined align-middle" style="font-size:15px;">how_to_reg</span> Asignar Maestro/a Humanístico
+                                               </button>`
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Área Científica -->
+                        <div class="col-md-6">
+                            <div class="border rounded-4 p-3 h-100 ${esCienAEste ? 'border-primary bg-primary-subtle bg-opacity-10' : 'bg-light'}">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Área Científica</span>
+                                        <h6 class="fw-bold text-dark mt-1 mb-0">Maestro/a Científico/a</h6>
+                                    </div>
+                                    ${esCienAEste ? '<span class="badge bg-primary text-white">✓ Asignado/a</span>' : titularCienOtro ? `<span class="badge bg-secondary text-white" title="${titularCienOtro.docenteNombre}">A cargo de otro</span>` : '<span class="badge bg-warning text-dark">Vacante</span>'}
+                                </div>
+                                <small class="text-muted d-block mb-2">Materias troncales del área:</small>
+                                <ul class="list-unstyled small mb-3">
+                                    <li class="py-1 border-bottom d-flex align-items-center gap-1"><span class="material-symbols-outlined text-primary" style="font-size:16px;">calculate</span> Matemática 2° Ciclo</li>
+                                    <li class="py-1 d-flex align-items-center gap-1"><span class="material-symbols-outlined text-primary" style="font-size:16px;">science</span> Ciencias Naturales</li>
+                                </ul>
+                                <div>
+                                    ${esCienAEste
+                                        ? `<button class="btn btn-outline-danger btn-sm w-100 rounded-pill fw-bold" onclick="window._quitarAreaCientifica(${docente.id}, ${curso.id_curso})">
+                                               <span class="material-symbols-outlined align-middle" style="font-size:15px;">link_off</span> Quitar Área Científica
+                                           </button>`
+                                        : titularCienOtro
+                                            ? `<button class="btn btn-warning btn-sm w-100 rounded-pill fw-bold text-dark shadow-sm" onclick="window._asignarAreaCientifica(${docente.id}, ${curso.id_curso})">
+                                                   <span class="material-symbols-outlined align-middle" style="font-size:15px;">swap_horiz</span> Reasignar a ${docente.nombre}
+                                               </button>`
+                                            : `<button class="btn btn-primary btn-sm w-100 rounded-pill fw-bold shadow-sm" onclick="window._asignarAreaCientifica(${docente.id}, ${curso.id_curso})">
+                                                   <span class="material-symbols-outlined align-middle" style="font-size:15px;">how_to_reg</span> Asignar Maestro/a Científico
+                                               </button>`
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Especiales 2° Ciclo -->
+                    <div class="border rounded-3 p-3 bg-light bg-opacity-50">
+                        <small class="fw-bold text-secondary text-uppercase d-block mb-2">Materias con Profesores Especialistas:</small>
+                        <div class="d-flex flex-column gap-2">
+                            <div class="bg-white p-2 px-3 rounded-3 border d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div><strong>Inglés Primario</strong> <code class="text-muted small">(PRI-ING2)</code></div>
+                                <div class="d-flex align-items-center gap-2">
+                                    ${asigIng ? `<span class="badge ${ingAsignadaAEste ? 'bg-success-subtle text-success' : 'bg-light text-muted border'}">${ingAsignadaAEste ? 'Dictada por este docente' : 'A cargo de ' + ingDocente}</span>` : '<span class="badge bg-light text-muted border">Sin docente</span>'}
+                                    ${ingAsignadaAEste
+                                        ? `<button class="btn btn-outline-danger btn-sm rounded-pill py-0 px-2" onclick="window._handleAsignacionIndividual(11, ${curso.id_curso}, true)">Quitar</button>`
+                                        : `<button class="btn btn-outline-primary btn-sm rounded-pill py-0 px-2" onclick="window._handleAsignacionIndividual(11, ${curso.id_curso}, false)">Asignar</button>`
+                                    }
+                                </div>
+                            </div>
+                            <div class="bg-white p-2 px-3 rounded-3 border d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div><strong>Educación Física Primaria</strong> <code class="text-muted small">(PRI-EF)</code></div>
+                                <div class="d-flex align-items-center gap-2">
+                                    ${asigEf ? `<span class="badge ${efAsignadaAEste ? 'bg-success-subtle text-success' : 'bg-light text-muted border'}">${efAsignadaAEste ? 'Dictada por este docente' : 'A cargo de ' + efDocente}</span>` : '<span class="badge bg-light text-muted border">Sin docente</span>'}
+                                    ${efAsignadaAEste
+                                        ? `<button class="btn btn-outline-danger btn-sm rounded-pill py-0 px-2" onclick="window._handleAsignacionIndividual(29, ${curso.id_curso}, true)">Quitar</button>`
+                                        : `<button class="btn btn-outline-primary btn-sm rounded-pill py-0 px-2" onclick="window._handleAsignacionIndividual(29, ${curso.id_curso}, false)">Asignar</button>`
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    // CASO 4: NIVEL SECUNDARIO
+    if (idNivelCurso === 3) {
+        contenedor.innerHTML = `
+            <div class="card border-secondary border-opacity-25 rounded-4 shadow-sm overflow-hidden mb-3">
+                <div class="card-header bg-light border-0 p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined text-secondary fs-3">history_edu</span>
+                        <div>
+                            <h6 class="fw-bold mb-0 text-dark">Modalidad Cátedra · ${curso.nombre} (${curso.ciclo || 'Secundaria'})</h6>
+                            <small class="text-muted">En Nivel Secundario cada materia cuenta con su propio/a profesor/a especialista de cátedra.</small>
+                        </div>
+                    </div>
+                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill">Profesores de Cátedra</span>
+                </div>
+                <div class="card-body p-3 bg-white" id="contenedorMateriasSecundariaCurso">
+                    <div class="text-center py-2 text-muted small"><span class="spinner-border spinner-border-sm me-1"></span>Cargando asignaturas del curso...</div>
+                </div>
+            </div>
+        `;
+
+        cargarMateriasCatedraSecundaria(curso.id_curso, docente.id);
+        return;
+    }
+}
+
+// ── Cargar materias de cátedra secundaria para el curso seleccionado ──────────
+async function cargarMateriasCatedraSecundaria(id_curso, docenteId) {
+    const cont = document.getElementById('contenedorMateriasSecundariaCurso');
+    if (!cont) return;
+
+    try {
+        const res = await fetch(`http://localhost:3000/api/cursos/${id_curso}/materias`);
+        const data = await res.json();
+        if (data.ok && Array.isArray(data.data)) {
+            const materiasCurso = data.data;
+            const asignaciones = getAsignaciones();
+            const asigsCurso = asignaciones.filter(a => Number(a.cursoId) === Number(id_curso));
+
+            cont.innerHTML = `
+                <div class="d-flex flex-column gap-2">
+                    ${materiasCurso.map(m => {
+                        const asig = asigsCurso.find(a => Number(a.materiaId) === Number(m.id_materia));
+                        const esAsignadaAEste = asig && Number(asig.docenteId) === Number(docenteId);
+                        const otroDocente = asig && !esAsignadaAEste ? `${asig.docenteNombre} ${asig.docenteApellido}` : null;
+
+                        return `
+                            <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between gap-3 ${esAsignadaAEste ? 'bg-success-subtle bg-opacity-25 border-success' : 'bg-light'}">
+                                <div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <code class="text-muted small">${m.codigo}</code>
+                                        <strong class="text-dark">${m.nombre}</strong>
+                                        <span class="badge bg-secondary-subtle text-secondary small">${m.carga_horaria || 4}h</span>
+                                    </div>
+                                    <small class="text-muted">
+                                        ${esAsignadaAEste ? '<span class="text-success fw-bold">✓ Dictada por este docente</span>' : otroDocente ? '<span class="text-warning fw-bold">A cargo de: ' + otroDocente + '</span>' : 'Disponible para asignación'}
+                                    </small>
+                                </div>
+                                <div>
+                                    ${esAsignadaAEste
+                                        ? `<button class="btn btn-outline-danger btn-sm rounded-pill" onclick="window._handleAsignacionIndividual(${m.id_materia}, ${id_curso}, true)">
+                                               <span class="material-symbols-outlined align-middle" style="font-size:15px;">link_off</span> Quitar Cátedra
+                                           </button>`
+                                        : otroDocente
+                                            ? `<button class="btn btn-warning btn-sm rounded-pill text-dark fw-bold" onclick="window._handleAsignacionIndividual(${m.id_materia}, ${id_curso}, false)">
+                                                   <span class="material-symbols-outlined align-middle" style="font-size:15px;">swap_horiz</span> Reasignar Cátedra
+                                               </button>`
+                                            : `<button class="btn btn-outline-primary btn-sm rounded-pill" onclick="window._handleAsignacionIndividual(${m.id_materia}, ${id_curso}, false)">
+                                                   <span class="material-symbols-outlined align-middle" style="font-size:15px;">add_link</span> Asignar Cátedra
+                                               </button>`
+                                    }
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+    } catch (e) {
+        cont.innerHTML = `<span class="text-danger small">Error: ${e.message}</span>`;
+    }
+}
+
+// ── Handlers de Asignación en Bloque y Materias ──────────────────────────────
+window._asignarBloqueSala = async function(docenteId, cursoId) {
+    const res = await asignarBloqueDocente(docenteId, cursoId, [1, 2, 3]);
+    mostrarToast(res.mensaje, res.ok ? 'success' : 'danger');
+    if (res.ok) refrescarTodo();
+};
+
+window._quitarBloqueSala = async function(docenteId, cursoId) {
+    await desasignarMateria(docenteId, 1, cursoId);
+    await desasignarMateria(docenteId, 2, cursoId);
+    await desasignarMateria(docenteId, 3, cursoId);
+    mostrarToast('Titularidad de sala removida correctamente.', 'success');
+    refrescarTodo();
+};
+
+window._asignarBloqueGrado = async function(docenteId, cursoId) {
+    const res = await asignarBloqueDocente(docenteId, cursoId, [4, 5, 6]);
+    mostrarToast(res.mensaje, res.ok ? 'success' : 'danger');
+    if (res.ok) refrescarTodo();
+};
+
+window._quitarBloqueGrado = async function(docenteId, cursoId) {
+    await desasignarMateria(docenteId, 4, cursoId);
+    await desasignarMateria(docenteId, 5, cursoId);
+    await desasignarMateria(docenteId, 6, cursoId);
+    mostrarToast('Titularidad de grado removida correctamente.', 'success');
+    refrescarTodo();
+};
+
+window._asignarAreaHumanistica = async function(docenteId, cursoId) {
+    const res = await asignarBloqueDocente(docenteId, cursoId, [8, 10]);
+    mostrarToast(res.mensaje, res.ok ? 'success' : 'danger');
+    if (res.ok) refrescarTodo();
+};
+
+window._quitarAreaHumanistica = async function(docenteId, cursoId) {
+    await desasignarMateria(docenteId, 8, cursoId);
+    await desasignarMateria(docenteId, 10, cursoId);
+    mostrarToast('Área Humanística removida correctamente.', 'success');
+    refrescarTodo();
+};
+
+window._asignarAreaCientifica = async function(docenteId, cursoId) {
+    const res = await asignarBloqueDocente(docenteId, cursoId, [7, 9]);
+    mostrarToast(res.mensaje, res.ok ? 'success' : 'danger');
+    if (res.ok) refrescarTodo();
+};
+
+window._quitarAreaCientifica = async function(docenteId, cursoId) {
+    await desasignarMateria(docenteId, 7, cursoId);
+    await desasignarMateria(docenteId, 9, cursoId);
+    mostrarToast('Área Científica removida correctamente.', 'success');
+    refrescarTodo();
+};
+
+window._handleAsignacionIndividual = async function(materiaId, cursoId, estaAsignada) {
+    if (!docenteSeleccionadoId) return;
+    const res = estaAsignada 
+        ? await desasignarMateria(docenteSeleccionadoId, materiaId, cursoId)
+        : await asignarMateria(docenteSeleccionadoId, materiaId, cursoId);
+    mostrarToast(res.mensaje, res.ok ? 'success' : 'danger');
+    if (res.ok) refrescarTodo();
+};
+
+window._eliminarAsignacionPorId = async function(idAsignacion) {
+    const res = await desasignarAsignacion(idAsignacion);
+    mostrarToast(res.mensaje, res.ok ? 'success' : 'danger');
+    if (res.ok) refrescarTodo();
+};
+
+function refrescarTodo() {
+    actualizarBarraHoras();
+    renderDocentes();
+    renderAsignacionPedagogica();
+    renderMaterias();
+    renderTablaResumen();
+    cargarCursosPlan();
+}
 
 // ── Función: actualizar la barra de carga horaria del docente activo ──────────
 function actualizarBarraHoras() {
@@ -422,21 +962,21 @@ function actualizarBarraHoras() {
     const texto       = document.getElementById('textoHoras');
     const colorBarra  = carga.porcentaje >= 90 ? 'carga-full' : carga.porcentaje >= 70 ? 'carga-warn' : 'carga-ok';
 
-    // Resetear clases de color y aplicar la correcta
     barra.className   = `progress-bar ${colorBarra}`;
     barra.style.width = `${carga.porcentaje}%`;
     texto.textContent = `${carga.horasUsadas} / ${carga.horasMax} h`;
 }
 
-// ── Función: renderizar la lista de materias en el panel derecho ─────────────
+// ── Función: renderizar catálogo general de materias ─────────────────────────
 function renderMaterias() {
     if (!docenteSeleccionadoId) return;
 
     const materias  = getMaterias();
-    const asignadas = getMateriasPorDocente(docenteSeleccionadoId); // IDs asignadas a este docente
+    const asignadas = getMateriasPorDocente(docenteSeleccionadoId);
+    const docentes  = getDocentes();
+    const docenteActivo = docentes.find(d => Number(d.id) === Number(docenteSeleccionadoId));
     const container = document.getElementById('contenedorMaterias');
 
-    // Aplicar filtro por nivel si está activo
     const filtradas = filtroNivelActual === 'todos'
         ? materias
         : materias.filter(m => m.nivel === filtroNivelActual);
@@ -449,12 +989,11 @@ function renderMaterias() {
     container.innerHTML = filtradas.map(m => {
         const esAsignadaAEste  = asignadas.some(asigId => Number(asigId) === Number(m.id));
         const docenteOtroId    = getDocentePorMateria(m.id);
-        // ¿Está asignada a otro docente distinto al seleccionado?
         const esAsignadaAOtro  = docenteOtroId && Number(docenteOtroId) !== Number(docenteSeleccionadoId);
-        const docentes         = getDocentes();
         const otroDocente      = esAsignadaAOtro ? docentes.find(d => Number(d.id) === Number(docenteOtroId)) : null;
 
-        // Badge de nivel: inicial/primaria/secundaria
+        const esNivelIncompatible = docenteActivo && docenteActivo.nivel && m.nivel && (docenteActivo.nivel !== m.nivel);
+
         const nivelBadge = m.nivel === 'inicial'
             ? '<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Inicial</span>'
             : m.nivel === 'primaria'
@@ -463,116 +1002,111 @@ function renderMaterias() {
 
         return `
         <div class="materia-row p-3 border rounded-3 d-flex align-items-center gap-3
-                    ${esAsignadaAEste ? 'asignada-aqui' : ''} ${esAsignadaAOtro ? 'asignada-otro' : ''}">
-            <!-- Icono de la materia -->
+                    ${esAsignadaAEste ? 'asignada-aqui' : ''} ${esAsignadaAOtro ? 'asignada-otro' : ''} ${esNivelIncompatible ? 'opacity-75 bg-light' : ''}">
             <div class="flex-shrink-0">
-                <span class="material-symbols-outlined fs-4 text-${esAsignadaAEste ? 'success' : 'muted'}">
-                    ${esAsignadaAEste ? 'check_circle' : 'circle'}
+                <span class="material-symbols-outlined fs-4 text-${esAsignadaAEste ? 'success' : esNivelIncompatible ? 'danger' : 'muted'}">
+                    ${esAsignadaAEste ? 'check_circle' : esNivelIncompatible ? 'cancel' : 'circle'}
                 </span>
             </div>
-            <!-- Información de la materia -->
             <div class="flex-grow-1">
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                     <code class="text-muted small">${m.codigo}</code>
                     <strong>${m.nombre}</strong>
                     ${nivelBadge}
+                    ${esNivelIncompatible ? `<span class="badge bg-danger-subtle text-danger border border-danger-subtle"><span class="material-symbols-outlined align-middle" style="font-size:12px;">block</span> Nivel Incompatible</span>` : ''}
                 </div>
                 <small class="text-muted">
                     ${m.cargaHoraria}h · Ciclo ${m.cicloLectivo}
-                    <!-- Si está asignada a otro docente, mostrar su nombre -->
                     ${esAsignadaAOtro && otroDocente
                         ? ` · <span class="text-warning fw-bold">Asignada a ${otroDocente.nombre} ${otroDocente.apellido}</span>`
                         : ''}
                 </small>
             </div>
-            <!-- Botón de asignar o desasignar -->
             <div class="flex-shrink-0">
                 ${esAsignadaAEste
                     ? `<button class="btn btn-outline-danger btn-sm rounded-pill"
                               onclick="window._handleAsignacion('${m.id}', true)">
                            <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle;">link_off</span> Quitar
                        </button>`
-                    : `<button class="btn btn-outline-primary btn-sm rounded-pill"
-                              ${esAsignadaAOtro ? 'disabled title="Asignada a otro docente"' : ''}
-                              onclick="window._handleAsignacion('${m.id}', false)">
-                           <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle;">add_link</span> Asignar
-                       </button>`
+                    : esNivelIncompatible
+                        ? `<button class="btn btn-outline-secondary btn-sm rounded-pill" disabled title="Incompatible: el docente pertenece al nivel ${docenteActivo.nivel} y la materia al nivel ${m.nivel}">
+                               <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle;">block</span> Incompatible
+                           </button>`
+                        : `<button class="btn btn-outline-primary btn-sm rounded-pill"
+                                  ${esAsignadaAOtro ? 'disabled title="Asignada a otro docente"' : ''}
+                                  onclick="window._handleAsignacion('${m.id}', false)">
+                               <span class="material-symbols-outlined" style="font-size:.9rem;vertical-align:middle;">add_link</span> Asignar
+                           </button>`
                 }
             </div>
         </div>`;
     }).join('');
 }
 
-// ── Función: manejar clic en Asignar / Quitar ─────────────────────────────────
+// ── Función: manejar clic en Asignar / Quitar del catálogo general ────────────
 window._handleAsignacion = async function(materiaId, estaAsignada) {
     if (!docenteSeleccionadoId) return;
 
-    // Llamar a la función correspondiente del módulo de lógica de negocio (PostgreSQL)
-    const resultado = estaAsignada
-        ? await desasignarMateria(docenteSeleccionadoId, materiaId)
-        : await asignarMateria(docenteSeleccionadoId, materiaId);
+    const docentes = getDocentes();
+    const docente = docentes.find(d => Number(d.id) === Number(docenteSeleccionadoId));
+    const materias = getMaterias();
+    const materia = materias.find(m => String(m.id) === String(materiaId));
 
-    // Mostrar toast con resultado
+    if (!estaAsignada && docente && materia && docente.nivel && materia.nivel && docente.nivel !== materia.nivel) {
+        mostrarToast(`Incompatibilidad de nivel: El docente ${docente.nombre} ${docente.apellido} (${docente.nivel}) no puede dictar materias de ${materia.nivel}.`, 'danger');
+        return;
+    }
+
+    const resultado = estaAsignada
+        ? await desasignarMateria(docenteSeleccionadoId, materiaId, cursoSeleccionadoId)
+        : await asignarMateria(docenteSeleccionadoId, materiaId, cursoSeleccionadoId);
+
     mostrarToast(resultado.mensaje, resultado.ok ? 'success' : 'danger');
 
     if (resultado.ok) {
-        // Actualizar todos los componentes visuales afectados
-        actualizarBarraHoras();
-        renderDocentes();
-        renderMaterias();
-        renderTablaResumen();
-        cargarCursosPlan();
+        refrescarTodo();
     }
 };
 
 // ── Función: filtrar materias por nivel desde los botones de filtro ───────────
 window.filtrarMaterias = function(nivel) {
     filtroNivelActual = nivel;
-
-    // Actualizar el estado visual de los botones de filtro
     ['filtroTodos', 'filtroInicial', 'filtroPrimaria', 'filtroSecundaria'].forEach(id => {
         document.getElementById(id)?.classList.remove('active');
     });
     const mapa = { todos: 'filtroTodos', inicial: 'filtroInicial', primaria: 'filtroPrimaria', secundaria: 'filtroSecundaria' };
     if (mapa[nivel]) document.getElementById(mapa[nivel])?.classList.add('active');
-
     renderMaterias();
 };
 
-// ── Función: renderizar la tabla resumen de asignaciones ─────────────────────
+// ── Función: renderizar la tabla resumen de asignaciones con curso y botón eliminar ────
 function renderTablaResumen() {
     const asignaciones = getAsignaciones();
-    const materias     = getMaterias();
-    const docentes     = getDocentes();
     const tbody        = document.getElementById('tablaResumen');
 
     if (!asignaciones.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted fst-italic py-3">Sin asignaciones todavía.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted fst-italic py-3">Sin asignaciones todavía.</td></tr>';
         return;
     }
 
     tbody.innerHTML = asignaciones.map(a => {
-        const docente = docentes.find(d => Number(d.id) === Number(a.docenteId));
-        const materia = materias.find(m => Number(m.id) === Number(a.materiaId));
-        if (!docente || !materia) return ''; // Ignorar asignaciones huérfanas
-
-        const nivelBadge = materia.nivel === 'inicial'
+        const nivelBadge = (a.nivel === 'Inicial' || a.nivel === 'inicial')
             ? '<span class="badge bg-warning-subtle text-warning">Inicial</span>'
-            : materia.nivel === 'primaria'
+            : (a.nivel === 'Primario' || a.nivel === 'primaria')
                 ? '<span class="badge bg-info-subtle text-info">Primaria</span>'
                 : '<span class="badge bg-secondary-subtle text-secondary">Secundaria</span>';
 
         return `<tr>
-            <td class="fw-bold">${docente.apellido}, ${docente.nombre}</td>
-            <td><code>${docente.legajo}</code></td>
-            <td>${materia.nombre}</td>
+            <td class="fw-bold">${a.docenteApellido || ''}, ${a.docenteNombre || ''}</td>
+            <td><code>${a.legajo || ''}</code></td>
+            <td><span class="badge bg-light text-dark border fw-bold">${a.cursoNombre || 'General'}</span></td>
+            <td><strong>${a.materiaNombre}</strong> <code class="text-muted small">(${a.materiaCodigo})</code></td>
             <td>${nivelBadge}</td>
-            <td>${materia.cargaHoraria}h</td>
-            <td><small class="text-muted">${a.fechaAsignacion || 'Activa'}</small></td>
+            <td>${a.cargaHoraria || 4}h</td>
+            <td><small class="text-muted">${a.fechaAsignacion ? new Date(a.fechaAsignacion).toLocaleDateString() : 'Activa'}</small></td>
             <td class="text-end">
-                <!-- Botón eliminar asignación directamente desde la tabla resumen -->
                 <button class="btn btn-outline-danger btn-sm rounded-pill px-3"
-                        onclick="window._handleAsignacion('${a.materiaId}', true)">
+                        onclick="window._eliminarAsignacionPorId(${a.id_asignacion})" title="Eliminar asignación">
                     <span class="material-symbols-outlined" style="font-size:.85rem;vertical-align:middle;">delete</span>
                 </button>
             </td>
@@ -745,9 +1279,9 @@ window._ocultarMateriasDeCurso = function(id_curso) {
 // ── Inicialización: dibujar toda la interfaz al cargar la página ──────────────
 document.addEventListener('DOMContentLoaded', async () => {
     await sincronizarConServidor();
+    await cargarCursosPlan();
     renderDocentes();
     renderTablaResumen();
-    cargarCursosPlan();
 });
 </script>
 

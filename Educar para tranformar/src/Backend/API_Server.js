@@ -175,6 +175,59 @@ app.get('/api/tutores', async (req, res) => {
 });
 
 /**
+ * GET /api/tutores/:id/alumnos
+ * Lista los alumnos a cargo de un tutor específico.
+ * Soporta ?byUser=true cuando :id es el id_usuario del tutor logueado.
+ */
+app.get('/api/tutores/:id/alumnos', async (req, res) => {
+  try {
+    const isByUser = req.query.byUser === 'true';
+    const tutorQuery = isByUser
+      ? 'SELECT t.id_tutor, t.nombre, t.apellido, t.dni, t.telefono, u.email FROM tutores t JOIN usuarios u ON u.id_usuario = t.id_usuario WHERE t.id_usuario = $1'
+      : 'SELECT t.id_tutor, t.nombre, t.apellido, t.dni, t.telefono, u.email FROM tutores t JOIN usuarios u ON u.id_usuario = t.id_usuario WHERE t.id_tutor = $1';
+
+    const tutorRes = await db.query(tutorQuery, [req.params.id]);
+    if (tutorRes.rows.length === 0) {
+      return fail(res, 'Tutor no encontrado', 404);
+    }
+    const tutor = tutorRes.rows[0];
+
+    const hijosQuery = `
+      SELECT 
+        a.id_alumno,
+        a.id_usuario,
+        a.legajo,
+        a.dni,
+        a.nombre,
+        a.apellido,
+        u.edad,
+        u.genero,
+        c.nombre as curso,
+        ci.nombre as ciclo,
+        n.nombre as nivel,
+        c.division,
+        ta.parentesco
+      FROM tutor_alumno ta
+      JOIN alumnos a ON a.id_alumno = ta.id_alumno
+      LEFT JOIN usuarios u ON u.id_usuario = a.id_usuario
+      LEFT JOIN cursos c ON c.id_curso = a.id_curso
+      LEFT JOIN ciclos ci ON ci.id_ciclo = c.id_ciclo
+      LEFT JOIN niveles n ON n.id_nivel = c.id_nivel
+      WHERE ta.id_tutor = $1
+      ORDER BY a.apellido, a.nombre;
+    `;
+    const hijosRes = await db.query(hijosQuery, [tutor.id_tutor]);
+    ok(res, {
+      tutor,
+      hijos: hijosRes.rows
+    });
+  } catch (error) {
+    console.error('[API /tutores/:id/alumnos] Error:', error);
+    fail(res, 'Error al obtener alumnos del tutor', 500);
+  }
+});
+
+/**
  * GET /api/usuarios
  * Lista todos los usuarios registrados con su DNI, rol y nivel académico asociado.
  */
@@ -199,10 +252,20 @@ app.get('/api/usuarios', async (req, res) => {
         END as nivel,
         c_a.nombre as curso,
         ci_a.nombre as ciclo,
+        p.id_profesor,
+        p.especialidad as "docenteEspecialidad",
         CASE
           WHEN u.rol = 'ESTUDIANTE' THEN NULLIF(TRIM(CONCAT(tut.nombre, ' ', tut.apellido)), '')
           ELSE NULL
-        END as "tutorNombre"
+        END as "tutorNombre",
+        COALESCE(
+          (
+            SELECT json_agg(json_build_object('id', m.id_materia, 'nombre', m.nombre, 'codigo', m.codigo, 'cargaHoraria', m.carga_horaria))
+            FROM asignaciones_docente ad
+            JOIN materias m ON m.id_materia = ad.id_materia
+            WHERE ad.id_profesor = p.id_profesor
+          ), '[]'
+        ) as "materiasDictadas"
       FROM usuarios u
       LEFT JOIN alumnos a ON a.id_usuario = u.id_usuario
       LEFT JOIN cursos c_a ON c_a.id_curso = a.id_curso
@@ -270,8 +333,15 @@ app.post('/api/usuarios', async (req, res) => {
     // 2. Hashear la contraseña con bcrypt
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // 3. Insertar usuario principal con edad y género
-    const edadVal = edad ? parseInt(edad, 10) : null;
+    // 3. Insertar usuario principal con edad y género (validando rango positivo)
+    let edadVal = null;
+    if (edad !== undefined && edad !== null && String(edad).trim() !== '') {
+      edadVal = parseInt(edad, 10);
+      if (isNaN(edadVal) || edadVal < 2 || edadVal > 120) {
+        await client.query('ROLLBACK');
+        return fail(res, 'La edad debe ser un número entero válido entre 2 y 120 años', 400);
+      }
+    }
     const generoVal = genero || null;
 
     const userRes = await client.query(
@@ -396,20 +466,52 @@ app.post('/api/usuarios', async (req, res) => {
  * Elimina un usuario por su ID
  */
 app.delete('/api/usuarios/:id', async (req, res) => {
+  const client = await db.getClient();
   try {
-    const result = await db.query(
-      'DELETE FROM usuarios WHERE id_usuario = $1 RETURNING id_usuario, nombre, apellido',
+    await client.query('BEGIN');
+
+    const userRes = await client.query(
+      'SELECT id_usuario, rol, nombre, apellido FROM usuarios WHERE id_usuario = $1',
       [req.params.id]
     );
 
-    if (result.rows.length === 0) {
+    if (userRes.rows.length === 0) {
+      await client.query('ROLLBACK');
       return fail(res, 'Usuario no encontrado', 404);
     }
 
-    ok(res, { mensaje: `Usuario ${result.rows[0].nombre} ${result.rows[0].apellido} eliminado con éxito` });
+    const u = userRes.rows[0];
+
+    // 1. Si es estudiante, eliminar su registro de alumno (cascada en calificaciones y tutor_alumno)
+    if (u.rol === 'ESTUDIANTE' || u.rol === 'ALUMNO') {
+      await client.query('DELETE FROM alumnos WHERE id_usuario = $1', [u.id_usuario]);
+    }
+
+    // 2. Si es tutor/padre, eliminar de tutores (cascada en tutor_alumno)
+    if (u.rol === 'PADRE' || u.rol === 'TUTOR') {
+      await client.query('DELETE FROM tutores WHERE id_usuario = $1', [u.id_usuario]);
+    }
+
+    // 3. Si es docente, eliminar asignaciones y registro de profesor
+    if (u.rol === 'DOCENTE') {
+      await client.query(
+        'DELETE FROM asignaciones_docente WHERE id_profesor IN (SELECT id_profesor FROM profesores WHERE id_usuario = $1)',
+        [u.id_usuario]
+      );
+      await client.query('DELETE FROM profesores WHERE id_usuario = $1', [u.id_usuario]);
+    }
+
+    // 4. Eliminar el usuario principal
+    await client.query('DELETE FROM usuarios WHERE id_usuario = $1', [u.id_usuario]);
+
+    await client.query('COMMIT');
+    ok(res, { mensaje: `Usuario ${u.nombre} ${u.apellido} y sus registros vinculados eliminados con éxito` });
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('[API /usuarios DELETE] Error:', error);
-    fail(res, 'Error al eliminar usuario', 500);
+    fail(res, 'Error al eliminar usuario: ' + error.message, 500);
+  } finally {
+    client.release();
   }
 });
 
@@ -746,6 +848,83 @@ app.get('/api/docentes/:id', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/docentes/:id/alumnos
+ * Retorna ÚNICAMENTE los alumnos que cursan materias asignadas a este docente.
+ * Soporta ?byUser=true para consultar por id_usuario de sesión.
+ */
+app.get('/api/docentes/:id/alumnos', async (req, res) => {
+  try {
+    const byUser = req.query.byUser === 'true';
+    let idProfesor = null;
+
+    if (byUser) {
+      const profRes = await db.query('SELECT id_profesor FROM profesores WHERE id_usuario = $1', [req.params.id]);
+      if (profRes.rows.length === 0) {
+        return ok(res, []);
+      }
+      idProfesor = profRes.rows[0].id_profesor;
+    } else {
+      idProfesor = parseInt(req.params.id, 10);
+      if (isNaN(idProfesor)) {
+        return fail(res, 'ID de docente inválido', 400);
+      }
+    }
+
+    // Obtener alumnos que cursen en los cursos donde este docente dicta materias
+    const query = `
+      WITH docente_materias_cursos AS (
+        SELECT DISTINCT 
+          ad.id_profesor,
+          m.id_materia,
+          m.codigo as materia_codigo,
+          m.nombre as materia_nombre,
+          COALESCE(ad.id_curso, cm.id_curso) as id_curso
+        FROM asignaciones_docente ad
+        JOIN materias m ON m.id_materia = ad.id_materia
+        LEFT JOIN curso_materia cm ON cm.id_materia = m.id_materia
+        WHERE ad.id_profesor = $1
+      )
+      SELECT 
+        a.id_alumno as id,
+        a.id_alumno,
+        a.legajo,
+        a.dni,
+        a.nombre,
+        a.apellido,
+        a.estado,
+        u.edad,
+        u.genero,
+        c.id_curso,
+        c.nombre as curso,
+        c.division,
+        n.nombre as nivel,
+        ci.nombre as ciclo,
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'id_materia', dmc.id_materia,
+            'codigo', dmc.materia_codigo,
+            'nombre', dmc.materia_nombre
+          )
+        ) as materias_con_docente
+      FROM docente_materias_cursos dmc
+      JOIN alumnos a ON a.id_curso = dmc.id_curso
+      LEFT JOIN usuarios u ON u.id_usuario = a.id_usuario
+      LEFT JOIN cursos c ON c.id_curso = a.id_curso
+      LEFT JOIN niveles n ON n.id_nivel = c.id_nivel
+      LEFT JOIN ciclos ci ON ci.id_ciclo = c.id_ciclo
+      GROUP BY a.id_alumno, a.legajo, a.dni, a.nombre, a.apellido, a.estado, u.edad, u.genero, c.id_curso, c.nombre, c.division, n.nombre, ci.nombre
+      ORDER BY c.nombre, a.apellido, a.nombre;
+    `;
+
+    const result = await db.query(query, [idProfesor]);
+    ok(res, result.rows);
+  } catch (error) {
+    console.error('[API /docentes/:id/alumnos] Error:', error);
+    fail(res, 'Error al listar alumnos del docente', 500);
+  }
+});
+
 // ─── 4. MATERIAS Y ASIGNACIONES (HU-04) ──────────────────────────────────────
 
 /**
@@ -761,14 +940,18 @@ app.get('/api/materias', async (req, res) => {
         m.nombre,
         m.carga_horaria as "cargaHoraria",
         n.nombre as nivel,
+        m.id_nivel,
         ad.id_asignacion,
+        ad.id_curso,
+        c.nombre as "cursoNombre",
         p.id_profesor as "docenteId",
         CONCAT(p.nombre, ' ', p.apellido) as "docenteNombre"
       FROM materias m
       JOIN niveles n ON n.id_nivel = m.id_nivel
       LEFT JOIN asignaciones_docente ad ON ad.id_materia = m.id_materia
+      LEFT JOIN cursos c ON c.id_curso = ad.id_curso
       LEFT JOIN profesores p ON p.id_profesor = ad.id_profesor
-      ORDER BY m.nombre;
+      ORDER BY m.id_nivel, m.nombre;
     `;
     const result = await db.query(query);
     ok(res, result.rows);
@@ -808,28 +991,101 @@ app.post('/api/materias', async (req, res) => {
 });
 
 /**
+ * GET /api/asignaciones
+ * Retorna todas las asignaciones de docentes con datos de curso, materia y docente.
+ */
+app.get('/api/asignaciones', async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT 
+        ad.id_asignacion,
+        ad.id_profesor as "docenteId",
+        p.legajo,
+        p.nombre as "docenteNombre",
+        p.apellido as "docenteApellido",
+        ad.id_materia as "materiaId",
+        m.codigo as "materiaCodigo",
+        m.nombre as "materiaNombre",
+        m.carga_horaria as "cargaHoraria",
+        n.nombre as nivel,
+        ad.id_curso as "cursoId",
+        c.nombre as "cursoNombre",
+        ad.fecha_asignacion as "fechaAsignacion"
+      FROM asignaciones_docente ad
+      JOIN profesores p ON p.id_profesor = ad.id_profesor
+      JOIN materias m ON m.id_materia = ad.id_materia
+      JOIN niveles n ON n.id_nivel = m.id_nivel
+      LEFT JOIN cursos c ON c.id_curso = ad.id_curso
+      ORDER BY c.id_curso NULLS LAST, m.nombre;
+    `);
+    ok(res, result.rows);
+  } catch (error) {
+    console.error('[API GET /asignaciones] Error:', error);
+    fail(res, 'Error al listar asignaciones', 500);
+  }
+});
+
+/**
  * POST /api/asignaciones
  * Asigna una materia a un profesor (HU-04: Límite 200 hs y unicidad por materia).
  */
 app.post('/api/asignaciones', async (req, res) => {
-  const { id_profesor, id_materia, id_curso = 1 } = req.body;
+  const { id_profesor, id_materia, id_curso } = req.body;
 
   if (!id_profesor || !id_materia) {
     return fail(res, 'Faltan campos obligatorios: id_profesor e id_materia');
   }
 
   try {
-    // 1. Verificar si la materia ya está asignada
+    // 1. Determinar id_curso correcto: si no se envía, obtener el curso real de curso_materia
+    let cursoId = (id_curso !== undefined && id_curso !== null && String(id_curso).trim() !== '') ? parseInt(id_curso, 10) : null;
+    if (!cursoId) {
+      const cmRes = await db.query('SELECT id_curso FROM curso_materia WHERE id_materia = $1 ORDER BY id_curso LIMIT 1', [id_materia]);
+      cursoId = cmRes.rows.length > 0 ? cmRes.rows[0].id_curso : null;
+    }
+
+    // 2. Verificar si la materia ya está asignada en este curso específico
     const checkAsignada = await db.query(
-      'SELECT id_asignacion, id_profesor FROM asignaciones_docente WHERE id_materia = $1',
-      [id_materia]
+      cursoId 
+        ? 'SELECT id_asignacion, id_profesor FROM asignaciones_docente WHERE id_materia = $1 AND id_curso = $2'
+        : 'SELECT id_asignacion, id_profesor FROM asignaciones_docente WHERE id_materia = $1',
+      cursoId ? [id_materia, cursoId] : [id_materia]
     );
 
     if (checkAsignada.rows.length > 0) {
-      return fail(res, 'Esta materia ya tiene un docente titular asignado. Desasígnela primero.');
+      return fail(res, 'Esta materia ya tiene un docente titular asignado para este curso. Desasígnela primero.');
     }
 
-    // 2. Verificar límite de carga horaria (máx 200 hs)
+    // 3. Verificar correspondencia de nivel docente vs materia
+    const profNivelRes = await db.query('SELECT especialidad, nombre, apellido FROM profesores WHERE id_profesor = $1', [id_profesor]);
+    const matNivelRes = await db.query('SELECT m.nombre, m.id_nivel, n.nombre as nivel_nombre FROM materias m JOIN niveles n ON n.id_nivel = m.id_nivel WHERE m.id_materia = $1', [id_materia]);
+    
+    if (profNivelRes.rows.length === 0) return fail(res, 'Docente no encontrado', 404);
+    if (matNivelRes.rows.length === 0) return fail(res, 'Materia no encontrada', 404);
+
+    const prof = profNivelRes.rows[0];
+    const mat = matNivelRes.rows[0];
+    const espProf = (prof.especialidad || '').toLowerCase();
+    const idNivelMat = mat.id_nivel; // 1: Inicial, 2: Primario, 3: Secundario
+
+    let nivelDocenteEsperado = null;
+    let nombreNivelDocente = '';
+    if (espProf.includes('inicial') || espProf.includes('jard')) {
+      nivelDocenteEsperado = 1;
+      nombreNivelDocente = 'Nivel Inicial';
+    } else if (espProf.includes('primar')) {
+      nivelDocenteEsperado = 2;
+      nombreNivelDocente = 'Nivel Primario';
+    } else if (espProf.includes('secundar')) {
+      nivelDocenteEsperado = 3;
+      nombreNivelDocente = 'Nivel Secundario';
+    }
+
+    if (nivelDocenteEsperado !== null && nivelDocenteEsperado !== idNivelMat) {
+      return fail(res, `Incompatibilidad de nivel: El docente '${prof.nombre} ${prof.apellido}' está registrado en '${prof.especialidad || nombreNivelDocente}' y no puede dictar la materia '${mat.nombre}' que corresponde a '${mat.nivel_nombre}'.`);
+    }
+
+    // 4. Verificar límite de carga horaria (máx 200 hs)
     const horasDocenteRes = await db.query(`
       SELECT COALESCE(SUM(m.carga_horaria), 0)::int as total
       FROM asignaciones_docente ad
@@ -847,12 +1103,12 @@ app.post('/api/asignaciones', async (req, res) => {
       return fail(res, `Supera el límite de 200 hs anuales permitidas (Actual: ${horasActuales}hs + ${horasNueva}hs = ${horasActuales + horasNueva}hs)`);
     }
 
-    // 3. Insertar asignación
+    // 5. Insertar asignación
     const insertRes = await db.query(`
       INSERT INTO asignaciones_docente (id_profesor, id_materia, id_curso)
       VALUES ($1, $2, $3)
       RETURNING *
-    `, [id_profesor, id_materia, id_curso]);
+    `, [id_profesor, id_materia, cursoId]);
 
     ok(res, {
       mensaje: 'Materia asignada correctamente con éxito',
@@ -866,15 +1122,88 @@ app.post('/api/asignaciones', async (req, res) => {
 });
 
 /**
+ * POST /api/asignaciones/bloque
+ * Asigna un bloque de materias troncales de un curso a un maestro titular
+ * (Jardín: actividades de sala; Primaria 1°-3°: troncales de grado; Primaria 4°-6°: pareja pedagógica).
+ */
+app.post('/api/asignaciones/bloque', async (req, res) => {
+  const { id_profesor, id_curso, materias_ids } = req.body;
+
+  if (!id_profesor || !id_curso || !Array.isArray(materias_ids) || materias_ids.length === 0) {
+    return fail(res, 'Faltan campos obligatorios: id_profesor, id_curso y materias_ids');
+  }
+
+  const client = await db.getClient();
+  try {
+    await client.query('BEGIN');
+
+    // 1. Validar docente y curso
+    const profRes = await client.query('SELECT especialidad, nombre, apellido FROM profesores WHERE id_profesor = $1', [id_profesor]);
+    const cursoRes = await client.query('SELECT c.nombre as curso_nombre, c.id_nivel, n.nombre as nivel_nombre FROM cursos c JOIN niveles n ON n.id_nivel = c.id_nivel WHERE c.id_curso = $1', [id_curso]);
+
+    if (profRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return fail(res, 'Docente no encontrado', 404);
+    }
+    if (cursoRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return fail(res, 'Curso no encontrado', 404);
+    }
+
+    const prof = profRes.rows[0];
+    const curso = cursoRes.rows[0];
+    const espProf = (prof.especialidad || '').toLowerCase();
+    let nivelDocenteEsperado = null;
+    if (espProf.includes('inicial') || espProf.includes('jard')) nivelDocenteEsperado = 1;
+    else if (espProf.includes('primar')) nivelDocenteEsperado = 2;
+    else if (espProf.includes('secundar')) nivelDocenteEsperado = 3;
+
+    if (nivelDocenteEsperado !== null && nivelDocenteEsperado !== curso.id_nivel) {
+      await client.query('ROLLBACK');
+      return fail(res, `Incompatibilidad de nivel: El docente '${prof.nombre} ${prof.apellido}' pertenece a '${prof.especialidad}' y el curso seleccionado es de '${curso.nivel_nombre}'.`, 400);
+    }
+
+    const asignadas = [];
+    for (const id_materia of materias_ids) {
+      await client.query('DELETE FROM asignaciones_docente WHERE id_materia = $1 AND id_curso = $2', [id_materia, id_curso]);
+      const insRes = await client.query(`
+        INSERT INTO asignaciones_docente (id_profesor, id_materia, id_curso)
+        VALUES ($1, $2, $3)
+        RETURNING *
+      `, [id_profesor, id_materia, id_curso]);
+      asignadas.push(insRes.rows[0]);
+    }
+
+    await client.query('COMMIT');
+    ok(res, {
+      mensaje: `Bloque pedagógico asignado con éxito a ${prof.nombre} ${prof.apellido} en ${curso.curso_nombre}`,
+      asignadas
+    }, 201);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('[API /asignaciones/bloque] Error:', err);
+    fail(res, err.message || 'Error al asignar bloque', 500);
+  } finally {
+    client.release();
+  }
+});
+
+/**
  * DELETE /api/asignaciones/:id_materia
- * Desasigna una materia.
+ * Desasigna una materia (opcionalmente filtrando por cursoId).
  */
 app.delete('/api/asignaciones/:id_materia', async (req, res) => {
   try {
-    const result = await db.query(
-      'DELETE FROM asignaciones_docente WHERE id_materia = $1 RETURNING *',
-      [req.params.id_materia]
-    );
+    const cursoId = req.query.cursoId ? parseInt(req.query.cursoId, 10) : null;
+    let query = 'DELETE FROM asignaciones_docente WHERE id_materia = $1 RETURNING *';
+    let params = [req.params.id_materia];
+
+    if (cursoId) {
+      query = 'DELETE FROM asignaciones_docente WHERE id_materia = $1 AND id_curso = $2 RETURNING *';
+      params = [req.params.id_materia, cursoId];
+    }
+
+    const result = await db.query(query, params);
 
     if (result.rows.length === 0) {
       return fail(res, 'No se encontró asignación activa para esa materia', 404);
@@ -884,6 +1213,23 @@ app.delete('/api/asignaciones/:id_materia', async (req, res) => {
   } catch (error) {
     console.error('[API DELETE /asignaciones] Error:', error);
     fail(res, 'Error al desasignar materia', 500);
+  }
+});
+
+/**
+ * DELETE /api/asignaciones/id/:id
+ * Elimina una asignación por su id_asignacion primario.
+ */
+app.delete('/api/asignaciones/id/:id', async (req, res) => {
+  try {
+    const result = await db.query('DELETE FROM asignaciones_docente WHERE id_asignacion = $1 RETURNING *', [req.params.id]);
+    if (result.rows.length === 0) {
+      return fail(res, 'Asignación no encontrada', 404);
+    }
+    ok(res, { mensaje: 'Asignación eliminada correctamente' });
+  } catch (error) {
+    console.error('[API DELETE /asignaciones/id/:id] Error:', error);
+    fail(res, 'Error al eliminar asignación', 500);
   }
 });
 
@@ -920,7 +1266,20 @@ app.get('/api/alumnos', async (req, res) => {
 app.get('/api/alumnos/:id', async (req, res) => {
   try {
     const byUser = req.query.byUser === 'true';
-    const param = req.params.id;
+    let param = req.params.id;
+
+    if (!param || param === 'undefined' || param === 'null') {
+      return fail(res, 'ID de alumno no especificado o inválido', 400);
+    }
+
+    if (isNaN(parseInt(param, 10))) {
+      const findRes = await db.query('SELECT id_alumno FROM alumnos WHERE LOWER(nombre) = LOWER($1) LIMIT 1', [param]);
+      if (findRes.rows.length > 0) {
+        param = findRes.rows[0].id_alumno;
+      } else {
+        return fail(res, 'Alumno no encontrado', 404);
+      }
+    }
 
     const query = `
       SELECT
@@ -976,7 +1335,20 @@ app.get('/api/alumnos/:id', async (req, res) => {
 app.get('/api/alumnos/:id/calificaciones', async (req, res) => {
   try {
     const byUser = req.query.byUser === 'true';
-    const idParam = req.params.id;
+    let idParam = req.params.id;
+
+    if (!idParam || idParam === 'undefined' || idParam === 'null') {
+      return fail(res, 'ID de alumno no especificado o inválido', 400);
+    }
+
+    if (isNaN(parseInt(idParam, 10))) {
+      const findRes = await db.query('SELECT id_alumno FROM alumnos WHERE LOWER(nombre) = LOWER($1) LIMIT 1', [idParam]);
+      if (findRes.rows.length > 0) {
+        idParam = findRes.rows[0].id_alumno;
+      } else {
+        return fail(res, 'Alumno no encontrado', 404);
+      }
+    }
 
     // 1. Obtener alumno y su curso
     const alRes = await db.query(
@@ -1096,6 +1468,25 @@ app.post('/api/calificaciones', async (req, res) => {
   }
 
   try {
+    // VALIDACIÓN: Verificar que el alumno realmente cursa esta materia en su plan de estudios institucional
+    const checkPlan = await db.query(`
+      SELECT m.nombre as materia_nombre, c.nombre as curso_nombre
+      FROM curso_materia cm
+      JOIN alumnos a ON a.id_curso = cm.id_curso
+      JOIN materias m ON m.id_materia = cm.id_materia
+      JOIN cursos c ON c.id_curso = a.id_curso
+      WHERE a.id_alumno = $1 AND cm.id_materia = $2
+    `, [id_alumno, id_materia]);
+
+    if (checkPlan.rows.length === 0) {
+      const alInfo = await db.query('SELECT a.nombre, a.apellido, c.nombre as curso FROM alumnos a LEFT JOIN cursos c ON c.id_curso = a.id_curso WHERE a.id_alumno = $1', [id_alumno]);
+      const matInfo = await db.query('SELECT nombre FROM materias WHERE id_materia = $1', [id_materia]);
+      const nomAl = alInfo.rows[0] ? `${alInfo.rows[0].nombre} ${alInfo.rows[0].apellido} (${alInfo.rows[0].curso || 'Sin curso'})` : 'El estudiante';
+      const nomMat = matInfo.rows[0] ? matInfo.rows[0].nombre : 'la materia';
+
+      return fail(res, `No se puede calificar: ${nomAl} no cursa la materia '${nomMat}' en su plan de estudios.`, 400);
+    }
+
     const result = await db.query(`
       INSERT INTO calificaciones (id_alumno, id_materia, trimestre, nota, observacion)
       VALUES ($1, $2, $3, $4, $5)
