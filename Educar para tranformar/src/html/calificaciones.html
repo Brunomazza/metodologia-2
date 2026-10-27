@@ -287,7 +287,7 @@
             // Es PADRE: obtener sus hijos y cargar el primero
             try {
                 const userId = usuarioSesion.id || usuarioSesion.uid;
-                const resTutor = await fetch(`http://localhost:3000/api/tutores/${userId}/alumnos?byUser=true`);
+                const resTutor = await fetch(`https://metodologia-2.onrender.com/api/tutores/${userId}/alumnos?byUser=true`);
                 const dataTutor = await resTutor.json();
                 if (dataTutor.ok && dataTutor.data && dataTutor.data.hijos && dataTutor.data.hijos.length > 0) {
                     const selectorCont = document.getElementById('selectorAlumnoContainer');
@@ -308,7 +308,7 @@
             // Es ESTUDIANTE: buscar su id_alumno a partir de su id_usuario
             try {
                 const userId = usuarioSesion.id || usuarioSesion.uid;
-                const res = await fetch(`http://localhost:3000/api/alumnos/${userId}?byUser=true`);
+                const res = await fetch(`https://metodologia-2.onrender.com/api/alumnos/${userId}?byUser=true`);
                 const data = await res.json();
                 if (data.ok && data.data) {
                     idAlumnoConsultar = data.data.id_alumno;
@@ -324,7 +324,7 @@
     async function cargarSelectorAlumnos(alumnoPreseleccionado = null) {
         const select = document.getElementById('selectAlumnoActivo');
         try {
-            const res = await fetch('http://localhost:3000/api/alumnos');
+            const res = await fetch('https://metodologia-2.onrender.com/api/alumnos');
             const data = await res.json();
             if (data.ok && Array.isArray(data.data)) {
                 select.innerHTML = data.data.map(a => `
@@ -353,8 +353,8 @@
 
             // Traer alumno con edad y género
             const [resCal, resAl] = await Promise.all([
-                fetch(`http://localhost:3000/api/alumnos/${idAlumno}/calificaciones`),
-                fetch(`http://localhost:3000/api/alumnos/${idAlumno}`)
+                fetch(`https://metodologia-2.onrender.com/api/alumnos/${idAlumno}/calificaciones`),
+                fetch(`https://metodologia-2.onrender.com/api/alumnos/${idAlumno}`)
             ]);
 
             const dataCal = await resCal.json();

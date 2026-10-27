@@ -610,7 +610,7 @@
     // Cargar métricas dinámicas desde PostgreSQL
     async function cargarMetricasDashboard() {
         try {
-            const res = await fetch('http://localhost:3000/api/dashboard');
+            const res = await fetch('https://metodologia-2.onrender.com/api/dashboard');
             const data = await res.json();
             if(data.ok && data.data) {
                 if (document.getElementById('totalAlumnosAdmin')) {

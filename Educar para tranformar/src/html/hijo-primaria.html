@@ -442,7 +442,7 @@ async function cargarRendimientoAcademico() {
     const tbody = document.getElementById('tablaRendimientoTomas');
     if (!tbody) return;
     try {
-        const res = await fetch(`http://localhost:3000/api/alumnos/${ALUMNO_ID}/calificaciones`);
+        const res = await fetch(`https://metodologia-2.onrender.com/api/alumnos/${ALUMNO_ID}/calificaciones`);
         const data = await res.json();
         if (data.ok && data.data && Array.isArray(data.data.boletin)) {
             const b = data.data.boletin;

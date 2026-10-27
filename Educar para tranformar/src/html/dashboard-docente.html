@@ -451,6 +451,11 @@
 
 <!-- Script no-module: carga datos de sesión y configura cierre de sesión -->
 <script>
+    // Configuración dinámica de API (funciona en localhost y en Render)
+    const API_BASE_DOCENTE = window.location.origin.includes('localhost')
+        ? 'http://localhost:3000/api'
+        : `${window.location.origin}/api`;
+
     // Verificar que el usuario esté logueado; si no, redirigir al login
     const usuario = JSON.parse(localStorage.getItem('usuario'));
     if (!usuario) {
@@ -511,7 +516,7 @@
             btnGuardarNota.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
 
             try {
-                const res = await fetch('http://localhost:3000/api/calificaciones', {
+                const res = await fetch(`${API_BASE_DOCENTE}/calificaciones`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1286,7 +1291,7 @@
 
         // Cargar alumnos reales vinculados desde PostgreSQL y poblar planilla
         try {
-            const resAl = await fetch(`http://localhost:3000/api/docentes/${usuario.id}/alumnos?byUser=true`);
+            const resAl = await fetch(`${API_BASE_DOCENTE}/docentes/${usuario.id}/alumnos?byUser=true`);
             const dataAl = await resAl.json();
             const tablaAlumnos = document.getElementById('tablaAlumnos');
             const filtroMateria = document.getElementById('filtroMateria');
@@ -1406,10 +1411,59 @@
                 }
             }
 
-            // Construir mapa de cursos y materias para la planilla interactiva
-            construirMapaCursosDocente(alumnosDocente, docente);
-            inicializarPlanillaSelects();
+            // Cargar tabla de calificaciones SOLO para los alumnos y materias de este docente
+            window.recargarCalificacionesDocente = async function() {
+                const tbodyCal = document.getElementById('tablaCalificaciones');
+                if (!tbodyCal) return;
 
+                if (alumnosDocente.length === 0) {
+                    tbodyCal.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-3">No hay alumnos asignados a tus materias.</td></tr>';
+                    return;
+                }
+
+                try {
+                    const idsMateriasDocente = new Set(materias.map(m => Number(m.id)));
+                    const boletines = await Promise.all(
+                        alumnosDocente.map(async al => {
+                            const r = await fetch(`${API_BASE_DOCENTE}/alumnos/${al.id_alumno}/calificaciones`);
+                            const d = await r.json();
+                            return { al, boletin: (d.ok && d.data && Array.isArray(d.data.boletin)) ? d.data.boletin : [] };
+                        })
+                    );
+
+                    const filas = [];
+                    boletines.forEach(({ al, boletin }) => {
+                        // Filtrar estrictamente solo las materias asignadas a este docente
+                        const boletinDocente = boletin.filter(m => idsMateriasDocente.has(Number(m.id_materia)));
+                        boletinDocente.forEach(m => {
+                            filas.push(`
+                                <tr>
+                                    <td class="text-start ps-3"><code>${al.legajo}</code></td>
+                                    <td class="text-start fw-bold">
+                                        ${al.apellido}, ${al.nombre}
+                                        <small class="text-muted d-block" style="font-size:11px;">${al.curso || ''}</small>
+                                    </td>
+                                    <td><small class="text-muted">${al.edad ? al.edad + 'a' : '-'} • ${al.genero || '-'}</small></td>
+                                    <td class="text-start fw-bold text-primary">${m.materia}</td>
+                                    <td>${m.trimestre_1 !== null ? Number(m.trimestre_1).toFixed(2) : '-'}</td>
+                                    <td>${m.trimestre_2 !== null ? Number(m.trimestre_2).toFixed(2) : '-'}</td>
+                                    <td>${m.trimestre_3 !== null ? Number(m.trimestre_3).toFixed(2) : '-'}</td>
+                                    <td class="fw-bold ${m.promedio >= 7 ? 'text-success' : 'text-primary'}">${m.promedio !== null ? Number(m.promedio).toFixed(2) : '-'}</td>
+                                    <td><span class="badge ${m.estado === 'Promocionado' ? 'bg-success-subtle text-success border' : 'bg-primary-subtle text-primary border'}">${m.estado}</span></td>
+                                </tr>
+                            `);
+                        });
+                    });
+
+                    tbodyCal.innerHTML = filas.length > 0
+                        ? filas.join('')
+                        : '<tr><td colspan="9" class="text-center text-muted py-3">No hay calificaciones registradas aún en tus materias.</td></tr>';
+                } catch (err) {
+                    console.error('Error al recargar calificaciones docente:', err);
+                }
+            };
+
+            await window.recargarCalificacionesDocente();
         } catch (err) {
             console.warn('No se pudo cargar la lista de alumnos en el dashboard docente:', err);
         }
