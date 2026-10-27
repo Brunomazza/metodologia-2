@@ -339,7 +339,7 @@
 
 <script>
     // --- GESTIÓN DE USUARIOS CONECTADA A POSTGRESQL (API REST) ---
-    const API_URL = 'http://localhost:3000/api/usuarios';
+    const API_URL = 'https://metodologia-2.onrender.com/api/usuarios';
     let listaUsuariosCache = [];
     let materiasCatalogoCache = [];
 
@@ -370,7 +370,7 @@
         const select = document.getElementById('filtroMateriaDocenteSelect');
         if (!select) return;
         try {
-            const res = await fetch('http://localhost:3000/api/materias');
+            const res = await fetch('https://metodologia-2.onrender.com/api/materias');
             const data = await res.json();
             if (data.ok && Array.isArray(data.data)) {
                 materiasCatalogoCache = data.data;
@@ -556,7 +556,7 @@
         const select = document.getElementById('selectTutor');
         if (!select) return;
         try {
-            const res = await fetch('http://localhost:3000/api/tutores');
+            const res = await fetch('https://metodologia-2.onrender.com/api/tutores');
             const data = await res.json();
             select.innerHTML = '<option value="">-- Seleccionar Tutor Registrado --</option><option value="nuevo">+ Registrar Nuevo Tutor con este Alumno</option>';
             if (data.ok && Array.isArray(data.data)) {
@@ -576,7 +576,7 @@
     let cursosCache = [];
     async function cargarCursos() {
         try {
-            const res = await fetch('http://localhost:3000/api/cursos');
+            const res = await fetch('https://metodologia-2.onrender.com/api/cursos');
             const data = await res.json();
             if (data.ok && Array.isArray(data.data)) {
                 cursosCache = data.data;

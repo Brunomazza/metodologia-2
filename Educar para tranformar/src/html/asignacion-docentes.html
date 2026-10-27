@@ -824,7 +824,7 @@ async function cargarMateriasCatedraSecundaria(id_curso, docenteId) {
     if (!cont) return;
 
     try {
-        const res = await fetch(`http://localhost:3000/api/cursos/${id_curso}/materias`);
+        const res = await fetch(`https://metodologia-2.onrender.com/api/cursos/${id_curso}/materias`);
         const data = await res.json();
         if (data.ok && Array.isArray(data.data)) {
             const materiasCurso = data.data;
@@ -1160,7 +1160,7 @@ let filtroCicloPlanActual = 'todos';
 
 async function cargarCursosPlan() {
     try {
-        const res = await fetch('http://localhost:3000/api/cursos');
+        const res = await fetch('https://metodologia-2.onrender.com/api/cursos');
         const data = await res.json();
         if (data.ok && Array.isArray(data.data)) {
             cursosPlanCache = data.data;
@@ -1235,7 +1235,7 @@ window._verMateriasDeCurso = async function(id_curso) {
     cont.innerHTML = '<div class="text-center py-2 text-muted small"><span class="spinner-border spinner-border-sm me-1"></span>Cargando materias...</div>';
 
     try {
-        const res = await fetch(`http://localhost:3000/api/cursos/${id_curso}/materias`);
+        const res = await fetch(`https://metodologia-2.onrender.com/api/cursos/${id_curso}/materias`);
         const data = await res.json();
         if (data.ok && Array.isArray(data.data)) {
             if (data.data.length === 0) {

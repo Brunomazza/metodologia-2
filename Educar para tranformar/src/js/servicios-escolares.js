@@ -13,7 +13,7 @@
  * =============================================================================
  */
 
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = 'https://metodologia-2.onrender.com/api';
 
 // ─── CATÁLOGO OFICIAL DE DEPORTES (HU-02) ────────────────────────────────────
 export const DEPORTES_CATALOGO = [

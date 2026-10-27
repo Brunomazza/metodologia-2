@@ -393,7 +393,7 @@
             btnGuardarNota.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
 
             try {
-                const res = await fetch('http://localhost:3000/api/calificaciones', {
+                const res = await fetch('https://metodologia-2.onrender.com/api/calificaciones', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -510,7 +510,7 @@
 
         // Cargar alumnos reales vinculados desde PostgreSQL y poblar modal
         try {
-            const resAl = await fetch(`http://localhost:3000/api/docentes/${usuario.id}/alumnos?byUser=true`);
+            const resAl = await fetch(`https://metodologia-2.onrender.com/api/docentes/${usuario.id}/alumnos?byUser=true`);
             const dataAl = await resAl.json();
             const tablaAlumnos = document.getElementById('tablaAlumnos');
             const filtroMateria = document.getElementById('filtroMateria');
@@ -634,7 +634,7 @@
                     const idsMateriasDocente = new Set(materias.map(m => Number(m.id)));
                     const boletines = await Promise.all(
                         alumnosDocente.map(async al => {
-                            const r = await fetch(`http://localhost:3000/api/alumnos/${al.id_alumno}/calificaciones`);
+                            const r = await fetch(`https://metodologia-2.onrender.com/api/alumnos/${al.id_alumno}/calificaciones`);
                             const d = await r.json();
                             return { al, boletin: (d.ok && d.data && Array.isArray(d.data.boletin)) ? d.data.boletin : [] };
                         })

@@ -930,7 +930,7 @@ async function cargarMateriasPlan(idCurso) {
     }
 
     try {
-        const res = await fetch(`http://localhost:3000/api/cursos/${idCurso}/materias`);
+        const res = await fetch(`https://metodologia-2.onrender.com/api/cursos/${idCurso}/materias`);
         const data = await res.json();
 
         if (!res.ok || !data.ok || !Array.isArray(data.data)) {
@@ -979,7 +979,7 @@ async function cargarBoletinOficial() {
     if (!tbody) return;
 
     try {
-        const res = await fetch(`http://localhost:3000/api/alumnos/${ALUMNO_ID}/calificaciones`);
+        const res = await fetch(`https://metodologia-2.onrender.com/api/alumnos/${ALUMNO_ID}/calificaciones`);
         const data = await res.json();
 
         if (!res.ok || !data.ok || !data.data || !Array.isArray(data.data.boletin)) {
@@ -1090,7 +1090,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let requestedAlumnoId = urlParams.get('alumnoId') || urlParams.get('id');
 
     try {
-        const res = await fetch(`http://localhost:3000/api/tutores/${userId}/alumnos?byUser=true`);
+        const res = await fetch(`https://metodologia-2.onrender.com/api/tutores/${userId}/alumnos?byUser=true`);
         const data = await res.json();
 
         if (res.ok && data.ok && data.data) {
@@ -1151,7 +1151,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 3. Cargar información oficial del Alumno
     try {
-        const resAl = await fetch(`http://localhost:3000/api/alumnos/${ALUMNO_ID}`);
+        const resAl = await fetch(`https://metodologia-2.onrender.com/api/alumnos/${ALUMNO_ID}`);
         const dataAl = await resAl.json();
 
         if (resAl.ok && dataAl.ok && dataAl.data) {

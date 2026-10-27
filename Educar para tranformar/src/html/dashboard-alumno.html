@@ -220,14 +220,14 @@
 
                 // 1. Obtener perfil del alumno
                 if (alumnoIdParam) {
-                    const resAl = await fetch(`http://localhost:3000/api/alumnos/${alumnoIdParam}`);
+                    const resAl = await fetch(`https://metodologia-2.onrender.com/api/alumnos/${alumnoIdParam}`);
                     const dataAl = await resAl.json();
                     if (dataAl.ok && dataAl.data) {
                         al = dataAl.data;
                         idAlumno = al.id_alumno;
                     }
                 } else {
-                    const resAl = await fetch(`http://localhost:3000/api/alumnos/${usuario.id}?byUser=true`);
+                    const resAl = await fetch(`https://metodologia-2.onrender.com/api/alumnos/${usuario.id}?byUser=true`);
                     const dataAl = await resAl.json();
                     if (dataAl.ok && dataAl.data) {
                         al = dataAl.data;
@@ -269,7 +269,7 @@
 
                 // 2. Obtener materias del plan de estudios de su curso
                 const targetId = idAlumno || 1;
-                const resCal = await fetch(`http://localhost:3000/api/alumnos/${targetId}/calificaciones`);
+                const resCal = await fetch(`https://metodologia-2.onrender.com/api/alumnos/${targetId}/calificaciones`);
                 const dataCal = await resCal.json();
                 const tbody = document.getElementById('tablaMateriasAlumno');
 

@@ -12,7 +12,7 @@
  * =============================================================================
  */
 
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = 'https://metodologia-2.onrender.com/api';
 const MAX_HORAS_DOCENTE = 200;
 
 // Caché en memoria para acceso rápido y renderizado fluido
