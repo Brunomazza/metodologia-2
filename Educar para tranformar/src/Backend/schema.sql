@@ -407,3 +407,44 @@ SELECT setval(pg_get_serial_sequence('materias',  'id_materia'),  COALESCE(MAX(i
 SELECT setval(pg_get_serial_sequence('deportes',  'id_deporte'),  COALESCE(MAX(id_deporte),  1)) FROM deportes;
 SELECT setval(pg_get_serial_sequence('calificaciones', 'id_calificacion'), COALESCE(MAX(id_calificacion), 1)) FROM calificaciones;
 
+-- -----------------------------------------------------------------------------
+-- 10. Solicitudes de Preinscripción Web (Inscripciones 2027)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS preinscripciones (
+    id_preinscripcion SERIAL PRIMARY KEY,
+    codigo_tramite VARCHAR(30) UNIQUE,
+    nombre_alumno VARCHAR(100) NOT NULL,
+    nivel VARCHAR(50) NOT NULL,
+    edad_alumno INT,
+    dni_alumno VARCHAR(20) NOT NULL,
+    tipo_sangre VARCHAR(10),
+    domicilio_alumno TEXT,
+    telefono_emergencia VARCHAR(30),
+    nombre_tutor VARCHAR(100) NOT NULL,
+    vinculo VARCHAR(50),
+    edad_tutor INT,
+    dni_tutor VARCHAR(20) NOT NULL,
+    domicilio_tutor TEXT,
+    telefono_tutor VARCHAR(30),
+    estado VARCHAR(30) DEFAULT 'Pendiente', -- 'Pendiente', 'Contactado', 'Aprobado', 'Rechazado'
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+SELECT setval(pg_get_serial_sequence('preinscripciones', 'id_preinscripcion'), COALESCE(MAX(id_preinscripcion), 1)) FROM preinscripciones;
+
+-- -----------------------------------------------------------------------------
+-- 11. Noticias y Novedades Institucionales (Portal Web Dinámico)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS noticias (
+    id_noticia SERIAL PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    categoria VARCHAR(50) NOT NULL DEFAULT 'Institucional',
+    fecha DATE NOT NULL DEFAULT CURRENT_DATE,
+    imagen_url VARCHAR(500) NOT NULL DEFAULT '../img/portada1.jpg',
+    descripcion TEXT NOT NULL,
+    cuerpo TEXT,
+    activo BOOLEAN DEFAULT TRUE,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+SELECT setval(pg_get_serial_sequence('noticias', 'id_noticia'), COALESCE(MAX(id_noticia), 1)) FROM noticias;

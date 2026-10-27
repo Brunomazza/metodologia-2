@@ -40,6 +40,62 @@
             color: #1a56db;
             border: 1px solid #c3d7fa;
         }
+
+        /* ── Estilos de la Planilla Rápida de Calificaciones ── */
+        .input-nota {
+            width: 74px;
+            text-align: center;
+            font-weight: 700;
+            border-radius: 8px;
+            padding: 0.35rem 0.2rem;
+            transition: all 0.2s ease;
+        }
+        .input-nota:focus {
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+            background-color: #ffffff;
+        }
+        .input-nota.nota-alta {
+            color: #198754;
+            border-color: #a3cfbb;
+            background-color: #f6fcf8;
+        }
+        .input-nota.nota-media {
+            color: #0d6efd;
+            border-color: #9ec5fe;
+            background-color: #f8fbff;
+        }
+        .input-nota.nota-baja {
+            color: #dc3545;
+            border-color: #f1aeb5;
+            background-color: #fff8f8;
+        }
+        .input-nota.nota-invalida {
+            border-color: #dc3545 !important;
+            background-color: #ffeaec !important;
+            color: #dc3545 !important;
+        }
+        .input-obs {
+            min-width: 170px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+        }
+        .fila-modificada {
+            background-color: #fffde7 !important;
+            transition: background-color 0.3s ease;
+        }
+        .fila-guardada {
+            background-color: #e8f5e9 !important;
+            transition: background-color 0.5s ease;
+        }
+
+        /* ── Toast de feedback ── */
+        .toast-feedback {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 1090;
+            min-width: 320px;
+        }
     </style>
 </head>
 <body class="bg-light pt-0 m-0">
@@ -170,7 +226,7 @@
                 </section>
 
                 <!-- ===== SECCIÓN: Alumnos ===== -->
-                <section id="seccionAlumnos" class="mt-5">
+                <section id="seccionAlumnos" class="mt-4 d-none">
                     <div class="card card-dash p-4 bg-white shadow-sm border-0">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
@@ -235,36 +291,95 @@
                 </section>
 
                 <!-- ===== SECCIÓN: Calificaciones ===== -->
-                <section id="seccionCalificaciones" class="mt-5">
-                    <div class="card card-dash p-4 bg-white shadow-sm border-0">
-                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-                            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                                <span class="material-symbols-outlined text-primary">grading</span> Gestión de Calificaciones
-                            </h5>
-                            <button class="btn btn-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#modalNota">
-                                <span class="material-symbols-outlined align-middle me-1" style="font-size:16px">add</span> Cargar Nota
-                            </button>
+                <section id="seccionCalificaciones" class="mt-4 d-none">
+                    <div class="card card-dash p-4 bg-white shadow-sm border-0 mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <div>
+                                <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary">grading</span> Planilla Oficial de Calificaciones
+                                </h5>
+                                <p class="text-muted small mb-0">
+                                    Carga y edición de notas por curso y materia con validación pedagógica inmediata.
+                                </p>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <button id="btnGuardarLotePlanilla" class="btn btn-success btn-sm rounded-pill px-3 fw-bold d-inline-flex align-items-center gap-1 shadow-sm" disabled>
+                                    <span class="material-symbols-outlined fs-6">save</span> Guardar Toda la Planilla
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#modalNota">
+                                    <span class="material-symbols-outlined fs-6">add</span> Carga Individual
+                                </button>
+                            </div>
                         </div>
+
+                        <!-- Barra de Filtros de Curso y Materia -->
+                        <div class="row g-3 align-items-center bg-light p-3 rounded-4 border mb-3">
+                            <div class="col-md-5">
+                                <label class="form-label small fw-bold text-secondary mb-1">
+                                    <span class="material-symbols-outlined align-middle fs-6 text-primary me-1">school</span> Curso / Grado:
+                                </label>
+                                <select id="selectPlanillaCurso" class="form-select form-select-sm rounded-pill">
+                                    <option value="">Cargando cursos asignados...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label small fw-bold text-secondary mb-1">
+                                    <span class="material-symbols-outlined align-middle fs-6 text-primary me-1">menu_book</span> Asignatura:
+                                </label>
+                                <select id="selectPlanillaMateria" class="form-select form-select-sm rounded-pill">
+                                    <option value="">Selecciona un curso primero...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 text-md-end pt-md-3">
+                                <span id="badgeIndicadorCambios" class="badge bg-secondary-subtle text-secondary border rounded-pill px-3 py-2 small">
+                                    Sin cambios
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Resumen KPI de la clase seleccionada -->
+                        <div id="contenedorKpisPlanilla" class="row g-3 mb-3 d-none">
+                            <div class="col-sm-4">
+                                <div class="p-2 px-3 bg-white border rounded-3 d-flex align-items-center justify-content-between">
+                                    <span class="small text-muted fw-semibold">Alumnos Inscriptos:</span>
+                                    <span id="lblTotalAlumnosPlanilla" class="fw-bold text-dark h6 mb-0">0</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="p-2 px-3 bg-white border rounded-3 d-flex align-items-center justify-content-between">
+                                    <span class="small text-muted fw-semibold">Promedio Grupal:</span>
+                                    <span id="lblPromedioGrupalPlanilla" class="fw-bold text-primary h6 mb-0">-</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="p-2 px-3 bg-white border rounded-3 d-flex align-items-center justify-content-between">
+                                    <span class="small text-muted fw-semibold">Condición Mínima:</span>
+                                    <span class="badge bg-success-subtle text-success border">Aprobado &ge; 7.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabla Planilla Interactiva -->
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0 text-center">
                                 <thead class="table-light">
                                     <tr>
-                                        <th class="text-start ps-3">Legajo</th>
-                                        <th class="text-start">Alumno</th>
-                                        <th>Edad / Género</th>
-                                        <th class="text-start">Materia</th>
-                                        <th>1° Trim</th>
-                                        <th>2° Trim</th>
-                                        <th>3° Trim</th>
-                                        <th>Promedio</th>
-                                        <th>Estado</th>
+                                        <th class="text-start ps-3" style="width: 90px;">Legajo</th>
+                                        <th class="text-start">Estudiante</th>
+                                        <th style="width: 100px;">1° Trim</th>
+                                        <th style="width: 100px;">2° Trim</th>
+                                        <th style="width: 100px;">3° Trim</th>
+                                        <th style="width: 95px;">Promedio</th>
+                                        <th style="width: 130px;">Condición</th>
+                                        <th class="text-start">Concepto Pedagógico</th>
+                                        <th style="width: 60px;">Guardar</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tablaCalificaciones">
+                                <tbody id="tablaPlanillaDocente">
                                     <tr>
-                                        <td colspan="9" class="text-center py-3 text-muted">
-                                            <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-                                            Cargando calificaciones desde PostgreSQL...
+                                        <td colspan="9" class="text-center py-4 text-muted">
+                                            <span class="material-symbols-outlined fs-2 d-block text-secondary mb-1">touch_app</span>
+                                            Selecciona un Curso y una Asignatura para ver y cargar calificaciones.
                                         </td>
                                     </tr>
                                 </tbody>
@@ -272,6 +387,9 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- Toast de Feedback -->
+                <div class="toast-feedback" id="toastContainer" aria-live="polite"></div>
 
             </div><!-- /p-4 p-md-5 -->
         </main>
@@ -413,12 +531,18 @@
                 if (alertEl) alertEl.classList.add('d-none');
                 bootstrap.Modal.getInstance(document.getElementById('modalNota')).hide();
 
-                // Recargar tabla de calificaciones
-                if (window.recargarCalificacionesDocente) {
+                // Recargar planilla de calificaciones activa
+                if (window.recargarPlanillaActual) {
+                    await window.recargarPlanillaActual();
+                } else if (window.recargarCalificacionesDocente) {
                     await window.recargarCalificacionesDocente();
                 }
 
-                alert('✅ Calificación guardada exitosamente en PostgreSQL!');
+                if (window.mostrarToastGlobal) {
+                    window.mostrarToastGlobal('✅ Calificación guardada exitosamente en PostgreSQL!', 'success');
+                } else {
+                    alert('✅ Calificación guardada exitosamente en PostgreSQL!');
+                }
             } catch (err) {
                 console.error(err);
                 if (alertEl) {
@@ -433,22 +557,81 @@
     }
 </script>
 
-<!-- Script module: carga las materias asignadas desde PostgreSQL -->
+<!-- Script module: carga materias asignadas y gestiona la planilla de calificaciones desde PostgreSQL -->
 <script type="module">
-    // Importar las funciones necesarias del módulo de asignación de HU-04
     import {
         sincronizarConServidor,
         getDocentes,
         getMateriasCompletasPorDocente,
-        getCargaHorariaDocente
+        getCargaHorariaDocente,
+        getAsignacionesPorDocente
     } from '../js/asignacion-materias.js';
+
+    // Estado global de la planilla interactiva
+    const cursosDocenteMap = new Map();
+    let planillaActual = { id_curso: null, id_materia: null, alumnos: [] };
+
+    // --- Sistema de Toast de Feedback ---
+    function mostrarToast(mensaje, tipo = 'success') {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${tipo === 'success' ? 'success' : (tipo === 'info' ? 'info' : 'danger')} shadow py-2 px-3 mb-2 rounded-3 d-flex align-items-center gap-2 fade show`;
+        toast.innerHTML = `
+            <span class="material-symbols-outlined fs-5">${tipo === 'success' ? 'check_circle' : (tipo === 'info' ? 'info' : 'error')}</span>
+            <span class="small fw-semibold">${mensaje}</span>
+        `;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3800);
+    }
+    window.mostrarToastGlobal = mostrarToast;
+
+    // --- Navegación por pestañas del Sidebar ---
+    function setupSidebarNavigation() {
+        const navLinks = document.querySelectorAll('.sidebar .nav-link[data-section]');
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const section = link.getAttribute('data-section');
+                activarSeccion(section);
+            });
+        });
+    }
+
+    function activarSeccion(sectionName) {
+        document.querySelectorAll('.sidebar .nav-link[data-section]').forEach(l => {
+            if (l.getAttribute('data-section') === sectionName) {
+                l.classList.add('active');
+            } else {
+                l.classList.remove('active');
+            }
+        });
+
+        const secciones = {
+            'materias': document.getElementById('seccionMaterias'),
+            'alumnos': document.getElementById('seccionAlumnos'),
+            'calificaciones': document.getElementById('seccionCalificaciones')
+        };
+
+        Object.entries(secciones).forEach(([key, sec]) => {
+            if (!sec) return;
+            if (key === sectionName) {
+                sec.classList.remove('d-none');
+            } else {
+                sec.classList.add('d-none');
+            }
+        });
+    }
+    window.activarSeccionDocente = activarSeccion;
 
     function encontrarDocenteDeSession() {
         const usuarioSesion = JSON.parse(localStorage.getItem('usuario'));
         if (!usuarioSesion) return null;
 
         const docentes = getDocentes();
-        // Buscar por email o coincidencia de nombre
         return docentes.find(d =>
             (usuarioSesion.email && d.email && d.email.toLowerCase() === usuarioSesion.email.toLowerCase()) ||
             (usuarioSesion.nombre && d.nombre && usuarioSesion.nombre.toLowerCase().includes(d.nombre.toLowerCase())) ||
@@ -456,8 +639,603 @@
         ) || docentes[0];
     }
 
+    // --- Helpers de Notas Pedagógicas ---
+    function getClaseNota(val) {
+        if (val === '' || val === null || val === undefined) return '';
+        const num = parseFloat(val);
+        if (isNaN(num) || num < 1 || num > 10) return 'nota-invalida';
+        if (num >= 7) return 'nota-alta';
+        if (num >= 4) return 'nota-media';
+        return 'nota-baja';
+    }
+
+    function recalcularFila(idAlumno) {
+        const fila = document.getElementById(`fila-alumno-${idAlumno}`);
+        if (!fila) return;
+
+        const inT1 = fila.querySelector('.input-nota[data-trimestre="1"]');
+        const inT2 = fila.querySelector('.input-nota[data-trimestre="2"]');
+        const inT3 = fila.querySelector('.input-nota[data-trimestre="3"]');
+        const lblProm = document.getElementById(`promedio-alumno-${idAlumno}`);
+        const badgeEst = document.getElementById(`estado-alumno-${idAlumno}`);
+
+        const notas = [inT1?.value, inT2?.value, inT3?.value]
+            .map(v => (v !== '' && v !== null && !isNaN(parseFloat(v))) ? parseFloat(v) : null)
+            .filter(n => n !== null && n >= 1 && n <= 10);
+
+        if (notas.length === 0) {
+            if (lblProm) {
+                lblProm.textContent = '-';
+                lblProm.className = 'fw-bold text-muted';
+            }
+            if (badgeEst) {
+                badgeEst.textContent = 'Cursando';
+                badgeEst.className = 'badge bg-secondary-subtle text-secondary border';
+            }
+        } else {
+            const prom = +(notas.reduce((a, b) => a + b, 0) / notas.length).toFixed(2);
+            if (lblProm) {
+                lblProm.textContent = prom.toFixed(2);
+                lblProm.className = `fw-bold ${prom >= 7 ? 'text-success' : 'text-primary'}`;
+            }
+            if (badgeEst) {
+                if (prom >= 7.00) {
+                    badgeEst.textContent = 'Promocionado';
+                    badgeEst.className = 'badge bg-success-subtle text-success border border-success-subtle';
+                } else if (prom >= 4.00) {
+                    badgeEst.textContent = 'Regular';
+                    badgeEst.className = 'badge bg-primary-subtle text-primary border border-primary-subtle';
+                } else {
+                    badgeEst.textContent = 'En Riesgo';
+                    badgeEst.className = 'badge bg-danger-subtle text-danger border border-danger-subtle';
+                }
+            }
+        }
+
+        recalcularKpiGrupal();
+    }
+
+    function recalcularKpiGrupal() {
+        const lblPromGrupal = document.getElementById('lblPromedioGrupalPlanilla');
+        if (!lblPromGrupal) return;
+
+        const promSpans = document.querySelectorAll('#tablaPlanillaDocente [id^="promedio-alumno-"]');
+        const validProms = [];
+        promSpans.forEach(span => {
+            const val = parseFloat(span.textContent);
+            if (!isNaN(val)) validProms.push(val);
+        });
+
+        if (validProms.length > 0) {
+            const avg = (validProms.reduce((a, b) => a + b, 0) / validProms.length).toFixed(2);
+            lblPromGrupal.textContent = avg;
+            lblPromGrupal.className = `fw-bold h6 mb-0 ${avg >= 7 ? 'text-success' : 'text-primary'}`;
+        } else {
+            lblPromGrupal.textContent = '-';
+            lblPromGrupal.className = 'fw-bold text-muted h6 mb-0';
+        }
+    }
+
+    function verificarEstadoGlobalCambios() {
+        const filasMod = document.querySelectorAll('#tablaPlanillaDocente tr.fila-modificada');
+        const badge = document.getElementById('badgeIndicadorCambios');
+        const btnGuardarLote = document.getElementById('btnGuardarLotePlanilla');
+
+        if (filasMod.length > 0) {
+            if (badge) {
+                badge.className = 'badge bg-warning-subtle text-dark border border-warning rounded-pill px-3 py-2 small';
+                badge.innerHTML = `<span class="spinner-grow spinner-grow-sm me-1"></span> ${filasMod.length} cambios pendientes`;
+            }
+            if (btnGuardarLote) btnGuardarLote.disabled = false;
+        } else {
+            if (badge) {
+                badge.className = 'badge bg-success-subtle text-success border rounded-pill px-3 py-2 small';
+                badge.textContent = '✅ Planilla al día';
+            }
+            if (btnGuardarLote) btnGuardarLote.disabled = true;
+        }
+    }
+
+    // --- Carga de Planilla Oficial ---
+    async function cargarPlanillaDocente(idCurso, idMateria) {
+        if (!idCurso || !idMateria) return;
+        const tbody = document.getElementById('tablaPlanillaDocente');
+        const kpis = document.getElementById('contenedorKpisPlanilla');
+        const badgeCambios = document.getElementById('badgeIndicadorCambios');
+        const btnGuardarLote = document.getElementById('btnGuardarLotePlanilla');
+
+        if (btnGuardarLote) btnGuardarLote.disabled = true;
+        if (badgeCambios) {
+            badgeCambios.className = 'badge bg-secondary-subtle text-secondary border rounded-pill px-3 py-2 small';
+            badgeCambios.textContent = 'Sin cambios';
+        }
+
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="text-center py-4 text-muted">
+                        <span class="spinner-border spinner-border-sm text-primary me-2"></span>
+                        Cargando planilla de calificaciones desde PostgreSQL...
+                    </td>
+                </tr>
+            `;
+        }
+
+        try {
+            const res = await fetch(`http://localhost:3000/api/calificaciones/planilla?id_curso=${idCurso}&id_materia=${idMateria}`);
+            const data = await res.json();
+
+            if (!res.ok || !data.ok) {
+                throw new Error(data.error || 'Error al obtener la planilla');
+            }
+
+            const info = data.data;
+            planillaActual = {
+                id_curso: Number(idCurso),
+                id_materia: Number(idMateria),
+                alumnos: info.alumnos || []
+            };
+
+            if (kpis) kpis.classList.remove('d-none');
+            const totalEl = document.getElementById('lblTotalAlumnosPlanilla');
+            if (totalEl) totalEl.textContent = info.totalAlumnos || 0;
+
+            if (!info.alumnos || info.alumnos.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center py-4 text-muted">
+                            <span class="material-symbols-outlined fs-2 d-block text-secondary mb-1">sentiment_dissatisfied</span>
+                            No hay estudiantes inscriptos en este curso y materia.
+                        </td>
+                    </tr>
+                `;
+                recalcularKpiGrupal();
+                return;
+            }
+
+            renderizarFilasPlanilla(info.alumnos);
+            recalcularKpiGrupal();
+        } catch (err) {
+            console.error('Error al cargar planilla docente:', err);
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center py-4 text-danger">
+                            <span class="material-symbols-outlined fs-2 d-block mb-1">error</span>
+                            Error al cargar la planilla: ${err.message}
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+    }
+
+    function renderizarFilasPlanilla(alumnos) {
+        const tbody = document.getElementById('tablaPlanillaDocente');
+        if (!tbody) return;
+
+        tbody.innerHTML = alumnos.map(al => {
+            const t1 = al.trimestre_1 !== null ? al.trimestre_1 : '';
+            const t2 = al.trimestre_2 !== null ? al.trimestre_2 : '';
+            const t3 = al.trimestre_3 !== null ? al.trimestre_3 : '';
+            const obs = al.observacion_3 || al.observacion_2 || al.observacion_1 || '';
+
+            const badgeClase = al.estado === 'Promocionado'
+                ? 'bg-success-subtle text-success border border-success-subtle'
+                : (al.estado === 'Regular'
+                    ? 'bg-primary-subtle text-primary border border-primary-subtle'
+                    : (al.estado === 'En Riesgo'
+                        ? 'bg-danger-subtle text-danger border border-danger-subtle'
+                        : 'bg-secondary-subtle text-secondary border'));
+
+            return `
+                <tr id="fila-alumno-${al.id_alumno}" data-alumno="${al.id_alumno}">
+                    <td class="text-start ps-3"><code>${al.legajo}</code></td>
+                    <td class="text-start">
+                        <div class="fw-bold text-dark">${al.apellido}, ${al.nombre}</div>
+                        <small class="text-muted" style="font-size:11px;">
+                            ${al.edad ? al.edad + ' años' : ''} ${al.edad && al.genero ? '•' : ''} ${al.genero || ''}
+                        </small>
+                    </td>
+                    <td>
+                        <input type="number" 
+                               class="form-control form-control-sm input-nota ${getClaseNota(t1)}" 
+                               min="1" max="10" step="0.25" 
+                               data-alumno="${al.id_alumno}" data-trimestre="1" 
+                               value="${t1}" placeholder="-">
+                    </td>
+                    <td>
+                        <input type="number" 
+                               class="form-control form-control-sm input-nota ${getClaseNota(t2)}" 
+                               min="1" max="10" step="0.25" 
+                               data-alumno="${al.id_alumno}" data-trimestre="2" 
+                               value="${t2}" placeholder="-">
+                    </td>
+                    <td>
+                        <input type="number" 
+                               class="form-control form-control-sm input-nota ${getClaseNota(t3)}" 
+                               min="1" max="10" step="0.25" 
+                               data-alumno="${al.id_alumno}" data-trimestre="3" 
+                               value="${t3}" placeholder="-">
+                    </td>
+                    <td>
+                        <span id="promedio-alumno-${al.id_alumno}" class="fw-bold ${al.promedio >= 7 ? 'text-success' : 'text-primary'}">
+                            ${al.promedio !== null ? Number(al.promedio).toFixed(2) : '-'}
+                        </span>
+                    </td>
+                    <td>
+                        <span id="estado-alumno-${al.id_alumno}" class="badge ${badgeClase}">
+                            ${al.estado || 'Cursando'}
+                        </span>
+                    </td>
+                    <td class="text-start">
+                        <input type="text" 
+                               class="form-control form-control-sm input-obs" 
+                               data-alumno="${al.id_alumno}" 
+                               value="${obs}" 
+                               placeholder="Concepto pedagógico...">
+                    </td>
+                    <td>
+                        <button class="btn btn-outline-success btn-sm rounded-circle p-1 btn-guardar-fila" 
+                                data-alumno="${al.id_alumno}" 
+                                title="Guardar cambios de este estudiante (Enter)">
+                            <span class="material-symbols-outlined fs-6 align-middle">check</span>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        configurarEventosPlanilla();
+    }
+
+    function configurarEventosPlanilla() {
+        // Validación interactiva y recálculo dinámico en cada input de nota
+        document.querySelectorAll('#tablaPlanillaDocente .input-nota').forEach(input => {
+            input.addEventListener('input', () => {
+                const fila = input.closest('tr');
+                const idAlumno = input.dataset.alumno;
+
+                input.className = `form-control form-control-sm input-nota ${getClaseNota(input.value)}`;
+                fila.classList.add('fila-modificada');
+
+                recalcularFila(idAlumno);
+                verificarEstadoGlobalCambios();
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    guardarFilaIndividual(input.dataset.alumno);
+                }
+            });
+        });
+
+        // Observaciones pedagógicas
+        document.querySelectorAll('#tablaPlanillaDocente .input-obs').forEach(input => {
+            input.addEventListener('input', () => {
+                const fila = input.closest('tr');
+                fila.classList.add('fila-modificada');
+                verificarEstadoGlobalCambios();
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    guardarFilaIndividual(input.dataset.alumno);
+                }
+            });
+        });
+
+        // Botón guardar fila individual
+        document.querySelectorAll('#tablaPlanillaDocente .btn-guardar-fila').forEach(btn => {
+            btn.addEventListener('click', () => {
+                guardarFilaIndividual(btn.dataset.alumno);
+            });
+        });
+
+        // Botón guardar toda la planilla en lote
+        const btnLote = document.getElementById('btnGuardarLotePlanilla');
+        if (btnLote) {
+            btnLote.onclick = guardarTodaLaPlanilla;
+        }
+    }
+
+    async function guardarFilaIndividual(idAlumno) {
+        const fila = document.getElementById(`fila-alumno-${idAlumno}`);
+        if (!fila) return;
+
+        const inT1 = fila.querySelector('.input-nota[data-trimestre="1"]');
+        const inT2 = fila.querySelector('.input-nota[data-trimestre="2"]');
+        const inT3 = fila.querySelector('.input-nota[data-trimestre="3"]');
+        const inObs = fila.querySelector('.input-obs');
+        const btn = fila.querySelector('.btn-guardar-fila');
+
+        const trims = [
+            { trimestre: 1, val: inT1?.value },
+            { trimestre: 2, val: inT2?.value },
+            { trimestre: 3, val: inT3?.value }
+        ];
+
+        const notasAGuardar = [];
+        for (const t of trims) {
+            if (t.val !== '' && t.val !== null && t.val !== undefined) {
+                const num = parseFloat(t.val);
+                if (isNaN(num) || num < 1 || num > 10) {
+                    mostrarToast(`La nota del ${t.trimestre}° Trimestre debe estar entre 1.00 y 10.00`, 'danger');
+                    return;
+                }
+                notasAGuardar.push({
+                    id_alumno: Number(idAlumno),
+                    id_materia: Number(planillaActual.id_materia),
+                    trimestre: t.trimestre,
+                    nota: num,
+                    observacion: inObs?.value.trim() || null
+                });
+            }
+        }
+
+        if (notasAGuardar.length === 0) {
+            mostrarToast('Ingresa al menos una calificación para guardar', 'info');
+            return;
+        }
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        }
+
+        try {
+            const res = await fetch('http://localhost:3000/api/calificaciones/lote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ calificaciones: notasAGuardar })
+            });
+            const data = await res.json();
+
+            if (!res.ok || !data.ok) {
+                throw new Error(data.error || 'Error al guardar calificación');
+            }
+
+            fila.classList.remove('fila-modificada');
+            fila.classList.add('fila-guardada');
+            setTimeout(() => fila.classList.remove('fila-guardada'), 2000);
+
+            mostrarToast(`✅ Notas de estudiante guardadas en PostgreSQL`, 'success');
+            verificarEstadoGlobalCambios();
+        } catch (err) {
+            console.error('Error al guardar fila individual:', err);
+            mostrarToast(`Error: ${err.message}`, 'danger');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-symbols-outlined fs-6 align-middle">check</span>';
+            }
+        }
+    }
+
+    async function guardarTodaLaPlanilla() {
+        const btnGuardarLote = document.getElementById('btnGuardarLotePlanilla');
+        const filasModificadas = document.querySelectorAll('#tablaPlanillaDocente tr.fila-modificada');
+
+        const listaAGuardar = [];
+
+        for (const fila of filasModificadas) {
+            const idAlumno = fila.dataset.alumno;
+            const inT1 = fila.querySelector('.input-nota[data-trimestre="1"]');
+            const inT2 = fila.querySelector('.input-nota[data-trimestre="2"]');
+            const inT3 = fila.querySelector('.input-nota[data-trimestre="3"]');
+            const inObs = fila.querySelector('.input-obs');
+
+            const trims = [
+                { trimestre: 1, val: inT1?.value },
+                { trimestre: 2, val: inT2?.value },
+                { trimestre: 3, val: inT3?.value }
+            ];
+
+            for (const t of trims) {
+                if (t.val !== '' && t.val !== null && t.val !== undefined) {
+                    const num = parseFloat(t.val);
+                    if (isNaN(num) || num < 1 || num > 10) {
+                        mostrarToast(`Nota inválida (${t.val}) en fila. Debe ser entre 1 y 10`, 'danger');
+                        return;
+                    }
+                    listaAGuardar.push({
+                        id_alumno: Number(idAlumno),
+                        id_materia: Number(planillaActual.id_materia),
+                        trimestre: t.trimestre,
+                        nota: num,
+                        observacion: inObs?.value.trim() || null
+                    });
+                }
+            }
+        }
+
+        if (listaAGuardar.length === 0) {
+            mostrarToast('No hay cambios pendientes para guardar', 'info');
+            return;
+        }
+
+        if (btnGuardarLote) {
+            btnGuardarLote.disabled = true;
+            btnGuardarLote.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando Planilla...';
+        }
+
+        try {
+            const res = await fetch('http://localhost:3000/api/calificaciones/lote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ calificaciones: listaAGuardar })
+            });
+            const data = await res.json();
+
+            if (!res.ok || !data.ok) {
+                throw new Error(data.error || 'Error al guardar planilla en lote');
+            }
+
+            filasModificadas.forEach(fila => {
+                fila.classList.remove('fila-modificada');
+                fila.classList.add('fila-guardada');
+                setTimeout(() => fila.classList.remove('fila-guardada'), 2000);
+            });
+
+            verificarEstadoGlobalCambios();
+            mostrarToast(`💾 Se guardaron ${data.data?.guardadas || listaAGuardar.length} calificaciones en PostgreSQL!`, 'success');
+        } catch (err) {
+            console.error('Error al guardar planilla en lote:', err);
+            mostrarToast(`Error al guardar: ${err.message}`, 'danger');
+        } finally {
+            if (btnGuardarLote) {
+                btnGuardarLote.disabled = false;
+                btnGuardarLote.innerHTML = '<span class="material-symbols-outlined fs-6">save</span> Guardar Toda la Planilla';
+            }
+        }
+    }
+
+    window.recargarPlanillaActual = function() {
+        if (planillaActual.id_curso && planillaActual.id_materia) {
+            return cargarPlanillaDocente(planillaActual.id_curso, planillaActual.id_materia);
+        }
+        return Promise.resolve();
+    };
+
+    window.abrirPlanillaParaAlumno = function(idAlumno, idCurso, idMateria) {
+        activarSeccion('calificaciones');
+        const selectCurso = document.getElementById('selectPlanillaCurso');
+        const selectMateria = document.getElementById('selectPlanillaMateria');
+
+        if (selectCurso && idCurso) {
+            selectCurso.value = idCurso;
+            actualizarMateriasPlanilla(idCurso);
+        }
+
+        if (selectMateria && idMateria) {
+            selectMateria.value = idMateria;
+            cargarPlanillaDocente(idCurso, idMateria).then(() => {
+                setTimeout(() => {
+                    const fila = document.getElementById(`fila-alumno-${idAlumno}`);
+                    if (fila) {
+                        fila.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        fila.classList.add('fila-modificada');
+                        const firstInput = fila.querySelector('.input-nota');
+                        if (firstInput) firstInput.focus();
+                    }
+                }, 300);
+            });
+        }
+    };
+
+    function construirMapaCursosDocente(alumnosDocente, docente) {
+        cursosDocenteMap.clear();
+
+        // 1. A partir de los alumnos vinculados
+        alumnosDocente.forEach(al => {
+            if (al.id_curso) {
+                if (!cursosDocenteMap.has(al.id_curso)) {
+                    cursosDocenteMap.set(al.id_curso, {
+                        id_curso: al.id_curso,
+                        nombre: al.curso || `Curso ${al.id_curso}`,
+                        materias: new Map()
+                    });
+                }
+                const cursoObj = cursosDocenteMap.get(al.id_curso);
+                if (Array.isArray(al.materias_con_docente)) {
+                    al.materias_con_docente.forEach(m => {
+                        if (!cursoObj.materias.has(m.id_materia)) {
+                            cursoObj.materias.set(m.id_materia, {
+                                id_materia: m.id_materia,
+                                codigo: m.codigo,
+                                nombre: m.nombre
+                            });
+                        }
+                    });
+                }
+            }
+        });
+
+        // 2. A partir de las asignaciones de materias del docente
+        if (docente && docente.id) {
+            const asignaciones = getAsignacionesPorDocente(docente.id);
+            if (Array.isArray(asignaciones)) {
+                asignaciones.forEach(asig => {
+                    if (asig.cursoId) {
+                        if (!cursosDocenteMap.has(asig.cursoId)) {
+                            cursosDocenteMap.set(asig.cursoId, {
+                                id_curso: asig.cursoId,
+                                nombre: asig.cursoNombre || `Curso ${asig.cursoId}`,
+                                materias: new Map()
+                            });
+                        }
+                        const cursoObj = cursosDocenteMap.get(asig.cursoId);
+                        if (!cursoObj.materias.has(asig.materiaId)) {
+                            cursoObj.materias.set(asig.materiaId, {
+                                id_materia: asig.materiaId,
+                                codigo: asig.materiaCodigo,
+                                nombre: asig.materiaNombre
+                            });
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    function inicializarPlanillaSelects() {
+        const selectCurso = document.getElementById('selectPlanillaCurso');
+        if (!selectCurso) return;
+
+        if (cursosDocenteMap.size === 0) {
+            selectCurso.innerHTML = '<option value="">No hay cursos asignados a tu usuario</option>';
+            const selectMateria = document.getElementById('selectPlanillaMateria');
+            if (selectMateria) selectMateria.innerHTML = '<option value="">Sin materias</option>';
+            return;
+        }
+
+        selectCurso.innerHTML = Array.from(cursosDocenteMap.values()).map(c => `
+            <option value="${c.id_curso}">${c.nombre}</option>
+        `).join('');
+
+        selectCurso.onchange = () => {
+            actualizarMateriasPlanilla(selectCurso.value);
+        };
+
+        const primerCursoId = Array.from(cursosDocenteMap.keys())[0];
+        selectCurso.value = primerCursoId;
+        actualizarMateriasPlanilla(primerCursoId);
+    }
+
+    function actualizarMateriasPlanilla(idCurso) {
+        const selectMateria = document.getElementById('selectPlanillaMateria');
+        if (!selectMateria) return;
+
+        const curso = cursosDocenteMap.get(Number(idCurso));
+        if (!curso || curso.materias.size === 0) {
+            selectMateria.innerHTML = '<option value="">Sin materias asignadas en este curso</option>';
+            const tbody = document.getElementById('tablaPlanillaDocente');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">No tienes materias asignadas en este curso.</td></tr>';
+            }
+            return;
+        }
+
+        selectMateria.innerHTML = Array.from(curso.materias.values()).map(m => `
+            <option value="${m.id_materia}">${m.nombre} (${m.codigo})</option>
+        `).join('');
+
+        selectMateria.onchange = () => {
+            cargarPlanillaDocente(idCurso, selectMateria.value);
+        };
+
+        const primeraMateriaId = Array.from(curso.materias.keys())[0];
+        selectMateria.value = primeraMateriaId;
+        cargarPlanillaDocente(idCurso, primeraMateriaId);
+    }
+
     /** Renderiza la tabla de materias asignadas con los datos reales de PostgreSQL. */
     async function cargarMateriasAsignadas() {
+        // Inicializar navegación por secciones del sidebar
+        setupSidebarNavigation();
+
         // Sincronizar datos frescos desde la API REST y PostgreSQL
         await sincronizarConServidor();
 
@@ -478,37 +1256,35 @@
         if (cantEl)   cantEl.textContent   = materias.length;
         if (cargaEl)  cargaEl.textContent  = `${carga.horasUsadas} h`;
 
-        if (!tbody) return;
+        if (tbody) {
+            if (!materias.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <span class="material-symbols-outlined text-muted d-block mb-1" style="font-size:2rem">assignment_late</span>
+                            <span class="text-muted fst-italic small">No tenés materias asignadas aún en la base de datos. El área administrativa las cargará en breve.</span>
+                        </td>
+                    </tr>`;
+            } else {
+                tbody.innerHTML = materias.map(m => {
+                    const nivelBadge = m.nivel === 'inicial'
+                        ? '<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Inicial</span>'
+                        : m.nivel === 'primaria'
+                            ? '<span class="badge bg-info-subtle text-info">Primaria</span>'
+                            : '<span class="badge bg-secondary-subtle text-secondary">Secundaria</span>';
 
-        if (!materias.length) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="5" class="text-center py-4">
-                        <span class="material-symbols-outlined text-muted d-block mb-1" style="font-size:2rem">assignment_late</span>
-                        <span class="text-muted fst-italic small">No tenés materias asignadas aún en la base de datos. El área administrativa las cargará en breve.</span>
-                    </td>
-                </tr>`;
-            return;
+                    return `<tr>
+                        <td><code>${m.codigo}</code></td>
+                        <td class="fw-bold">${m.nombre} ${nivelBadge}</td>
+                        <td>${m.cargaHoraria} Horas</td>
+                        <td>Ciclo ${m.cicloLectivo || 2027}</td>
+                        <td><span class="badge bg-success-subtle text-success border border-success-subtle">Activa</span></td>
+                    </tr>`;
+                }).join('');
+            }
         }
 
-        // Generar una fila por cada materia asignada
-        tbody.innerHTML = materias.map(m => {
-            const nivelBadge = m.nivel === 'inicial'
-                ? '<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Inicial</span>'
-                : m.nivel === 'primaria'
-                    ? '<span class="badge bg-info-subtle text-info">Primaria</span>'
-                    : '<span class="badge bg-secondary-subtle text-secondary">Secundaria</span>';
-
-            return `<tr>
-                <td><code>${m.codigo}</code></td>
-                <td class="fw-bold">${m.nombre} ${nivelBadge}</td>
-                <td>${m.cargaHoraria} Horas</td>
-                <td>Ciclo ${m.cicloLectivo || 2027}</td>
-                <td><span class="badge bg-success-subtle text-success border border-success-subtle">Activa</span></td>
-            </tr>`;
-        }).join('');
-
-        // Cargar alumnos reales vinculados desde PostgreSQL y poblar modal
+        // Cargar alumnos reales vinculados desde PostgreSQL y poblar planilla
         try {
             const resAl = await fetch(`http://localhost:3000/api/docentes/${usuario.id}/alumnos?byUser=true`);
             const dataAl = await resAl.json();
@@ -594,6 +1370,7 @@
                         `).join('');
 
                         const codigosMaterias = (a.materias_con_docente || []).map(m => m.codigo).join(' ');
+                        const primerMat = (a.materias_con_docente && a.materias_con_docente[0]) ? a.materias_con_docente[0].id_materia : null;
 
                         return `
                             <tr data-materia="${codigosMaterias}">
@@ -610,9 +1387,18 @@
                                 </td>
                                 <td><span class="badge bg-success-subtle text-success border border-success-subtle">${a.estado || 'Regular'}</span></td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="window.abrirCargarNotaDirecta(${a.id_alumno}, '${a.nombre} ${a.apellido}')">
-                                        <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">grading</span> Calificar
-                                    </button>
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-outline-primary rounded-pill px-2 d-inline-flex align-items-center gap-1" 
+                                                onclick="window.abrirPlanillaParaAlumno(${a.id_alumno}, ${a.id_curso}, ${primerMat})" 
+                                                title="Cargar nota en planilla interactiva">
+                                            <span class="material-symbols-outlined" style="font-size:14px;">grading</span> Planilla
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary rounded-pill px-2" 
+                                                onclick="window.abrirCargarNotaDirecta(${a.id_alumno}, '${a.nombre} ${a.apellido}')" 
+                                                title="Carga individual modal">
+                                            <span class="material-symbols-outlined" style="font-size:14px;">edit_note</span>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         `;
@@ -620,59 +1406,10 @@
                 }
             }
 
-            // Cargar tabla de calificaciones SOLO para los alumnos y materias de este docente
-            window.recargarCalificacionesDocente = async function() {
-                const tbodyCal = document.getElementById('tablaCalificaciones');
-                if (!tbodyCal) return;
+            // Construir mapa de cursos y materias para la planilla interactiva
+            construirMapaCursosDocente(alumnosDocente, docente);
+            inicializarPlanillaSelects();
 
-                if (alumnosDocente.length === 0) {
-                    tbodyCal.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-3">No hay alumnos asignados a tus materias.</td></tr>';
-                    return;
-                }
-
-                try {
-                    const idsMateriasDocente = new Set(materias.map(m => Number(m.id)));
-                    const boletines = await Promise.all(
-                        alumnosDocente.map(async al => {
-                            const r = await fetch(`http://localhost:3000/api/alumnos/${al.id_alumno}/calificaciones`);
-                            const d = await r.json();
-                            return { al, boletin: (d.ok && d.data && Array.isArray(d.data.boletin)) ? d.data.boletin : [] };
-                        })
-                    );
-
-                    const filas = [];
-                    boletines.forEach(({ al, boletin }) => {
-                        // Filtrar estrictamente solo las materias asignadas a este docente
-                        const boletinDocente = boletin.filter(m => idsMateriasDocente.has(Number(m.id_materia)));
-                        boletinDocente.forEach(m => {
-                            filas.push(`
-                                <tr>
-                                    <td class="text-start ps-3"><code>${al.legajo}</code></td>
-                                    <td class="text-start fw-bold">
-                                        ${al.apellido}, ${al.nombre}
-                                        <small class="text-muted d-block" style="font-size:11px;">${al.curso || ''}</small>
-                                    </td>
-                                    <td><small class="text-muted">${al.edad ? al.edad + 'a' : '-'} • ${al.genero || '-'}</small></td>
-                                    <td class="text-start fw-bold text-primary">${m.materia}</td>
-                                    <td>${m.trimestre_1 !== null ? Number(m.trimestre_1).toFixed(2) : '-'}</td>
-                                    <td>${m.trimestre_2 !== null ? Number(m.trimestre_2).toFixed(2) : '-'}</td>
-                                    <td>${m.trimestre_3 !== null ? Number(m.trimestre_3).toFixed(2) : '-'}</td>
-                                    <td class="fw-bold ${m.promedio >= 7 ? 'text-success' : 'text-primary'}">${m.promedio !== null ? Number(m.promedio).toFixed(2) : '-'}</td>
-                                    <td><span class="badge ${m.estado === 'Promocionado' ? 'bg-success-subtle text-success border' : 'bg-primary-subtle text-primary border'}">${m.estado}</span></td>
-                                </tr>
-                            `);
-                        });
-                    });
-
-                    tbodyCal.innerHTML = filas.length > 0
-                        ? filas.join('')
-                        : '<tr><td colspan="9" class="text-center text-muted py-3">No hay calificaciones registradas aún en tus materias.</td></tr>';
-                } catch (err) {
-                    console.error('Error al recargar calificaciones docente:', err);
-                }
-            };
-
-            await window.recargarCalificacionesDocente();
         } catch (err) {
             console.warn('No se pudo cargar la lista de alumnos en el dashboard docente:', err);
         }

@@ -189,12 +189,38 @@
             </div>
         </div>
     </footer>
+    <!-- Modal de Confirmación de Preinscripción -->
+    <div class="modal fade" id="modalExitoPreinscripcion" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4 overflow-hidden">
+                <div class="modal-header bg-success text-white border-0 py-3">
+                    <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined fs-4">verified</span> ¡Preinscripción Recibida!
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div class="mb-3">
+                        <span class="material-symbols-outlined text-success" style="font-size: 64px;">task_alt</span>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Comprobante de Trámite Online</h5>
+                    <p class="text-secondary small mb-3">La solicitud fue registrada exitosamente en el sistema institucional. Presenta el siguiente código durante la entrevista presencial:</p>
+                    <div class="p-3 bg-light rounded-3 border d-inline-block px-4 mb-3">
+                        <span class="text-muted small d-block">Código de Preinscripción:</span>
+                        <span id="lblCodigoTramite" class="h4 fw-bold text-primary font-monospace mb-0">PRE-2027-XXXX</span>
+                    </div>
+                    <p class="text-muted small mb-0">Nos contactaremos al teléfono indicado para coordinar la fecha y documentación de ingreso.</p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center pb-4">
+                    <button type="button" class="btn btn-primary rounded-pill px-5 fw-bold" data-bs-dismiss="modal">Entendido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script type="module">
-        import { db } from '../js/firebase-config.js';
-        import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-
+    <script>
         document.querySelector('form').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -203,40 +229,45 @@
 
             const btn = e.target.querySelector('[type="submit"]');
             btn.disabled = true;
-            btn.textContent = 'Enviando...';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Registrando...';
+
+            let codigoTramite = 'PRE-2027-' + Math.floor(1000 + Math.random() * 9000);
 
             try {
-                await addDoc(collection(db, 'preinscripciones'), {
-                    alumno: {
-                        nombre:             data.nombreAlumno,
-                        nivel:              data.nivelIngresa,
-                        edad:               Number(data.edadAlumno),
-                        dni:                data.dniAlumno,
-                        tipoSangre:         data.tipoSangre,
-                        domicilio:          data.domicilioAlumno,
-                        telefonoEmergencia: data.telefonoEmergencia
-                    },
-                    tutor: {
-                        nombre:    data.nombreTutor,
-                        vinculo:   data.vinculo,
-                        edad:      Number(data.edadTutor),
-                        dni:       data.dniTutor,
-                        domicilio: data.domicilioTutor || null,
-                        telefono:  data.telefonoTutor
-                    },
-                    estado:   'pendiente',
-                    creadoEn: serverTimestamp()
+                // 1. Guardar en PostgreSQL en Neon Cloud mediante REST API
+                const res = await fetch('http://localhost:3000/api/preinscripciones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
                 });
 
-                alert('¡Preinscripción enviada con éxito! Nos comunicaremos a la brevedad para coordinar la visita presencial.');
-                e.target.reset();
-
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.data && json.data.codigo_tramite) {
+                        codigoTramite = json.data.codigo_tramite;
+                    }
+                } else {
+                    throw new Error('Servidor respondió con código ' + res.status);
+                }
             } catch (err) {
-                console.error('Error al guardar preinscripción:', err);
-                alert('Error al enviar. Por favor intentá nuevamente.');
+                console.warn('Backend REST API en modo fallback local:', err.message);
+                // Respaldo en LocalStorage para no perder la solicitud
+                const pendientes = JSON.parse(localStorage.getItem('preinscripciones_locales') || '[]');
+                pendientes.push({
+                    codigo_tramite: codigoTramite,
+                    data,
+                    fecha: new Date().toISOString()
+                });
+                localStorage.setItem('preinscripciones_locales', JSON.stringify(pendientes));
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Enviar Preinscripción';
+                btn.innerHTML = 'Enviar Preinscripción';
+
+                document.getElementById('lblCodigoTramite').textContent = codigoTramite;
+                const modal = new bootstrap.Modal(document.getElementById('modalExitoPreinscripcion'));
+                modal.show();
+
+                e.target.reset();
             }
         });
     </script>

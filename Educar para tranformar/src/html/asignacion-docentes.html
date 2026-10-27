@@ -52,9 +52,10 @@
                 <li class="nav-item"><a class="nav-link" href="dashboard.html"><span class="material-symbols-outlined me-2">analytics</span> Vista General</a></li>
                 <li class="nav-item"><a class="nav-link" href="dashboard.html#seccionNoticias"><span class="material-symbols-outlined me-2">campaign</span> Publicar Noticias</a></li>
                 <li class="nav-item"><a class="nav-link" href="admin-usuarios.html"><span class="material-symbols-outlined me-2">manage_accounts</span> Gestión Usuarios</a></li>
-                <li class="nav-item"><a class="nav-link" href="dashboard.html"><span class="material-symbols-outlined me-2">group</span> Control Alumnos</a></li>
-                <li class="nav-item"><a class="nav-link" href="dashboard.html"><span class="material-symbols-outlined me-2">badge</span> Legajos Docentes</a></li>
+                <li class="nav-item"><a class="nav-link" href="control-alumnos.html"><span class="material-symbols-outlined me-2">group</span> Control Alumnos</a></li>
+                <li class="nav-item"><a class="nav-link" href="legajos-docentes.html"><span class="material-symbols-outlined me-2">badge</span> Legajos Docentes</a></li>
                 <li class="nav-item"><a class="nav-link active" href="asignacion-docentes.html"><span class="material-symbols-outlined me-2">menu_book</span> Asignación Materias</a></li>
+                <li class="nav-item"><a class="nav-link" href="dashboard.html#seccionPreinscripciones"><span class="material-symbols-outlined me-2">how_to_reg</span> Preinscripciones Web</a></li>
                 <li class="nav-item mt-3 border-top border-white border-opacity-10 pt-3">
                     <a class="nav-link" href="index.html"><span class="material-symbols-outlined me-2">public</span> Ver Sitio Web</a>
                 </li>
@@ -465,7 +466,7 @@ function poblarSelectorCursosDocente(nivelDocente) {
     const cursosNivel = cursosPlanCache.filter(c => Number(c.id_nivel) === idNivelEsperado);
 
     select.innerHTML = cursosNivel.map(c => 
-        `<option value="${c.id_curso}">${c.nombre} ${c.ciclo ? '· ' + c.ciclo : ''}</option>`
+        `<option value="${c.id_curso}">${c.nombre} (División ${c.division || 'A'}) ${c.ciclo ? '· ' + c.ciclo : ''}</option>`
     ).join('');
 
     const cursoExiste = cursosNivel.some(c => Number(c.id_curso) === Number(cursoSeleccionadoId));
@@ -511,13 +512,15 @@ function renderAsignacionPedagogica() {
         const efDocente = asigEf ? `${asigEf.docenteNombre} ${asigEf.docenteApellido}` : null;
 
         contenedor.innerHTML = `
-            <div class="card border-warning border-opacity-50 rounded-4 shadow-sm overflow-hidden mb-3">
-                <div class="card-header bg-warning bg-opacity-10 border-0 p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="card border-0 rounded-4 shadow-sm overflow-hidden mb-3">
+                <div class="p-3 d-flex justify-content-between align-items-center flex-wrap gap-2" style="background: linear-gradient(135deg, #0b2545 0%, #065f46 100%); border-left: 5px solid #10b981;">
                     <div class="d-flex align-items-center gap-2">
-                        <span class="material-symbols-outlined text-warning fs-3">child_care</span>
+                        <div class="bg-white bg-opacity-10 rounded-circle p-2 d-flex align-items-center justify-content-center">
+                            <span class="material-symbols-outlined text-warning fs-4">child_care</span>
+                        </div>
                         <div>
-                            <h6 class="fw-bold mb-0 text-dark">Maestro/a de Sala Titular · ${curso.nombre}</h6>
-                            <small class="text-muted">En Nivel Inicial, el/la maestro/a es dueño/a de su sala y dicta las materias troncales en bloque integrado.</small>
+                            <h6 class="fw-bold mb-0 text-white">Maestro/a de Sala Titular · ${curso.nombre} (División ${curso.division || 'A'})</h6>
+                            <small class="text-white-50">En Nivel Inicial, el/la maestro/a es dueño/a de su sala y dicta las materias troncales en bloque integrado.</small>
                         </div>
                     </div>
                     <div>
@@ -581,8 +584,14 @@ function renderAsignacionPedagogica() {
         return;
     }
 
-    // CASO 2: PRIMARIA 1° CICLO (1° a 3° Grado)
-    if (idNivelCurso === 2 && [4, 5, 6].includes(Number(curso.id_curso))) {
+    // CASO 2: PRIMARIA 1° CICLO (1° a 3° Grado - Maestro Único Titular de Grado)
+    const esPrimaria1Ciclo = idNivelCurso === 2 && (
+        Number(curso.id_ciclo) === 1 || 
+        Number(curso.anio_escolar) <= 3 || 
+        [4, 5, 6].includes(Number(curso.id_curso)) || 
+        /1°|2°|3°/i.test(curso.nombre)
+    );
+    if (esPrimaria1Ciclo) {
         const idsTroncales = [4, 5, 6]; // Matemática 1°, Lengua 1°, Conocimiento del Entorno
         const asigsTroncales = asigsCurso.filter(a => idsTroncales.includes(Number(a.materiaId)));
         const esTitularDeEsteGrado = asigsTroncales.some(a => Number(a.docenteId) === Number(docente.id));
@@ -593,13 +602,15 @@ function renderAsignacionPedagogica() {
         const efDocente = asigEf ? `${asigEf.docenteNombre} ${asigEf.docenteApellido}` : null;
 
         contenedor.innerHTML = `
-            <div class="card border-info border-opacity-50 rounded-4 shadow-sm overflow-hidden mb-3">
-                <div class="card-header bg-info bg-opacity-10 border-0 p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="card border-0 rounded-4 shadow-sm overflow-hidden mb-3">
+                <div class="p-3 d-flex justify-content-between align-items-center flex-wrap gap-2" style="background: linear-gradient(135deg, #0b2545 0%, #0369a1 100%); border-left: 5px solid #38bdf8;">
                     <div class="d-flex align-items-center gap-2">
-                        <span class="material-symbols-outlined text-info fs-3">school</span>
+                        <div class="bg-white bg-opacity-10 rounded-circle p-2 d-flex align-items-center justify-content-center">
+                            <span class="material-symbols-outlined text-info fs-4">school</span>
+                        </div>
                         <div>
-                            <h6 class="fw-bold mb-0 text-dark">Maestro/a de Grado Único · ${curso.nombre} (1° Ciclo)</h6>
-                            <small class="text-muted">Hasta 3° grado de primaria, un solo maestro/a es dueño/a de su curso y dicta todas las materias troncales.</small>
+                            <h6 class="fw-bold mb-0 text-white">Maestro/a de Grado Único · ${curso.nombre} (División ${curso.division || 'A'} · 1° Ciclo)</h6>
+                            <small class="text-white-50">Hasta 3° grado de primaria, un solo maestro/a es dueño/a de su curso y dicta todas las materias troncales.</small>
                         </div>
                     </div>
                     <div>
@@ -664,7 +675,13 @@ function renderAsignacionPedagogica() {
     }
 
     // CASO 3: PRIMARIA 2° CICLO (4° a 6° Grado - Pareja Pedagógica)
-    if (idNivelCurso === 2 && [7, 8, 9].includes(Number(curso.id_curso))) {
+    const esPrimaria2Ciclo = idNivelCurso === 2 && (
+        Number(curso.id_ciclo) === 2 || 
+        Number(curso.anio_escolar) >= 4 || 
+        [7, 8, 9].includes(Number(curso.id_curso)) || 
+        /4°|5°|6°/i.test(curso.nombre)
+    );
+    if (esPrimaria2Ciclo) {
         const idsHum = [8, 10]; // Lengua 2°, Ciencias Sociales
         const asigsHum = asigsCurso.filter(a => idsHum.includes(Number(a.materiaId)));
         const esHumAEste = asigsHum.some(a => Number(a.docenteId) === Number(docente.id));
@@ -684,13 +701,15 @@ function renderAsignacionPedagogica() {
         const efDocente = asigEf ? `${asigEf.docenteNombre} ${asigEf.docenteApellido}` : null;
 
         contenedor.innerHTML = `
-            <div class="card border-primary border-opacity-50 rounded-4 shadow-sm overflow-hidden mb-3">
-                <div class="card-header bg-primary bg-opacity-10 border-0 p-3">
+            <div class="card border-0 rounded-4 shadow-sm overflow-hidden mb-3">
+                <div class="p-3" style="background: linear-gradient(135deg, #0b2545 0%, #1e40af 100%); border-left: 5px solid #f59e0b;">
                     <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="material-symbols-outlined text-primary fs-3">groups</span>
+                        <div class="bg-white bg-opacity-10 rounded-circle p-2 d-flex align-items-center justify-content-center">
+                            <span class="material-symbols-outlined text-warning fs-4">groups</span>
+                        </div>
                         <div>
-                            <h6 class="fw-bold mb-0 text-dark">Modalidad Pareja Pedagógica · ${curso.nombre} (2° Ciclo)</h6>
-                            <small class="text-muted">En 4°, 5° y 6° grado son <strong>dos maestros</strong>: cada uno dueño y responsable de su área pedagógica dentro del mismo curso.</small>
+                            <h6 class="fw-bold mb-0 text-white">Modalidad Pareja Pedagógica · ${curso.nombre} (División ${curso.division || 'A'} · 2° Ciclo)</h6>
+                            <small class="text-white-50">En 4°, 5° y 6° grado son <strong class="text-warning">dos maestros</strong>: cada uno dueño y responsable de su área pedagógica dentro del mismo curso.</small>
                         </div>
                     </div>
                 </div>

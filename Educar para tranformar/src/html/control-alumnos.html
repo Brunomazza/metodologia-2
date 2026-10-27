@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Alumnos por Grado y División | NovaSYS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+    <link rel="icon" href="../img/logo.png" type="image/png">
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <style>
+        body { background-color: #f1f5f9; color: #1e293b; }
+        .card-curso-nav {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
+        .card-curso-nav:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.08);
+            border-color: #3b82f6;
+        }
+        .card-curso-nav.active {
+            border-color: #2563eb;
+            background: #eff6ff;
+            box-shadow: 0 0 0 2px #2563eb;
+        }
+        .avatar-alumno {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        .badge-div-a { background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+        .badge-div-b { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .badge-div-c { background-color: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+    </style>
+</head>
+<body class="pt-0 m-0">
+
+<div class="container-fluid p-0">
+    <div class="row g-0">
+
+        <!-- ═══ SIDEBAR DE NAVEGACIÓN INSTITUCIONAL ═══ -->
+        <aside class="col-md-2 d-none d-md-block sidebar p-0 vh-100 position-sticky top-0 shadow-sm">
+            <div class="p-4 text-center border-bottom border-white border-opacity-10">
+                <img src="../img/logo.png" width="50" class="mb-2 bg-white rounded-circle p-1 shadow-sm" alt="Logo NovaSYS">
+                <h5 class="text-white mb-0 fw-bold">NovaSYS</h5>
+                <small class="text-white-50">Gestión Institucional</small>
+            </div>
+            <ul class="nav flex-column mt-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html">
+                        <span class="material-symbols-outlined me-2">analytics</span> Vista General
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html#seccionNoticias">
+                        <span class="material-symbols-outlined me-2">campaign</span> Publicar Noticias
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="admin-usuarios.html">
+                        <span class="material-symbols-outlined me-2">manage_accounts</span> Gestión Usuarios
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="control-alumnos.html">
+                        <span class="material-symbols-outlined me-2">group</span> Control Alumnos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="legajos-docentes.html">
+                        <span class="material-symbols-outlined me-2">badge</span> Legajos Docentes
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="asignacion-docentes.html">
+                        <span class="material-symbols-outlined me-2">menu_book</span> Asignación Materias
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html#seccionPreinscripciones">
+                        <span class="material-symbols-outlined me-2">how_to_reg</span> Preinscripciones Web
+                    </a>
+                </li>
+                <li class="nav-item mt-3 border-top border-white border-opacity-10 pt-3">
+                    <a class="nav-link text-white-50 hover-text-white" href="index.html">
+                        <span class="material-symbols-outlined me-2">public</span> Ver Sitio Web
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- ═══ CONTENIDO PRINCIPAL ═══ -->
+        <main class="col-md-10 main-content p-0">
+
+            <!-- Navbar superior -->
+            <nav class="navbar-dashboard bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2 w-50">
+                    <span class="material-symbols-outlined text-muted">search</span>
+                    <input type="text" id="inputBuscarAlumno" class="form-control border-0 bg-light rounded-pill px-3" placeholder="Buscar por alumno, DNI, legajo o tutor...">
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-2 border-start ps-3">
+                        <img src="../img/logo.png" width="34" class="rounded-circle border p-1 bg-white" alt="Admin">
+                        <span class="fw-bold small text-dark d-none d-sm-inline">Administración</span>
+                    </div>
+                    <button onclick="window.cerrarSesion()" class="btn btn-outline-danger btn-sm rounded-pill fw-bold ms-2">Cerrar Sesión</button>
+                </div>
+            </nav>
+
+            <div class="p-4 p-md-5">
+
+                <!-- Encabezado de página -->
+                <header class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary text-white px-3 py-1 rounded-pill fw-bold">Matrícula Escolar</span>
+                            <span id="badgeTotalGlobalAlumnos" class="badge bg-light text-secondary border rounded-pill px-3 py-1">0 Alumnos Registrados</span>
+                        </div>
+                        <h1 class="h3 fw-bold text-dark mt-2 mb-1">Control de Alumnos por Grado y División</h1>
+                        <p class="text-muted mb-0">Explora cada curso navegable, filtra por nivel y división (A, B o C) y gestiona la ficha de los alumnos matriculados.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="admin-usuarios.html" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center gap-2">
+                            <span class="material-symbols-outlined fs-5">person_add</span> Registrar Alumno
+                        </a>
+                    </div>
+                </header>
+
+                <!-- ═══ BARRA DE FILTROS: NIVEL Y DIVISIÓN ═══ -->
+                <section class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+                    <div class="row g-3 align-items-center">
+                        <!-- Filtro por Nivel Académico -->
+                        <div class="col-lg-7">
+                            <label class="form-label small fw-bold text-secondary mb-1">Nivel Académico:</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-sm rounded-pill btn-primary filter-nivel-btn fw-bold px-3 active" data-nivel="todos">
+                                    Todos los Niveles
+                                </button>
+                                <button type="button" class="btn btn-sm rounded-pill btn-outline-secondary filter-nivel-btn fw-bold px-3" data-nivel="inicial">
+                                    <span class="material-symbols-outlined align-middle fs-6 me-1 text-warning">child_care</span> Inicial (Jardín)
+                                </button>
+                                <button type="button" class="btn btn-sm rounded-pill btn-outline-secondary filter-nivel-btn fw-bold px-3" data-nivel="primario">
+                                    <span class="material-symbols-outlined align-middle fs-6 me-1 text-primary">school</span> Primario
+                                </button>
+                                <button type="button" class="btn btn-sm rounded-pill btn-outline-secondary filter-nivel-btn fw-bold px-3" data-nivel="secundario">
+                                    <span class="material-symbols-outlined align-middle fs-6 me-1 text-info">menu_book</span> Secundario
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Filtro por División (A, B, C) -->
+                        <div class="col-lg-5">
+                            <label class="form-label small fw-bold text-secondary mb-1">División / Sección:</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-sm rounded-pill btn-dark filter-div-btn fw-bold px-3 active" data-division="todas">
+                                    Todas
+                                </button>
+                                <button type="button" class="btn btn-sm rounded-pill btn-outline-primary filter-div-btn fw-bold px-3" data-division="A">
+                                    División A
+                                </button>
+                                <button type="button" class="btn btn-sm rounded-pill btn-outline-warning filter-div-btn fw-bold px-3 text-dark" data-division="B">
+                                    División B
+                                </button>
+                                <button type="button" class="btn btn-sm rounded-pill btn-outline-purple filter-div-btn fw-bold px-3" data-division="C">
+                                    División C
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ═══ NAVEGADOR DE CURSOS Y GRADOS EN FORMATO TARJETAS ═══ -->
+                <section class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold text-secondary text-uppercase small mb-0">Cursos y Grados Disponibles (Selecciona uno para filtrar):</h6>
+                        <button type="button" class="btn btn-link btn-sm text-decoration-none p-0 fw-bold" onclick="seleccionarCurso(null)">
+                            Ver todos los grados
+                        </button>
+                    </div>
+                    <div id="gridCursosNav" class="row g-2 overflow-auto flex-nowrap pb-2" style="max-height: 180px;">
+                        <div class="col-12 text-muted small py-3"><span class="spinner-border spinner-border-sm me-2"></span>Cargando cursos...</div>
+                    </div>
+                </section>
+
+                <!-- ═══ PANEL DE DETALLE DEL CURSO Y ALUMNOS ═══ -->
+                <section id="panelCursoSeleccionado" class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 d-none">
+                    <div class="p-4 text-white" style="background: linear-gradient(135deg, #0b2545 0%, #1e40af 100%);">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-white bg-opacity-10 border border-white border-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width:56px;height:56px;">
+                                    <span class="material-symbols-outlined fs-2 text-warning">school</span>
+                                </div>
+                                <div>
+                                    <h4 id="lblNombreCurso" class="fw-bold mb-0 text-white">5° Grado "A"</h4>
+                                    <div class="d-flex flex-wrap gap-2 align-items-center mt-1">
+                                        <span id="lblNivelCicloCurso" class="badge bg-white bg-opacity-20 text-white border border-white border-opacity-25">Nivel Primario · 2° Ciclo</span>
+                                        <span id="lblDivisionCurso" class="badge bg-warning text-dark fw-bold">División A</span>
+                                        <span id="lblCountAlumnosCurso" class="badge bg-success text-white">0 Alumnos</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="infoDocenteCurso" class="bg-white bg-opacity-10 border border-white border-opacity-25 rounded-3 p-3 text-end">
+                                <small class="text-white-50 d-block">Docente(s) a cargo:</small>
+                                <strong id="lblDocenteCurso" class="text-white">Cargando...</strong>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ═══ LISTADO DE ALUMNOS (CARDS O TABLA DINÁMICA) ═══ -->
+                <section class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                    <div class="p-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2 bg-light bg-opacity-50">
+                        <div>
+                            <h5 class="fw-bold mb-0 text-dark" id="lblTituloTabla">Nómina de Alumnos Matriculados</h5>
+                            <small class="text-muted" id="lblSubtituloTabla">Mostrando todos los cursos y divisiones</small>
+                        </div>
+                        <span id="badgeContadorListado" class="badge bg-primary rounded-pill px-3 py-2">0 alumnos</span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Alumno</th>
+                                    <th>Grado y División</th>
+                                    <th>Nivel Educativo</th>
+                                    <th>Tutor Responsable</th>
+                                    <th>Estado</th>
+                                    <th class="text-end pe-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaAlumnosBody">
+                                <tr><td colspan="6" class="text-center text-muted py-5"><span class="spinner-border spinner-border-sm me-2"></span>Cargando nómina de alumnos desde PostgreSQL...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- ═══ MODAL REASIGNAR CURSO Y DIVISIÓN ═══ -->
+<div class="modal fade" id="modalCambiarCurso" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header bg-primary text-white rounded-top-4">
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+                    <span class="material-symbols-outlined">swap_horiz</span> Cambiar Curso o División
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="small text-muted mb-3">Reasigna al estudiante a otro grado o cambia su sección/división (A, B o C).</p>
+                <div class="p-3 bg-light rounded-3 mb-3 border">
+                    <strong id="modalAlumnoNombre" class="d-block text-dark">Nombre del Alumno</strong>
+                    <small id="modalAlumnoLegajoDni" class="text-muted">Legajo: A001 • DNI: 12345678</small>
+                    <div class="mt-1"><span id="modalAlumnoCursoActual" class="badge bg-primary-subtle text-primary border">Curso Actual</span></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-secondary">Nuevo Curso y División Asignada *</label>
+                    <select id="modalSelectNuevoCurso" class="form-select form-select-lg">
+                        <option value="">-- Seleccionar Nuevo Curso --</option>
+                    </select>
+                </div>
+
+                <div id="modalAlertCambio" class="alert d-none py-2 small"></div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnGuardarCambioCurso" class="btn btn-primary rounded-pill px-4 fw-bold">Guardar Reasignación</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let alumnosCache = [];
+    let cursosCache = [];
+    let nivelFiltroActivo = 'todos';
+    let divisionFiltroActiva = 'todas';
+    let cursoSeleccionadoId = null;
+    let alumnoParaReasignar = null;
+
+    // Cargar alumnos desde API PostgreSQL
+    async function cargarAlumnos() {
+        try {
+            const res = await fetch('http://localhost:3000/api/alumnos');
+            const data = await res.json();
+            if (data.ok && Array.isArray(data.data)) {
+                alumnosCache = data.data;
+                document.getElementById('badgeTotalGlobalAlumnos').innerText = `${alumnosCache.length} Alumnos Registrados`;
+            }
+        } catch (e) {
+            console.error('Error cargando alumnos:', e);
+        }
+    }
+
+    // Cargar catálogo de cursos y divisiones
+    async function cargarCursos() {
+        try {
+            const res = await fetch('http://localhost:3000/api/cursos');
+            const data = await res.json();
+            if (data.ok && Array.isArray(data.data)) {
+                cursosCache = data.data;
+                renderizarNavegadorCursos();
+                poblarSelectModalCursos();
+            }
+        } catch (e) {
+            console.error('Error cargando cursos:', e);
+        }
+    }
+
+    // Renderiza las tarjetas navegables de cursos
+    function renderizarNavegadorCursos() {
+        const contenedor = document.getElementById('gridCursosNav');
+        if (!contenedor) return;
+
+        let cursosFiltrados = cursosCache.filter(c => {
+            if (nivelFiltroActivo !== 'todos') {
+                const niv = (c.nivel || '').toLowerCase();
+                if (nivelFiltroActivo === 'inicial' && !niv.includes('inicial') && !niv.includes('jard')) return false;
+                if (nivelFiltroActivo === 'primario' && !niv.includes('primar')) return false;
+                if (nivelFiltroActivo === 'secundario' && !niv.includes('secundar')) return false;
+            }
+            if (divisionFiltroActiva !== 'todas') {
+                if ((c.division || 'A').toUpperCase() !== divisionFiltroActiva.toUpperCase()) return false;
+            }
+            return true;
+        });
+
+        if (cursosFiltrados.length === 0) {
+            contenedor.innerHTML = '<div class="col-12 text-muted small py-2">No hay cursos coincidentes con los filtros de nivel y división.</div>';
+            return;
+        }
+
+        contenedor.innerHTML = '';
+        cursosFiltrados.forEach(c => {
+            const cantAlumnos = alumnosCache.filter(a => Number(a.id_curso) === Number(c.id_curso)).length;
+            const esActivo = Number(cursoSeleccionadoId) === Number(c.id_curso);
+            const divClass = c.division === 'B' ? 'badge-div-b' : c.division === 'C' ? 'badge-div-c' : 'badge-div-a';
+
+            const col = document.createElement('div');
+            col.className = 'col-6 col-sm-4 col-md-3 col-lg-2 flex-shrink-0';
+            col.innerHTML = `
+                <div class="card card-curso-nav p-3 rounded-4 h-100 ${esActivo ? 'active' : ''}" onclick="seleccionarCurso(${c.id_curso})">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <span class="badge ${divClass} rounded-pill px-2 py-1 small fw-bold">Div. ${c.division || 'A'}</span>
+                        <span class="badge ${cantAlumnos > 0 ? 'bg-primary' : 'bg-light text-muted border'} rounded-pill">${cantAlumnos}</span>
+                    </div>
+                    <strong class="d-block text-dark mt-1" style="font-size:0.9rem;">${c.nombre}</strong>
+                    <small class="text-muted d-block" style="font-size:0.75rem;">${c.nivel}</small>
+                </div>
+            `;
+            contenedor.appendChild(col);
+        });
+    }
+
+    // Seleccionar curso para vista detallada
+    window.seleccionarCurso = async function(idCurso) {
+        cursoSeleccionadoId = idCurso;
+        renderizarNavegadorCursos();
+
+        const panel = document.getElementById('panelCursoSeleccionado');
+        const curso = cursosCache.find(c => Number(c.id_curso) === Number(idCurso));
+
+        if (!curso || !idCurso) {
+            if (panel) panel.classList.add('d-none');
+            document.getElementById('lblTituloTabla').innerText = 'Nómina de Alumnos Matriculados';
+            document.getElementById('lblSubtituloTabla').innerText = 'Mostrando todos los cursos y divisiones';
+            aplicarFiltrosAlumnos();
+            return;
+        }
+
+        if (panel) {
+            panel.classList.remove('d-none');
+            document.getElementById('lblNombreCurso').innerText = `${curso.nombre} "${curso.division || 'A'}"`;
+            document.getElementById('lblNivelCicloCurso').innerText = `${curso.nivel} ${curso.ciclo ? '· ' + curso.ciclo : ''}`;
+            document.getElementById('lblDivisionCurso').innerText = `División ${curso.division || 'A'}`;
+
+            const cant = alumnosCache.filter(a => Number(a.id_curso) === Number(curso.id_curso)).length;
+            document.getElementById('lblCountAlumnosCurso').innerText = `${cant} Alumnos Matriculados`;
+
+            document.getElementById('lblTituloTabla').innerText = `Alumnos de ${curso.nombre} (División ${curso.division || 'A'})`;
+            document.getElementById('lblSubtituloTabla').innerText = `Listado oficial del curso • ${curso.nivel}`;
+
+            // Cargar docente(s) asignados al curso
+            try {
+                const resDoc = await fetch(`http://localhost:3000/api/cursos/${curso.id_curso}/docentes`);
+                const dataDoc = await resDoc.json();
+                if (dataDoc.ok && Array.isArray(dataDoc.data) && dataDoc.data.length > 0) {
+                    const nombres = dataDoc.data.map(d => `${d.nombre} ${d.apellido}`).join(', ');
+                    document.getElementById('lblDocenteCurso').innerText = nombres;
+                } else {
+                    document.getElementById('lblDocenteCurso').innerText = 'Sin docentes asignados aún';
+                }
+            } catch (e) {
+                document.getElementById('lblDocenteCurso').innerText = 'Planta docente en configuración';
+            }
+        }
+
+        aplicarFiltrosAlumnos();
+    };
+
+    // Aplicar filtros combinados sobre la lista de alumnos
+    function aplicarFiltrosAlumnos() {
+        const query = (document.getElementById('inputBuscarAlumno')?.value || '').toLowerCase().trim();
+        const tbody = document.getElementById('tablaAlumnosBody');
+        const badgeCount = document.getElementById('badgeContadorListado');
+
+        let filtrados = alumnosCache.filter(a => {
+            // Filtro por curso específico seleccionado
+            if (cursoSeleccionadoId) {
+                if (Number(a.id_curso) !== Number(cursoSeleccionadoId)) return false;
+            }
+
+            // Filtro por nivel
+            if (nivelFiltroActivo !== 'todos') {
+                const niv = (a.nivel || '').toLowerCase();
+                if (nivelFiltroActivo === 'inicial' && !niv.includes('inicial') && !niv.includes('jard')) return false;
+                if (nivelFiltroActivo === 'primario' && !niv.includes('primar')) return false;
+                if (nivelFiltroActivo === 'secundario' && !niv.includes('secundar')) return false;
+            }
+
+            // Filtro por división
+            if (divisionFiltroActiva !== 'todas') {
+                if ((a.division || 'A').toUpperCase() !== divisionFiltroActiva.toUpperCase()) return false;
+            }
+
+            // Buscador por texto
+            if (query) {
+                const nombreCompleto = `${a.nombre || ''} ${a.apellido || ''}`.toLowerCase();
+                const matchNombre = nombreCompleto.includes(query);
+                const matchDni = (a.dni || '').toLowerCase().includes(query);
+                const matchLegajo = (a.legajo || '').toLowerCase().includes(query);
+                const matchTutor = (a.tutor_nombre || '').toLowerCase().includes(query);
+                const matchCurso = (a.curso_nombre || '').toLowerCase().includes(query);
+                if (!matchNombre && !matchDni && !matchLegajo && !matchTutor && !matchCurso) return false;
+            }
+
+            return true;
+        });
+
+        if (badgeCount) badgeCount.innerText = `${filtrados.length} alumnos`;
+
+        if (!tbody) return;
+        if (filtrados.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-5">
+                <span class="material-symbols-outlined fs-2 text-secondary d-block mb-2">person_search</span>
+                No se encontraron alumnos con los filtros seleccionados.
+            </td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = '';
+        filtrados.forEach(a => {
+            const tr = document.createElement('tr');
+            const iniciales = `${(a.nombre || '')[0] || ''}${(a.apellido || '')[0] || ''}`.toUpperCase();
+            const divClass = a.division === 'B' ? 'badge-div-b' : a.division === 'C' ? 'badge-div-c' : 'badge-div-a';
+
+            tr.innerHTML = `
+                <td class="ps-4 py-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="avatar-alumno">${iniciales}</div>
+                        <div>
+                            <div class="fw-bold text-dark">${a.nombre || ''} ${a.apellido || ''}</div>
+                            <small class="text-muted">Legajo: <strong>${a.legajo || 'S/L'}</strong> • DNI: ${a.dni || 'S/D'}</small>
+                            ${a.edad ? `<span class="badge bg-light text-secondary border ms-1" style="font-size:10px;">${a.edad} años</span>` : ''}
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="fw-semibold text-dark">${a.curso_nombre || 'Sin curso asignado'}</div>
+                    <span class="badge ${divClass} rounded-pill px-2 py-1 small fw-bold">División ${a.division || 'A'}</span>
+                    ${a.ciclo ? `<small class="text-muted d-block" style="font-size:11px;">${a.ciclo}</small>` : ''}
+                </td>
+                <td>
+                    <span class="badge bg-light text-primary border">${a.nivel || 'Nivel General'}</span>
+                </td>
+                <td>
+                    <div class="fw-semibold text-dark">${a.tutor_nombre || 'Sin tutor asignado'}</div>
+                    ${a.tutor_telefono ? `<small class="text-muted d-block"><span class="material-symbols-outlined align-middle" style="font-size:12px;">call</span> ${a.tutor_telefono}</small>` : ''}
+                </td>
+                <td>
+                    <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1">${a.estado || 'ACTIVO'}</span>
+                </td>
+                <td class="text-end pe-4">
+                    <button class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold d-inline-flex align-items-center gap-1 shadow-sm" onclick="abrirModalCambiarCurso(${a.id_alumno})">
+                        <span class="material-symbols-outlined fs-6">swap_horiz</span> Reasignar Grado / Div.
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Modal de reasignación de curso/división
+    function poblarSelectModalCursos() {
+        const select = document.getElementById('modalSelectNuevoCurso');
+        if (!select) return;
+        select.innerHTML = '<option value="">-- Seleccionar Nuevo Curso --</option>';
+
+        // Agrupar por nivel
+        ['Inicial', 'Primario', 'Secundario'].forEach(niv => {
+            const grupo = document.createElement('optgroup');
+            grupo.label = `Nivel ${niv}`;
+            const cursosNiv = cursosCache.filter(c => (c.nivel || '').toLowerCase().includes(niv.toLowerCase()));
+            cursosNiv.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id_curso;
+                opt.textContent = `${c.nombre} (División ${c.division || 'A'}) ${c.ciclo ? '· ' + c.ciclo : ''}`;
+                grupo.appendChild(opt);
+            });
+            if (cursosNiv.length > 0) select.appendChild(grupo);
+        });
+    }
+
+    window.abrirModalCambiarCurso = function(idAlumno) {
+        alumnoParaReasignar = alumnosCache.find(a => Number(a.id_alumno) === Number(idAlumno));
+        if (!alumnoParaReasignar) return;
+
+        document.getElementById('modalAlumnoNombre').innerText = `${alumnoParaReasignar.nombre} ${alumnoParaReasignar.apellido}`;
+        document.getElementById('modalAlumnoLegajoDni').innerText = `Legajo: ${alumnoParaReasignar.legajo || 'S/L'} • DNI: ${alumnoParaReasignar.dni || 'S/D'}`;
+        document.getElementById('modalAlumnoCursoActual').innerText = `Curso actual: ${alumnoParaReasignar.curso_nombre || 'Sin curso'} (Div. ${alumnoParaReasignar.division || 'A'})`;
+
+        const select = document.getElementById('modalSelectNuevoCurso');
+        if (select) select.value = String(alumnoParaReasignar.id_curso || '');
+
+        const alerta = document.getElementById('modalAlertCambio');
+        if (alerta) alerta.classList.add('d-none');
+
+        const modal = new bootstrap.Modal(document.getElementById('modalCambiarCurso'));
+        modal.show();
+    };
+
+    document.getElementById('btnGuardarCambioCurso')?.addEventListener('click', async () => {
+        if (!alumnoParaReasignar) return;
+        const select = document.getElementById('modalSelectNuevoCurso');
+        const nuevoCursoId = select ? select.value : '';
+        const alerta = document.getElementById('modalAlertCambio');
+
+        if (!nuevoCursoId) {
+            if (alerta) {
+                alerta.className = 'alert alert-warning py-2 small';
+                alerta.innerText = 'Por favor selecciona el nuevo curso y división.';
+                alerta.classList.remove('d-none');
+            }
+            return;
+        }
+
+        try {
+            const res = await fetch(`http://localhost:3000/api/alumnos/${alumnoParaReasignar.id_alumno}/curso`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_curso: parseInt(nuevoCursoId, 10) })
+            });
+            const data = await res.json();
+            if (!res.ok || !data.ok) throw new Error(data.error || 'Error al actualizar');
+
+            if (alerta) {
+                alerta.className = 'alert alert-success py-2 small';
+                alerta.innerText = '¡Alumno reasignado exitosamente en la base de datos!';
+                alerta.classList.remove('d-none');
+            }
+
+            setTimeout(async () => {
+                const modalEl = document.getElementById('modalCambiarCurso');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+                await cargarAlumnos();
+                await cargarCursos();
+                if (cursoSeleccionadoId) seleccionarCurso(cursoSeleccionadoId);
+                else aplicarFiltrosAlumnos();
+            }, 800);
+        } catch (err) {
+            if (alerta) {
+                alerta.className = 'alert alert-danger py-2 small';
+                alerta.innerText = err.message;
+                alerta.classList.remove('d-none');
+            }
+        }
+    });
+
+    // Eventos de botones de filtro por nivel
+    document.querySelectorAll('.filter-nivel-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-nivel-btn').forEach(b => {
+                b.classList.remove('active', 'btn-primary');
+                b.classList.add('btn-outline-secondary');
+            });
+            btn.classList.add('active', 'btn-primary');
+            btn.classList.remove('btn-outline-secondary');
+            nivelFiltroActivo = btn.dataset.nivel;
+            renderizarNavegadorCursos();
+            aplicarFiltrosAlumnos();
+        });
+    });
+
+    // Eventos de botones de filtro por división
+    document.querySelectorAll('.filter-div-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-div-btn').forEach(b => {
+                b.classList.remove('active', 'btn-dark', 'btn-primary', 'btn-warning');
+                if (b.dataset.division === 'todas') b.classList.add('btn-outline-dark');
+                else if (b.dataset.division === 'A') b.classList.add('btn-outline-primary');
+                else if (b.dataset.division === 'B') b.classList.add('btn-outline-warning');
+                else if (b.dataset.division === 'C') b.classList.add('btn-outline-purple');
+            });
+            btn.classList.add('active');
+            if (btn.dataset.division === 'todas') btn.classList.add('btn-dark');
+            else if (btn.dataset.division === 'A') btn.classList.add('btn-primary');
+            else if (btn.dataset.division === 'B') btn.classList.add('btn-warning');
+            else if (btn.dataset.division === 'C') btn.classList.add('btn-dark');
+
+            divisionFiltroActiva = btn.dataset.division;
+            renderizarNavegadorCursos();
+            aplicarFiltrosAlumnos();
+        });
+    });
+
+    // Evento de búsqueda en tiempo real
+    document.getElementById('inputBuscarAlumno')?.addEventListener('input', () => {
+        aplicarFiltrosAlumnos();
+    });
+
+    // Inicialización al cargar la página
+    async function init() {
+        await cargarAlumnos();
+        await cargarCursos();
+        aplicarFiltrosAlumnos();
+    }
+
+    init();
+</script>
+
+<script type="module" src="../js/auth-guard.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

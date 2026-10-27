@@ -47,18 +47,23 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="dashboard.html">
+                    <a class="nav-link" href="control-alumnos.html" id="navLinkAlumnos">
                         <span class="material-symbols-outlined me-2">group</span> Control Alumnos
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="dashboard.html">
+                    <a class="nav-link" href="legajos-docentes.html" id="navLinkDocentes">
                         <span class="material-symbols-outlined me-2">badge</span> Legajos Docentes
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="asignacion-docentes.html">
                         <span class="material-symbols-outlined me-2">menu_book</span> Asignación Materias
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html#seccionPreinscripciones">
+                        <span class="material-symbols-outlined me-2">how_to_reg</span> Preinscripciones Web
                     </a>
                 </li>
                 <li class="nav-item mt-3 border-top border-white border-opacity-10 pt-3">
@@ -875,7 +880,100 @@
         aplicarFiltrosUsuarios();
     });
 
+    // Parsear parámetros de URL (?rol=alumno, ?q=busqueda, ?nuevo=1...)
+    function procesarParametrosURL() {
+        const params = new URLSearchParams(window.location.search);
+        const rolParam = params.get('rol');
+        const qParam = params.get('q');
+        const nivelParam = params.get('nivel');
+
+        if (qParam) {
+            const input = document.getElementById('inputBuscarUsuario');
+            if (input) {
+                input.value = qParam;
+                busquedaTextoActiva = qParam;
+            }
+        }
+
+        if (rolParam) {
+            const btn = document.querySelector(`.filter-rol-btn[data-rol="${rolParam}"]`);
+            if (btn) {
+                document.querySelectorAll('.filter-rol-btn').forEach(b => {
+                    b.classList.remove('active', 'btn-primary');
+                    b.classList.add('btn-outline-secondary');
+                });
+                btn.classList.add('active', 'btn-primary');
+                btn.classList.remove('btn-outline-secondary');
+                rolFiltroActivo = rolParam;
+            }
+        }
+
+        if (nivelParam) {
+            const selNivel = document.getElementById('filtroNivelSelect');
+            if (selNivel) {
+                selNivel.value = nivelParam;
+                nivelFiltroActivo = nivelParam;
+            }
+        }
+
+        // Si viene desde "Matricular Alumno" preinscrito
+        if (params.get('nuevo') === '1') {
+            const nombreP = params.get('nombre') || '';
+            const apellidoP = params.get('apellido') || '';
+            const dniP = params.get('dni') || '';
+            const nivelP = params.get('nivel_aspirante') || '';
+            const tutorNomP = params.get('tutor_nombre') || '';
+            const tutorTelP = params.get('tutor_tel') || '';
+
+            if (document.getElementById('nombre')) document.getElementById('nombre').value = nombreP;
+            if (document.getElementById('apellido')) document.getElementById('apellido').value = apellidoP;
+            if (document.getElementById('dni')) document.getElementById('dni').value = dniP;
+            if (document.getElementById('password') && dniP) document.getElementById('password').value = `Educar.${dniP}`;
+
+            // Seleccionar rol Alumno
+            const radioAlumno = document.getElementById('rolAlumno');
+            if (radioAlumno) {
+                radioAlumno.checked = true;
+                radioAlumno.dispatchEvent(new Event('change'));
+            }
+
+            // Seleccionar nivel
+            if (nivelP) {
+                const nivLower = nivelP.toLowerCase();
+                let nivelVal = 'primaria';
+                if (nivLower.includes('jard') || nivLower.includes('inic')) nivelVal = 'inicial';
+                else if (nivLower.includes('secun')) nivelVal = 'secundaria';
+
+                const radioNivel = document.querySelector(`input[name="nivel"][value="${nivelVal}"]`);
+                if (radioNivel) {
+                    radioNivel.checked = true;
+                    radioNivel.dispatchEvent(new Event('change'));
+                }
+            }
+
+            // Si hay datos de tutor, desplegar "+ Registrar Nuevo Tutor"
+            if (tutorNomP) {
+                setTimeout(() => {
+                    const selectTutor = document.getElementById('selectTutor');
+                    if (selectTutor) {
+                        selectTutor.value = 'nuevo';
+                        selectTutor.dispatchEvent(new Event('change'));
+                        const partesTutor = tutorNomP.trim().split(' ');
+                        const nomTutor = partesTutor[0] || '';
+                        const apeTutor = partesTutor.slice(1).join(' ') || nomTutor;
+                        if (document.getElementById('tutorNombre')) document.getElementById('tutorNombre').value = nomTutor;
+                        if (document.getElementById('tutorApellido')) document.getElementById('tutorApellido').value = apeTutor;
+                        if (document.getElementById('tutorTelefono')) document.getElementById('tutorTelefono').value = tutorTelP;
+                    }
+                }, 400);
+            }
+
+            mostrarAlerta(`Formulario completado con los datos de ${nombreP} ${apellidoP}. Selecciona el curso y confirma el registro.`, 'info');
+        }
+    }
+
     // Render inicial al cargar la página
+    procesarParametrosURL();
     renderizarTablaUsuarios();
     cargarTutores();
     cargarCursos();

@@ -21,11 +21,13 @@
                 <small class="text-white-50">Gestión Institucional</small>
             </div>
             <ul class="nav flex-column mt-3">
-                <li class="nav-item"><a class="nav-link active" href="#"><span class="material-symbols-outlined me-2">analytics</span> Vista General</a></li>
+                <li class="nav-item"><a class="nav-link active" href="dashboard.html"><span class="material-symbols-outlined me-2">analytics</span> Vista General</a></li>
                 <li class="nav-item"><a class="nav-link" href="#seccionNoticias"><span class="material-symbols-outlined me-2">campaign</span> Publicar Noticias</a></li>
                 <li class="nav-item"><a class="nav-link" href="admin-usuarios.html"><span class="material-symbols-outlined me-2">manage_accounts</span> Gestión Usuarios</a></li>
-                <li class="nav-item"><a class="nav-link" href="#"><span class="material-symbols-outlined me-2">group</span> Control Alumnos</a></li>
+                <li class="nav-item"><a class="nav-link" href="control-alumnos.html"><span class="material-symbols-outlined me-2">group</span> Control Alumnos</a></li>
+                <li class="nav-item"><a class="nav-link" href="legajos-docentes.html"><span class="material-symbols-outlined me-2">badge</span> Legajos Docentes</a></li>
                 <li class="nav-item"><a class="nav-link" href="asignacion-docentes.html"><span class="material-symbols-outlined me-2">menu_book</span> Asignación Materias</a></li>
+                <li class="nav-item"><a class="nav-link" href="#seccionPreinscripciones"><span class="material-symbols-outlined me-2">how_to_reg</span> Preinscripciones Web <span id="badgeSidebarPreinscrip" class="badge bg-warning text-dark ms-1 d-none">0</span></a></li>
                 <li class="nav-item mt-3 border-top border-white border-opacity-10 pt-3">
                     <a class="nav-link" href="index.html">
                         <span class="material-symbols-outlined me-2">public</span> Ver Sitio Web
@@ -38,11 +40,16 @@
             
             <nav class="navbar-dashboard bg-white shadow-sm px-4 py-3 d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-2 w-50">
-                    <span class="material-symbols-outlined text-muted">search</span>
-                    <input type="text" class="form-control border-0 bg-light rounded-pill" placeholder="Buscar alumnos, docentes o legajos...">
+                    <span class="material-symbols-outlined text-muted" style="cursor:pointer;" onclick="ejecutarBusquedaDashboard()" title="Buscar">search</span>
+                    <input type="text" id="inputBuscarDashboard" class="form-control border-0 bg-light rounded-pill" placeholder="Buscar alumnos, docentes o legajos..." onkeydown="if(event.key==='Enter') ejecutarBusquedaDashboard();">
                 </div>
                 <div class="d-flex align-items-center gap-3">
-                    <span class="material-symbols-outlined text-muted" role="button">notifications</span>
+                    <button type="button" class="btn btn-link text-muted p-0 border-0 position-relative" onclick="document.getElementById('seccionPreinscripciones')?.scrollIntoView({behavior:'smooth'})" title="Ver solicitudes de preinscripción">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span id="badgeNotifPreinscrip" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-none">
+                            <span class="visually-hidden">Nuevas solicitudes</span>
+                        </span>
+                    </button>
                     <div class="d-flex align-items-center gap-2 border-start ps-3">
                         <img src="../img/logo.png" width="32" class="rounded-circle border p-1" alt="Admin">
                         <span class="fw-bold small text-dark d-none d-sm-inline">Administración</span>
@@ -67,35 +74,48 @@
 
                 <section class="row g-4 mb-5">
                     <div class="col-md-4">
-                        <div class="card card-dash p-4 bg-white border-0 shadow-sm h-100">
+                        <div class="card card-dash p-4 bg-white border-0 shadow-sm h-100" style="cursor:pointer; transition:transform .2s, box-shadow .2s;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.08)';" onmouseout="this.style.transform='none';this.style.boxShadow='';" onclick="window.location.href='control-alumnos.html';" title="Ir a Control Alumnos">
                             <div class="d-flex justify-content-between align-items-start mb-2">
-                                <p class="text-muted small text-uppercase fw-bold mb-0">Alumnos Activos</p>
+                                <p class="text-muted small text-uppercase fw-bold mb-0 d-flex align-items-center gap-1">
+                                    <span class="material-symbols-outlined text-primary fs-5">school</span> Alumnos Activos
+                                </p>
                                 <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1">+8.6%</span>
                             </div>
-                            <h2 id="totalAlumnosAdmin" class="display-6 fw-bold text-dark">1.248</h2>
-                            <p class="text-secondary small mb-0">Estudiantes cursando presencial y virtual.</p>
+                            <h2 id="totalAlumnosAdmin" class="display-6 fw-bold text-dark mb-1">0</h2>
+                            <p class="text-secondary small mb-2">Estudiantes cursando presencial y virtual.</p>
+                            <span class="text-primary small fw-bold d-inline-flex align-items-center gap-1 mt-auto">
+                                Ir a Control Alumnos <span class="material-symbols-outlined fs-6">arrow_forward</span>
+                            </span>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="card card-dash p-4 bg-white border-0 shadow-sm h-100">
+                        <div class="card card-dash p-4 bg-white border-0 shadow-sm h-100" style="cursor:pointer; transition:transform .2s, box-shadow .2s;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.08)';" onmouseout="this.style.transform='none';this.style.boxShadow='';" onclick="window.location.href='legajos-docentes.html';" title="Ir a Legajos Docentes">
                             <div class="d-flex justify-content-between align-items-start mb-2">
-                                <p class="text-muted small text-uppercase fw-bold mb-0">Docentes Registrados</p>
+                                <p class="text-muted small text-uppercase fw-bold mb-0 d-flex align-items-center gap-1">
+                                    <span class="material-symbols-outlined text-success fs-5">badge</span> Docentes Registrados
+                                </p>
                                 <span class="badge bg-info-subtle text-info rounded-pill px-2 py-1">Planta Completa</span>
                             </div>
-                            <h2 id="totalDocentesAdmin" class="display-6 fw-bold text-dark">86</h2>
-                            <p class="text-secondary small mb-0">Profesionales en todos los niveles académicos.</p>
+                            <h2 id="totalDocentesAdmin" class="display-6 fw-bold text-dark mb-1">0</h2>
+                            <p class="text-secondary small mb-2">Profesionales en todos los niveles académicos.</p>
+                            <span class="text-success small fw-bold d-inline-flex align-items-center gap-1 mt-auto">
+                                Ver Legajos Docentes <span class="material-symbols-outlined fs-6">arrow_forward</span>
+                            </span>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="card card-dash p-4 bg-white border-0 shadow-sm h-100">
+                        <div class="card card-dash p-4 bg-white border-0 shadow-sm h-100" style="cursor:pointer; transition:transform .2s, box-shadow .2s;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.08)';" onmouseout="this.style.transform='none';this.style.boxShadow='';" onclick="document.getElementById('seccionPreinscripciones')?.scrollIntoView({behavior:'smooth'});" title="Ver Solicitudes de Preinscripción">
                             <div class="d-flex justify-content-between align-items-start mb-2">
-                                <p class="text-muted small text-uppercase fw-bold mb-0">Ocupación de Aula</p>
-                                <span class="text-warning small fw-bold">Meta: 85%</span>
+                                <p class="text-muted small text-uppercase fw-bold mb-0 d-flex align-items-center gap-1">
+                                    <span class="material-symbols-outlined text-warning fs-5">how_to_reg</span> Preinscripciones 2027
+                                </p>
+                                <span id="badgePreinscripHeader" class="badge bg-warning-subtle text-warning rounded-pill px-2 py-1">En curso</span>
                             </div>
-                            <h2 id="porcentajeOcupacion" class="display-6 fw-bold text-dark">78%</h2>
-                            <div class="progress mt-2" style="height: 6px;">
-                                <div class="progress-bar bg-warning" role="progressbar" style="width: 78%"></div>
-                            </div>
+                            <h2 id="totalPreinscripcionesAdmin" class="display-6 fw-bold text-dark mb-1">0</h2>
+                            <p class="text-secondary small mb-2">Aspirantes web pendientes de matriculación.</p>
+                            <span class="text-warning small fw-bold d-inline-flex align-items-center gap-1 mt-auto">
+                                Revisar Solicitudes <span class="material-symbols-outlined fs-6">arrow_forward</span>
+                            </span>
                         </div>
                     </div>
                 </section>
@@ -109,14 +129,14 @@
                             </div>
                             <div class="row g-3">
                                 <div class="col-sm-6">
-                                    <div class="border rounded-4 p-3 bg-light h-100">
+                                    <div class="border rounded-4 p-3 bg-light h-100" style="cursor:pointer;" onclick="window.location.href='control-alumnos.html';" title="Gestionar alumnos">
                                         <p class="text-uppercase text-muted small mb-1 fw-bold">Matrículas Nuevas</p>
                                         <h3 class="h4 fw-bold text-primary mb-1">72</h3>
                                         <p class="text-secondary small mb-0">Inscripciones validadas en jardín, primaria y secundaria.</p>
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
-                                    <div class="border rounded-4 p-3 bg-light h-100">
+                                    <div class="border rounded-4 p-3 bg-light h-100" style="cursor:pointer;" onclick="window.location.href='asignacion-docentes.html';" title="Asignar materias a docentes">
                                         <p class="text-uppercase text-muted small mb-1 fw-bold">Altas Profesionales</p>
                                         <h3 class="h4 fw-bold text-primary mb-1">4</h3>
                                         <p class="text-secondary small mb-0">Nuevos docentes incorporados para idiomas y robótica.</p>
@@ -202,13 +222,19 @@
                                         </div>
 
                                         <div class="col-12">
-                                            <label for="noticiaImagen" class="form-label fw-bold small text-secondary">Imagen de Portada *</label>
-                                            <select class="form-select bg-white shadow-none" id="noticiaImagen" required>
-                                                <option value="../img/portada1.jpg">Fachada Institucional</option>
-                                                <option value="../img/ninosEstudiando.jpg">Alumnos en Actividad</option>
-                                                <option value="../img/Pileta natacion.jpg">Complejo Acuático y Deportivo</option>
-                                                <option value="../img/docente.jpg">Docentes y Capacitación</option>
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label for="noticiaImagen" class="form-label fw-bold small text-secondary mb-0">Imagen de Portada *</label>
+                                                <button type="button" class="btn btn-link p-0 text-decoration-none small text-primary" id="btnToggleCustomImg" onclick="toggleCustomImgInput()">
+                                                    <span class="material-symbols-outlined fs-6 align-middle">link</span> Ingresar URL web externa
+                                                </button>
+                                            </div>
+                                            <select class="form-select bg-white shadow-none" id="noticiaImagen">
+                                                <option value="../img/portada1.jpg">Fachada Institucional (portada1.jpg)</option>
+                                                <option value="../img/ninosEstudiando.jpg">Alumnos en Actividad (ninosEstudiando.jpg)</option>
+                                                <option value="../img/Pileta natacion.jpg">Complejo Acuático y Deportivo (Pileta natacion.jpg)</option>
+                                                <option value="../img/docente.jpg">Docentes y Capacitación (docente.jpg)</option>
                                             </select>
+                                            <input type="url" class="form-control bg-white shadow-none d-none mt-2" id="noticiaImagenCustom" placeholder="https://ejemplo.com/imagen.jpg">
                                         </div>
 
                                         <div class="col-12">
@@ -282,20 +308,73 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- SECCIÓN DE CONTROL DE PREINSCRIPCIONES WEB 2027 -->
+                <section id="seccionPreinscripciones" class="card border-0 shadow-sm mt-5 overflow-hidden rounded-4">
+                    <div class="p-4 p-md-5 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0d9488 100%);">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-white bg-opacity-10 border border-white border-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width:56px;height:56px;">
+                                    <span class="material-symbols-outlined fs-2 text-warning">how_to_reg</span>
+                                </div>
+                                <div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <h4 class="fw-bold mb-0 text-white">Solicitudes de Preinscripción Web 2027</h4>
+                                        <span id="badgeContadorPreinscrip" class="badge bg-warning text-dark fw-bold rounded-pill px-2 py-1 small">0 solicitudes</span>
+                                    </div>
+                                    <p class="text-white-50 small mb-0 mt-1">Aspirantes recibidos desde el formulario online público para entrevista o matriculación formal.</p>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button onclick="cargarPreinscripcionesAdmin()" class="btn btn-light btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
+                                    <span class="material-symbols-outlined fs-6">refresh</span> Actualizar
+                                </button>
+                                <a href="preinscripcion.html" target="_blank" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1">
+                                    <span class="material-symbols-outlined fs-6">open_in_new</span> Abrir Formulario
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 p-md-5 bg-white">
+                        <div class="table-responsive rounded-3 border">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-3">Código Trámite</th>
+                                        <th>Aspirante</th>
+                                        <th>Nivel Solicitado</th>
+                                        <th>Padre / Tutor Responsable</th>
+                                        <th>Fecha Registro</th>
+                                        <th class="text-end pe-3">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaPreinscripcionesAdmin">
+                                    <tr><td colspan="6" class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm me-2"></span>Cargando solicitudes de preinscripción...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
             </div>
         </main>
     </div>
 </div>
 
 <script>
-    // --- LÓGICA DE PUBLICAR NOTICIAS (LOCALSTORAGE) ---
-    const STORAGE_KEY = 'noticias_institucionales';
+    // --- LÓGICA DE GESTIÓN DE NOTICIAS CON BASE DE DATOS (POSTGRESQL) ---
+    const API_BASE_NOTICIAS = window.location.origin.includes('localhost')
+        ? 'http://localhost:3000/api'
+        : `${window.location.origin}/api`;
+
+    let noticiasAdminCache = [];
 
     // Elementos de la vista previa interactiva
     const tituloInput = document.getElementById('noticiaTitulo');
     const categoriaSelect = document.getElementById('noticiaCategoria');
     const fechaInput = document.getElementById('noticiaFecha');
     const imagenSelect = document.getElementById('noticiaImagen');
+    const imagenCustomInput = document.getElementById('noticiaImagenCustom');
     const descInput = document.getElementById('noticiaDescripcion');
 
     const prevTitulo = document.getElementById('prevTitulo');
@@ -303,6 +382,22 @@
     const prevFecha = document.getElementById('prevFecha');
     const prevImg = document.getElementById('prevImg');
     const prevDesc = document.getElementById('prevDescripcion');
+
+    let usandoUrlCustom = false;
+    window.toggleCustomImgInput = function() {
+        usandoUrlCustom = !usandoUrlCustom;
+        const btn = document.getElementById('btnToggleCustomImg');
+        if (usandoUrlCustom) {
+            imagenSelect.classList.add('d-none');
+            imagenCustomInput.classList.remove('d-none');
+            if (btn) btn.innerHTML = '<span class="material-symbols-outlined fs-6 align-middle">photo_library</span> Usar imágenes predeterminadas';
+        } else {
+            imagenSelect.classList.remove('d-none');
+            imagenCustomInput.classList.add('d-none');
+            if (btn) btn.innerHTML = '<span class="material-symbols-outlined fs-6 align-middle">link</span> Ingresar URL web externa';
+        }
+        actualizarVistaPrevia();
+    };
 
     // Colores de los badges según categoría
     const coloresCat = {
@@ -312,24 +407,40 @@
         'Comunidad': 'bg-primary text-white'
     };
 
+    function obtenerImagenActual() {
+        if (usandoUrlCustom && imagenCustomInput && imagenCustomInput.value.trim()) {
+            return imagenCustomInput.value.trim();
+        }
+        return (imagenSelect && imagenSelect.value) ? imagenSelect.value : '../img/portada1.jpg';
+    }
+
+    function formatearFechaAmigable(fechaStr) {
+        if (!fechaStr) return 'Hoy';
+        const partes = fechaStr.split('-');
+        if (partes.length !== 3) return fechaStr;
+        const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const dia = partes[2];
+        const mes = meses[parseInt(partes[1], 10) - 1] || partes[1];
+        const anio = partes[0];
+        return `${dia} ${mes}, ${anio}`;
+    }
+
     // Actualizar vista previa en tiempo real
     function actualizarVistaPrevia() {
         if (prevTitulo && tituloInput) prevTitulo.innerText = tituloInput.value.trim() || 'Título de la noticia en vista previa';
         if (prevDesc && descInput) prevDesc.innerText = descInput.value.trim() || 'Aquí podrás previsualizar cómo se verá la noticia exactamente antes de ser publicada.';
-        if (prevImg && imagenSelect) prevImg.src = imagenSelect.value;
+        if (prevImg) prevImg.src = obtenerImagenActual();
         if (prevCategoria && categoriaSelect) {
             prevCategoria.innerText = categoriaSelect.value;
             prevCategoria.className = `badge ${coloresCat[categoriaSelect.value] || 'bg-secondary text-white'}`;
         }
         if (prevFecha && fechaInput && fechaInput.value) {
-            const partes = fechaInput.value.split('-');
-            const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-            prevFecha.innerText = `${partes[2]} ${meses[parseInt(partes[1], 10) - 1]}, ${partes[0]}`;
+            prevFecha.innerText = formatearFechaAmigable(fechaInput.value);
         }
     }
 
     // Escuchadores de eventos para la vista previa en vivo
-    [tituloInput, categoriaSelect, fechaInput, imagenSelect, descInput].forEach(el => {
+    [tituloInput, categoriaSelect, fechaInput, imagenSelect, imagenCustomInput, descInput].forEach(el => {
         if (el) {
             el.addEventListener('input', actualizarVistaPrevia);
             el.addEventListener('change', actualizarVistaPrevia);
@@ -342,81 +453,96 @@
         actualizarVistaPrevia();
     }
 
-    function obtenerNoticiasGuardadas() {
-        try {
-            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-        } catch (e) {
-            return [];
-        }
-    }
-
-    function guardarNoticias(noticias) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(noticias));
-        renderizarTablaNoticias();
-    }
-
-    function renderizarTablaNoticias() {
+    async function cargarNoticiasAdmin() {
         const tabla = document.getElementById('tablaNoticiasAdmin');
         const badge = document.getElementById('badgeTotalNoticias');
-        const noticias = obtenerNoticiasGuardadas();
-
-        if (badge) badge.innerText = `${noticias.length} noticia(s)`;
-
         if (!tabla) return;
 
-        if (noticias.length === 0) {
-            tabla.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">No hay noticias personalizadas registradas todavía.</td></tr>';
-            return;
-        }
+        tabla.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3"><span class="spinner-border spinner-border-sm me-1"></span> Consultando base de datos...</td></tr>';
 
-        tabla.innerHTML = '';
-        noticias.forEach((noticia, index) => {
-            const tr = document.createElement('tr');
-            const badgeClase = coloresCat[noticia.categoria] || 'bg-secondary text-white';
-            tr.innerHTML = `
-                <td class="ps-3 py-3">
-                    <div class="fw-bold text-dark">${noticia.titulo}</div>
-                    <small class="text-muted d-block text-truncate" style="max-width:350px;">${noticia.descripcion}</small>
-                </td>
-                <td><span class="badge ${badgeClase}">${noticia.categoria}</span></td>
-                <td><small class="text-secondary fw-medium">${noticia.fecha}</small></td>
-                <td class="text-end pe-3">
-                    <button class="btn btn-outline-danger btn-sm rounded-pill px-3 py-1 small fw-bold" onclick="eliminarNoticia(${index})">
-                        <span class="material-symbols-outlined align-middle fs-6">delete</span> Eliminar
-                    </button>
-                </td>
-            `;
-            tabla.appendChild(tr);
-        });
+        try {
+            const res = await fetch(`${API_BASE_NOTICIAS}/noticias`);
+            const data = await res.json();
+            if (data.ok && Array.isArray(data.data)) {
+                noticiasAdminCache = data.data;
+                if (badge) badge.innerText = `${noticiasAdminCache.length} noticia(s)`;
+
+                if (noticiasAdminCache.length === 0) {
+                    tabla.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">No hay noticias registradas en la base de datos todavía.</td></tr>';
+                    return;
+                }
+
+                tabla.innerHTML = '';
+                noticiasAdminCache.forEach((noticia) => {
+                    const tr = document.createElement('tr');
+                    const badgeClase = coloresCat[noticia.categoria] || 'bg-secondary text-white';
+                    const fechaTxt = formatearFechaAmigable(noticia.fecha);
+
+                    tr.innerHTML = `
+                        <td class="ps-3 py-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <img src="${noticia.imagen_url || '../img/portada1.jpg'}" alt="img" class="rounded object-fit-cover" style="width: 44px; height: 32px;" onerror="this.src='../img/portada1.jpg'">
+                                <div>
+                                    <div class="fw-bold text-dark">${noticia.titulo}</div>
+                                    <small class="text-muted d-block text-truncate" style="max-width:320px;">${noticia.descripcion}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge ${badgeClase}">${noticia.categoria}</span></td>
+                        <td><small class="text-secondary fw-medium">${fechaTxt}</small></td>
+                        <td class="text-end pe-3">
+                            <button class="btn btn-outline-danger btn-sm rounded-pill px-3 py-1 small fw-bold" onclick="eliminarNoticiaEnServidor(${noticia.id_noticia})">
+                                <span class="material-symbols-outlined align-middle fs-6">delete</span> Eliminar
+                            </button>
+                        </td>
+                    `;
+                    tabla.appendChild(tr);
+                });
+                return;
+            }
+        } catch (e) {
+            console.error('Error al cargar noticias de la base de datos:', e);
+            tabla.innerHTML = '<tr><td colspan="4" class="text-center text-danger py-3">Error al conectar con la base de datos de noticias.</td></tr>';
+        }
     }
 
-    window.eliminarNoticia = function(index) {
-        const noticias = obtenerNoticiasGuardadas();
-        noticias.splice(index, 1);
-        guardarNoticias(noticias);
-        mostrarAlertaNoticia('Noticia eliminada correctamente.', 'info');
+    window.eliminarNoticiaEnServidor = async function(idNoticia) {
+        if (!confirm('¿Confirmas que deseas eliminar esta noticia de la base de datos? Se quitará de inmediato del sitio web para todos los usuarios.')) return;
+
+        try {
+            const res = await fetch(`${API_BASE_NOTICIAS}/noticias/${idNoticia}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.ok) {
+                mostrarAlertaNoticia('Noticia eliminada correctamente de la base de datos.', 'info');
+                cargarNoticiasAdmin();
+            } else {
+                mostrarAlertaNoticia(data.error || 'Error al eliminar noticia', 'danger');
+            }
+        } catch (e) {
+            mostrarAlertaNoticia('Error de comunicación: ' + e.message, 'danger');
+        }
     };
 
     function mostrarAlertaNoticia(mensaje, tipo = 'success') {
         const alerta = document.getElementById('alertaNoticia');
         if (!alerta) return;
-        alerta.className = `alert alert-${tipo} mt-3`;
+        alerta.className = `alert alert-${tipo} mt-3 shadow-sm`;
         alerta.innerText = mensaje;
         alerta.classList.remove('d-none');
         setTimeout(() => {
             alerta.classList.add('d-none');
-        }, 3500);
+        }, 4000);
     }
 
     const form = document.getElementById('formPublicarNoticia');
     if (form) {
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const titulo = document.getElementById('noticiaTitulo').value.trim();
             const categoria = document.getElementById('noticiaCategoria').value;
             const fechaRaw = document.getElementById('noticiaFecha').value;
-            const imagen = document.getElementById('noticiaImagen').value;
+            const imagen = obtenerImagenActual();
             const descripcion = document.getElementById('noticiaDescripcion').value.trim();
 
             if (!titulo || !descripcion || !fechaRaw) {
@@ -424,36 +550,62 @@
                 return;
             }
 
-            // Formatear fecha amigable (ej: 21 Sep, 2026)
-            const partesFecha = fechaRaw.split('-');
-            const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-            const dia = partesFecha[2];
-            const mesNombre = meses[parseInt(partesFecha[1], 10) - 1] || partesFecha[1];
-            const anio = partesFecha[0];
-            const fechaFormateada = `${dia} ${mesNombre}, ${anio}`;
+            const btnSubmit = form.querySelector('button[type="submit"]');
+            if (btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando en BD...';
+            }
 
-            const nuevaNoticia = {
-                id: Date.now(),
-                titulo,
-                categoria,
-                fecha: fechaFormateada,
-                imagen,
-                descripcion
-            };
+            try {
+                const res = await fetch(`${API_BASE_NOTICIAS}/noticias`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        titulo,
+                        categoria,
+                        fecha: fechaRaw,
+                        imagen_url: imagen,
+                        descripcion,
+                        cuerpo: `<p>${descripcion}</p>`
+                    })
+                });
 
-            const noticias = obtenerNoticiasGuardadas();
-            noticias.unshift(nuevaNoticia); // Agregar al principio
-            guardarNoticias(noticias);
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.error || 'No se pudo guardar la noticia');
+                }
 
-            form.reset();
-            if (fechaInput) fechaInput.value = new Date().toISOString().split('T')[0];
-            actualizarVistaPrevia();
-            mostrarAlertaNoticia('¡Noticia publicada con éxito en el sistema local!');
+                form.reset();
+                if (usandoUrlCustom) toggleCustomImgInput();
+                if (fechaInput) fechaInput.value = new Date().toISOString().split('T')[0];
+                actualizarVistaPrevia();
+                mostrarAlertaNoticia('¡Noticia publicada con éxito en la base de datos! Ya está disponible en línea para todos.', 'success');
+                cargarNoticiasAdmin();
+
+            } catch (err) {
+                mostrarAlertaNoticia('Error al publicar: ' + err.message, 'danger');
+            } finally {
+                if (btnSubmit) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = '<span class="material-symbols-outlined fs-5">publish</span> Publicar Noticia';
+                }
+            }
         });
     }
 
-    // Inicializar listado al cargar
-    renderizarTablaNoticias();
+    // Inicializar listado desde la base de datos al cargar
+    cargarNoticiasAdmin();
+
+    // Búsqueda en panel administrativo
+    function ejecutarBusquedaDashboard() {
+        const input = document.getElementById('inputBuscarDashboard');
+        const q = input ? input.value.trim() : '';
+        if (q) {
+            window.location.href = `admin-usuarios.html?q=${encodeURIComponent(q)}`;
+        } else {
+            window.location.href = 'admin-usuarios.html';
+        }
+    }
 
     // Cargar métricas dinámicas desde PostgreSQL
     async function cargarMetricasDashboard() {
@@ -467,19 +619,128 @@
                 if (document.getElementById('totalDocentesAdmin')) {
                     document.getElementById('totalDocentesAdmin').innerText = data.data.docentesRegistrados;
                 }
+                if (document.getElementById('totalPreinscripcionesAdmin') && data.data.preinscripciones !== undefined) {
+                    document.getElementById('totalPreinscripcionesAdmin').innerText = data.data.preinscripciones;
+                }
             }
         } catch (err) {
-            console.log('Usando datos estáticos de respaldo para el dashboard.');
+            console.log('Usando datos de respaldo para el dashboard:', err);
         }
     }
 
+    // Cargar solicitudes de preinscripción desde API PostgreSQL y localStorage
+    async function cargarPreinscripcionesAdmin() {
+        const tbody = document.getElementById('tablaPreinscripcionesAdmin');
+        const badgeCount = document.getElementById('badgeContadorPreinscrip');
+        const totalCard = document.getElementById('totalPreinscripcionesAdmin');
+        const badgeSidebar = document.getElementById('badgeSidebarPreinscrip');
+        const badgeNotif = document.getElementById('badgeNotifPreinscrip');
+
+        let lista = [];
+
+        try {
+            const res = await fetch('http://localhost:3000/api/preinscripciones');
+            const data = await res.json();
+            if (data.ok && Array.isArray(data.data)) {
+                lista = data.data;
+            }
+        } catch (e) {
+            console.warn('API de preinscripciones no disponible, usando respaldo local:', e);
+        }
+
+        // Combinar con localStorage si hubieran solicitudes locales pendientes
+        const locales = JSON.parse(localStorage.getItem('preinscripciones_locales') || '[]');
+        locales.forEach(loc => {
+            if (!lista.some(item => item.codigo_tramite === loc.codigo_tramite)) {
+                lista.unshift(loc);
+            }
+        });
+
+        if (totalCard) totalCard.innerText = lista.length;
+        if (badgeCount) badgeCount.innerText = `${lista.length} solicitudes`;
+        if (badgeSidebar) {
+            badgeSidebar.innerText = lista.length;
+            badgeSidebar.classList.remove('d-none');
+        }
+        if (badgeNotif && lista.length > 0) {
+            badgeNotif.classList.remove('d-none');
+        }
+
+        if (!tbody) return;
+
+        if (lista.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">
+                No hay solicitudes de preinscripción registradas aún. Las solicitudes enviadas en <a href="preinscripcion.html">preinscripcion.html</a> aparecerán aquí automáticamente.
+            </td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = '';
+        lista.forEach(p => {
+            const tr = document.createElement('tr');
+            const fechaStr = p.fecha_registro ? new Date(p.fecha_registro).toLocaleDateString('es-AR', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : 'Reciente';
+            
+            // Construir parámetros para derivar a matriculación en admin-usuarios.html
+            const paramsMatricula = new URLSearchParams({
+                nuevo: '1',
+                nombre: p.nombre_alumno || '',
+                apellido: p.apellido_alumno || '',
+                dni: p.dni_alumno || '',
+                nivel_aspirante: p.nivel || '',
+                tutor_nombre: p.nombre_tutor || '',
+                tutor_tel: p.telefono_tutor || '',
+                tutor_email: p.email_tutor || ''
+            });
+
+            tr.innerHTML = `
+                <td class="ps-3 py-3">
+                    <span class="badge bg-dark font-monospace px-2 py-1">${p.codigo_tramite || 'S/C'}</span>
+                </td>
+                <td>
+                    <div class="fw-bold text-dark">${p.nombre_alumno || ''} ${p.apellido_alumno || ''}</div>
+                    <small class="text-muted">DNI: ${p.dni_alumno || 'S/D'} • Nac: ${p.fecha_nacimiento || 'S/D'}</small>
+                </td>
+                <td>
+                    <span class="badge bg-primary-subtle text-primary border">${p.nivel || 'Sin definir'}</span>
+                    ${p.turno ? `<div class="small text-secondary mt-1">${p.turno}</div>` : ''}
+                </td>
+                <td>
+                    <div class="fw-semibold text-dark">${p.nombre_tutor || 'S/D'}</div>
+                    <small class="text-muted d-block"><span class="material-symbols-outlined align-middle" style="font-size:12px;">call</span> ${p.telefono_tutor || 'S/T'}</small>
+                    ${p.email_tutor ? `<small class="text-muted d-block"><span class="material-symbols-outlined align-middle" style="font-size:12px;">mail</span> ${p.email_tutor}</small>` : ''}
+                </td>
+                <td>
+                    <small class="text-secondary">${fechaStr}</small>
+                </td>
+                <td class="text-end pe-3">
+                    <a href="admin-usuarios.html?${paramsMatricula.toString()}" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold d-inline-flex align-items-center gap-1 shadow-sm">
+                        <span class="material-symbols-outlined fs-6">person_add</span> Matricular Alumno
+                    </a>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
     cargarMetricasDashboard();
+    cargarPreinscripcionesAdmin();
 
     // Botón refrescar
     const btnRefrescar = document.getElementById('btnRefrescarAdmin');
     if (btnRefrescar) {
-        btnRefrescar.addEventListener('click', cargarMetricasDashboard);
+        btnRefrescar.addEventListener('click', () => {
+            cargarMetricasDashboard();
+            cargarPreinscripcionesAdmin();
+        });
     }
+
+    // Buscador general del navbar dashboard
+    window.ejecutarBusquedaDashboard = function() {
+        const val = document.getElementById('inputBuscarDashboard')?.value.trim();
+        if (val) {
+            window.location.href = `control-alumnos.html?q=${encodeURIComponent(val)}`;
+        }
+    };
 </script>
 
 <script type="module" src="../js/auth-guard.js"></script>

@@ -81,61 +81,12 @@
     <main class="container py-5">
         <!-- CONTENEDOR DINÁMICO DE NOTICIAS -->
         <div class="row g-4" id="contenedorNoticias">
-            
-            <!-- Noticia Estática de Ejemplo 1 -->
-            <div class="col-lg-4 col-md-6 noticia-card-item" data-cat="Institucional">
-                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden custom-hover-card bg-white" style="border: 1px solid rgba(0,0,0,0.06);">
-                    <img src="../img/portada1.jpg" class="card-img-top object-fit-cover" alt="Noticia 1" style="height: 200px;">
-                    <div class="card-body p-4 d-flex flex-column">
-                        <div class="mb-2">
-                            <span class="badge bg-warning text-dark">Institucional</span>
-                            <small class="text-muted ms-2">15 Jun, 2026</small>
-                        </div>
-                        <h4 class="card-title fw-bold text-dark">Apertura Oficial de Inscripciones 2027</h4>
-                        <p class="card-text text-secondary mb-4">Con gran entusiasmo anunciamos el inicio de nuestro proceso de matriculación para el primer ciclo lectivo de nuestra institución.</p>
-                        <button type="button" class="btn btn-link p-0 mt-auto fw-bold text-primary text-decoration-none d-inline-flex align-items-center gap-1" onclick="abrirNoticiaModal('Apertura Oficial de Inscripciones 2027', 'Institucional', '15 Jun, 2026', '../img/portada1.jpg', 'Con gran entusiasmo anunciamos el inicio de nuestro proceso de matriculación para el primer ciclo lectivo de nuestra institución.', '<p>Con gran entusiasmo anunciamos el inicio de nuestro proceso de matriculación para el primer ciclo lectivo de nuestra institución.</p><p>Nuestro equipo directivo y docente ha preparado un itinerario de admisiones transparente, inclusivo y enfocado en el acompañamiento a las familias en cada etapa. Los cupos son limitados con el fin de mantener un ratio alumno-docente óptimo que garantice atención personalizada.</p><p>Para solicitar una entrevista diagnóstica o recorrer las instalaciones edilicias, complete el formulario de preinscripción en nuestro portal web.</p>')">
-                            Leer más <i class="bi bi-arrow-right"></i>
-                        </button>
-                    </div>
+            <div class="col-12 text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando noticias...</span>
                 </div>
+                <p class="text-muted mt-2">Cargando novedades institucionales...</p>
             </div>
-
-            <!-- Noticia Estática de Ejemplo 2 -->
-            <div class="col-lg-4 col-md-6 noticia-card-item" data-cat="Deportes">
-                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden custom-hover-card bg-white" style="border: 1px solid rgba(0,0,0,0.06);">
-                    <img src="../img/Pileta natacion.jpg" class="card-img-top object-fit-cover" alt="Noticia 2" style="height: 200px;">
-                    <div class="card-body p-4 d-flex flex-column">
-                        <div class="mb-2">
-                            <span class="badge bg-info text-white">Deportes</span>
-                            <small class="text-muted ms-2">08 Jun, 2026</small>
-                        </div>
-                        <h4 class="card-title fw-bold text-dark">Finalizan obras del Complejo Acuático</h4>
-                        <p class="card-text text-secondary mb-4">Nuestra pileta olímpica climatizada ya está en la fase final de pruebas. Un espacio de primer nivel para nuestros futuros alumnos.</p>
-                        <button type="button" class="btn btn-link p-0 mt-auto fw-bold text-primary text-decoration-none d-inline-flex align-items-center gap-1" onclick="abrirNoticiaModal('Finalizan obras del Complejo Acuático', 'Deportes', '08 Jun, 2026', '../img/Pileta natacion.jpg', 'Nuestra pileta olímpica climatizada ya está en la fase final de pruebas. Un espacio de primer nivel para nuestros futuros alumnos.', '<p>Nuestra pileta olímpica climatizada ya está en la fase final de pruebas. Un espacio de primer nivel para nuestros futuros alumnos.</p><p>La infraestructura cuenta con climatización geotérmica de última generación, carriles homologados de competición y vestuarios de estándar profesional adaptados para todas las edades y niveles de habilidad.</p><p>La natación formará parte integral de la currícula deportiva desde el nivel inicial hasta el secundario.</p>')">
-                            Leer más <i class="bi bi-arrow-right"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Noticia Estática de Ejemplo 3 -->
-            <div class="col-lg-4 col-md-6 noticia-card-item" data-cat="Académico">
-                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden custom-hover-card bg-white" style="border: 1px solid rgba(0,0,0,0.06);">
-                    <img src="../img/ninosEstudiando.jpg" class="card-img-top object-fit-cover" alt="Noticia 3" style="height: 200px;">
-                    <div class="card-body p-4 d-flex flex-column">
-                        <div class="mb-2">
-                            <span class="badge bg-success text-white">Académico</span>
-                            <small class="text-muted ms-2">25 May, 2026</small>
-                        </div>
-                        <h4 class="card-title fw-bold text-dark">Alianza estratégica con Cambridge</h4>
-                        <p class="card-text text-secondary mb-4">Firmamos un convenio para que nuestro programa de inglés cuente con certificación internacional desde la primaria.</p>
-                        <button type="button" class="btn btn-link p-0 mt-auto fw-bold text-primary text-decoration-none d-inline-flex align-items-center gap-1" onclick="abrirNoticiaModal('Alianza estratégica con Cambridge', 'Académico', '25 May, 2026', '../img/ninosEstudiando.jpg', 'Firmamos un convenio para que nuestro programa de inglés cuente con certificación internacional desde la primaria.', '<p>Firmamos un convenio para que nuestro programa de inglés cuente con certificación internacional desde la primaria.</p><p>Este convenio brindará a nuestros alumnos la posibilidad de rendir exámenes oficiales con reconocimiento global (Starters, Movers, Flyers, KET y PET), fortaleciendo sus competencias lingüísticas en un mundo interconectado.</p><p>Los docentes a cargo contarán con actualización pedagógica continua brindada directamente por examinadores internacionales.</p>')">
-                            Leer más <i class="bi bi-arrow-right"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
         </div>
     </main>
 
@@ -209,20 +160,38 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/main.js"></script>
 
-    <!-- SCRIPT DE CARGA DINÁMICA, FILTRADO Y LECTURA DE NOTICIAS -->
+    <!-- SCRIPT DE CARGA DINÁMICA DESDE BASE DE DATOS, FILTRADO Y LECTURA DE NOTICIAS -->
     <script>
+        const API_BASE = window.location.origin.includes('localhost')
+            ? 'http://localhost:3000/api'
+            : `${window.location.origin}/api`;
+
+        let todasLasNoticias = [];
+        let categoriaActiva = 'todas';
+
+        const coloresCategoria = {
+            'Institucional': 'bg-warning text-dark',
+            'Deportes': 'bg-info text-white',
+            'Académico': 'bg-success text-white',
+            'Comunidad': 'bg-primary text-white'
+        };
+
+        function formatearFechaAmigable(fechaStr) {
+            if (!fechaStr) return 'Reciente';
+            const partes = fechaStr.split('-');
+            if (partes.length !== 3) return fechaStr;
+            const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            const dia = partes[2];
+            const mes = meses[parseInt(partes[1], 10) - 1] || partes[1];
+            const anio = partes[0];
+            return `${dia} ${mes}, ${anio}`;
+        }
+
         // Función global para abrir cualquier noticia en el Modal de Lectura
         window.abrirNoticiaModal = function(titulo, categoria, fecha, imagen, descripcion, cuerpo) {
             document.getElementById('modalNoticiaTitulo').innerText = titulo;
             const badge = document.getElementById('modalNoticiaCategoria');
             badge.innerText = categoria;
-
-            const coloresCategoria = {
-                'Institucional': 'bg-warning text-dark',
-                'Deportes': 'bg-info text-white',
-                'Académico': 'bg-success text-white',
-                'Comunidad': 'bg-primary text-white'
-            };
             badge.className = `badge px-3 py-2 rounded-pill fw-bold ${coloresCategoria[categoria] || 'bg-secondary text-white'}`;
 
             document.getElementById('modalNoticiaFecha').innerText = fecha;
@@ -235,74 +204,98 @@
             modal.show();
         };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const STORAGE_KEY = 'noticias_institucionales';
-            const contenedor = document.getElementById('contenedorNoticias');
+        window.abrirNoticiaDinamica = function(idNoticia) {
+            const n = todasLasNoticias.find(x => Number(x.id_noticia) === Number(idNoticia));
+            if (n) {
+                abrirNoticiaModal(
+                    n.titulo, 
+                    n.categoria, 
+                    formatearFechaAmigable(n.fecha), 
+                    n.imagen_url, 
+                    n.descripcion, 
+                    n.cuerpo || `<p>${n.descripcion}</p>`
+                );
+            }
+        };
 
+        async function cargarNoticiasDesdeServidor() {
+            const contenedor = document.getElementById('contenedorNoticias');
+            try {
+                const res = await fetch(`${API_BASE}/noticias`);
+                const data = await res.json();
+                if (data.ok && Array.isArray(data.data)) {
+                    todasLasNoticias = data.data;
+                    renderizarNoticias();
+                    return;
+                }
+            } catch (err) {
+                console.warn('Error al conectar a la base de datos de noticias:', err);
+            }
+
+            if (contenedor) {
+                contenedor.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <span class="material-symbols-outlined text-muted fs-1 mb-2">newspaper</span>
+                        <h5 class="text-dark fw-bold">No se pudieron cargar las noticias</h5>
+                        <p class="text-secondary small">Por favor verifica tu conexión o intenta recargar la página.</p>
+                        <button class="btn btn-outline-primary btn-sm rounded-pill px-4 mt-2" onclick="cargarNoticiasDesdeServidor()">Reintentar</button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderizarNoticias() {
+            const contenedor = document.getElementById('contenedorNoticias');
             if (!contenedor) return;
 
-            // 1. Obtener las noticias guardadas por el Administrador desde localStorage
-            let noticiasGuardadas = [];
-            try {
-                noticiasGuardadas = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-            } catch (error) {
-                console.error('Error al leer noticias desde localStorage:', error);
-                noticiasGuardadas = [];
+            const filtradas = categoriaActiva === 'todas'
+                ? todasLasNoticias
+                : todasLasNoticias.filter(n => (n.categoria || '').toLowerCase() === categoriaActiva.toLowerCase());
+
+            if (filtradas.length === 0) {
+                contenedor.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <span class="material-symbols-outlined text-muted fs-1 mb-2">filter_alt_off</span>
+                        <h5 class="text-dark fw-bold">Sin publicaciones en esta categoría</h5>
+                        <p class="text-secondary small">No hay noticias registradas bajo el rubro "${categoriaActiva}".</p>
+                    </div>
+                `;
+                return;
             }
 
-            // Guardamos las noticias en memoria para acceder a ellas al hacer clic
-            window._noticiasDinamicas = noticiasGuardadas;
+            contenedor.innerHTML = filtradas.map((noticia) => {
+                const badgeClass = coloresCategoria[noticia.categoria] || 'bg-secondary text-white';
+                const fechaAmigable = formatearFechaAmigable(noticia.fecha);
+                const imagenSrc = noticia.imagen_url || '../img/portada1.jpg';
 
-            // 2. Si hay noticias publicadas por el Administrador, las renderizamos al principio
-            if (noticiasGuardadas.length > 0) {
-                const coloresCategoria = {
-                    'Institucional': 'bg-warning text-dark',
-                    'Deportes': 'bg-info text-white',
-                    'Académico': 'bg-success text-white',
-                    'Comunidad': 'bg-primary text-white'
-                };
-
-                let htmlNuevasNoticias = '';
-                noticiasGuardadas.forEach((noticia, idx) => {
-                    const badgeClass = coloresCategoria[noticia.categoria] || 'bg-secondary text-white';
-                    const imagenSrc = noticia.imagen || '../img/portada1.jpg';
-
-                    htmlNuevasNoticias += `
-                        <div class="col-lg-4 col-md-6 noticia-card-item" data-cat="${noticia.categoria}">
-                            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden custom-hover-card bg-white" style="border: 1px solid rgba(0,0,0,0.06);">
-                                <img src="${imagenSrc}" class="card-img-top object-fit-cover" alt="${noticia.titulo}" style="height: 200px;">
-                                <div class="card-body p-4 d-flex flex-column">
-                                    <div class="mb-2">
-                                        <span class="badge ${badgeClass}">${noticia.categoria}</span>
-                                        <small class="text-muted ms-2">${noticia.fecha}</small>
-                                    </div>
-                                    <h4 class="card-title fw-bold text-dark">${noticia.titulo}</h4>
-                                    <p class="card-text text-secondary mb-4">${noticia.descripcion}</p>
-                                    <button type="button" class="btn btn-link p-0 mt-auto fw-bold text-primary text-decoration-none d-inline-flex align-items-center gap-1" onclick="abrirNoticiaDinamica(${idx})">
-                                        Leer más <i class="bi bi-arrow-right"></i>
-                                    </button>
+                return `
+                    <div class="col-lg-4 col-md-6 noticia-card-item" data-cat="${noticia.categoria}">
+                        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden custom-hover-card bg-white" style="border: 1px solid rgba(0,0,0,0.06);">
+                            <img src="${imagenSrc}" class="card-img-top object-fit-cover" alt="${noticia.titulo}" style="height: 200px;" onerror="this.src='../img/portada1.jpg'">
+                            <div class="card-body p-4 d-flex flex-column">
+                                <div class="mb-2">
+                                    <span class="badge ${badgeClass}">${noticia.categoria}</span>
+                                    <small class="text-muted ms-2">${fechaAmigable}</small>
                                 </div>
+                                <h4 class="card-title fw-bold text-dark">${noticia.titulo}</h4>
+                                <p class="card-text text-secondary mb-4">${noticia.descripcion}</p>
+                                <button type="button" class="btn btn-link p-0 mt-auto fw-bold text-primary text-decoration-none d-inline-flex align-items-center gap-1" onclick="abrirNoticiaDinamica(${noticia.id_noticia})">
+                                    Leer más <i class="bi bi-arrow-right"></i>
+                                </button>
                             </div>
                         </div>
-                    `;
-                });
+                    </div>
+                `;
+            }).join('');
+        }
 
-                // Insertar las noticias del Administrador antes de las noticias de ejemplo
-                contenedor.innerHTML = htmlNuevasNoticias + contenedor.innerHTML;
-            }
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarNoticiasDesdeServidor();
 
-            window.abrirNoticiaDinamica = function(idx) {
-                const n = window._noticiasDinamicas[idx];
-                if (n) {
-                    abrirNoticiaModal(n.titulo, n.categoria, n.fecha, n.imagen, n.descripcion, `<p>${n.descripcion}</p><p class="mt-3">Para más información sobre este comunicado oficial, puede acercarse a la secretaría del establecimiento o contactar al canal de atención a familias.</p>`);
-                }
-            };
-
-            // 3. Sistema de Filtros por Categoría en Vivo
+            // Configurar botones de filtrado por categoría
             const botonesFiltro = document.querySelectorAll('#filtrosCategorias button');
             botonesFiltro.forEach(btn => {
                 btn.addEventListener('click', () => {
-                    // Actualizar estilos activos de los botones
                     botonesFiltro.forEach(b => {
                         b.classList.remove('btn-primary', 'active-filter');
                         b.classList.add('btn-outline-secondary');
@@ -310,17 +303,8 @@
                     btn.classList.remove('btn-outline-secondary');
                     btn.classList.add('btn-primary', 'active-filter');
 
-                    const categoriaSeleccionada = btn.getAttribute('data-cat');
-                    const tarjetas = document.querySelectorAll('.noticia-card-item');
-
-                    tarjetas.forEach(tarjeta => {
-                        const categoriaTarjeta = tarjeta.getAttribute('data-cat');
-                        if (categoriaSeleccionada === 'todas' || categoriaTarjeta === categoriaSeleccionada) {
-                            tarjeta.style.display = 'block';
-                        } else {
-                            tarjeta.style.display = 'none';
-                        }
-                    });
+                    categoriaActiva = btn.getAttribute('data-cat');
+                    renderizarNoticias();
                 });
             });
         });

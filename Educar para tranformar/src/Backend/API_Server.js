@@ -523,18 +523,20 @@ app.delete('/api/usuarios/:id', async (req, res) => {
  */
 app.get('/api/dashboard', async (req, res) => {
   try {
-    const [alumnosRes, docentesRes, materiasRes, deportesRes] = await Promise.all([
+    const [alumnosRes, docentesRes, materiasRes, deportesRes, preinscripRes] = await Promise.all([
       db.query("SELECT COUNT(*) FROM alumnos WHERE estado = 'ACTIVO'"),
       db.query("SELECT COUNT(*) FROM profesores"),
       db.query("SELECT COUNT(*) FROM materias"),
-      db.query("SELECT COUNT(*) FROM inscripciones_deporte")
+      db.query("SELECT COUNT(*) FROM inscripciones_deporte"),
+      db.query("SELECT COUNT(*) FROM preinscripciones")
     ]);
 
     ok(res, {
       alumnosActivos: parseInt(alumnosRes.rows[0].count, 10),
       docentesRegistrados: parseInt(docentesRes.rows[0].count, 10),
       materiasDisponibles: parseInt(materiasRes.rows[0].count, 10),
-      inscripcionesDeportes: parseInt(deportesRes.rows[0].count, 10)
+      inscripcionesDeportes: parseInt(deportesRes.rows[0].count, 10),
+      preinscripciones: parseInt(preinscripRes.rows[0].count, 10)
     });
   } catch (error) {
     console.error('[API /dashboard] Error:', error);
@@ -695,13 +697,85 @@ app.get('/api/cursos/:id/alumnos', async (req, res) => {
 });
 
 /**
+ * GET /api/alumnos
+ * Lista todos los alumnos registrados en el sistema institucional con curso, división y tutor.
+ */
+app.get('/api/alumnos', async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT
+        a.id_alumno as id,
+        a.id_alumno,
+        a.legajo,
+        a.dni,
+        a.nombre,
+        a.apellido,
+        a.fecha_nacimiento,
+        a.domicilio,
+        a.telefono,
+        a.correo,
+        a.estado,
+        cu.id_curso,
+        cu.nombre as curso_nombre,
+        cu.division,
+        cu.anio_escolar,
+        n.id_nivel,
+        n.nombre as nivel,
+        ci.id_ciclo,
+        ci.nombre as ciclo,
+        u.edad,
+        u.genero,
+        t.id_tutor,
+        NULLIF(TRIM(CONCAT(t.nombre, ' ', t.apellido)), '') as tutor_nombre,
+        t.telefono as tutor_telefono,
+        t.dni as tutor_dni,
+        ta.parentesco
+      FROM alumnos a
+      LEFT JOIN cursos cu ON cu.id_curso = a.id_curso
+      LEFT JOIN niveles n ON n.id_nivel = cu.id_nivel
+      LEFT JOIN ciclos ci ON ci.id_ciclo = cu.id_ciclo
+      LEFT JOIN usuarios u ON u.id_usuario = a.id_usuario
+      LEFT JOIN tutor_alumno ta ON ta.id_alumno = a.id_alumno
+      LEFT JOIN tutores t ON t.id_tutor = ta.id_tutor
+      ORDER BY n.id_nivel, cu.anio_escolar, cu.division, a.apellido, a.nombre
+    `);
+    ok(res, result.rows);
+  } catch (error) {
+    console.error('[API GET /alumnos] Error:', error);
+    fail(res, 'Error al listar alumnos', 500);
+  }
+});
+
+/**
+ * PUT /api/alumnos/:id/curso
+ * Permite cambiar el curso o la división de un alumno en la base de datos.
+ */
+app.put('/api/alumnos/:id/curso', async (req, res) => {
+  const { id_curso } = req.body;
+  const idAlumno = parseInt(req.params.id, 10);
+  if (isNaN(idAlumno) || !id_curso) {
+    return fail(res, 'ID de alumno o id_curso inválido', 400);
+  }
+  try {
+    const cursoCheck = await db.query('SELECT * FROM cursos WHERE id_curso = $1', [id_curso]);
+    if (cursoCheck.rows.length === 0) return fail(res, 'Curso inexistente', 404);
+
+    await db.query('UPDATE alumnos SET id_curso = $1 WHERE id_alumno = $2', [id_curso, idAlumno]);
+    ok(res, { mensaje: 'Curso y división actualizados con éxito', curso: cursoCheck.rows[0] });
+  } catch (error) {
+    console.error('[API PUT /alumnos/:id/curso] Error:', error);
+    fail(res, 'Error al reasignar curso del alumno', 500);
+  }
+});
+
+/**
  * GET /api/cursos/:id/docentes
  * Lista los docentes que tienen materias asignadas en ese curso.
  */
 app.get('/api/cursos/:id/docentes', async (req, res) => {
   try {
     const result = await db.query(`
-      SELECT DISTINCT
+      SELECT
         p.id_profesor, p.legajo, p.nombre, p.apellido, p.especialidad,
         u.email,
         json_agg(
@@ -808,7 +882,11 @@ app.get('/api/docentes', async (req, res) => {
               'id_materia', m.id_materia,
               'codigo', m.codigo,
               'nombre', m.nombre,
-              'carga_horaria', m.carga_horaria
+              'carga_horaria', m.carga_horaria,
+              'id_curso', cu.id_curso,
+              'curso_nombre', cu.nombre,
+              'curso_division', cu.division,
+              'nivel_nombre', n.nombre
             )
           ) FILTER (WHERE m.id_materia IS NOT NULL),
           '[]'
@@ -817,6 +895,8 @@ app.get('/api/docentes', async (req, res) => {
       LEFT JOIN usuarios u ON u.id_usuario = p.id_usuario
       LEFT JOIN asignaciones_docente ad ON ad.id_profesor = p.id_profesor
       LEFT JOIN materias m ON m.id_materia = ad.id_materia
+      LEFT JOIN cursos cu ON cu.id_curso = ad.id_curso
+      LEFT JOIN niveles n ON n.id_nivel = m.id_nivel
       GROUP BY p.id_profesor, p.legajo, p.dni, p.nombre, p.apellido, p.especialidad, p.telefono, u.email, u.edad, u.genero
       ORDER BY p.apellido, p.nombre;
     `;
@@ -1508,6 +1588,186 @@ app.post('/api/calificaciones', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/calificaciones/planilla
+ * Obtiene la lista completa de alumnos de un curso con sus notas en una materia específica.
+ * Query params: id_curso, id_materia
+ */
+app.get('/api/calificaciones/planilla', async (req, res) => {
+  const { id_curso, id_materia } = req.query;
+
+  if (!id_curso || !id_materia) {
+    return fail(res, 'Faltan parámetros obligatorios: id_curso e id_materia', 400);
+  }
+
+  const cId = parseInt(id_curso, 10);
+  const mId = parseInt(id_materia, 10);
+
+  if (isNaN(cId) || isNaN(mId)) {
+    return fail(res, 'id_curso e id_materia deben ser números enteros', 400);
+  }
+
+  try {
+    // 1. Obtener datos del curso y materia
+    const [cRes, mRes] = await Promise.all([
+      db.query('SELECT id_curso, nombre, anio_escolar, division FROM cursos WHERE id_curso = $1', [cId]),
+      db.query('SELECT id_materia, codigo, nombre, carga_horaria FROM materias WHERE id_materia = $1', [mId])
+    ]);
+
+    if (cRes.rows.length === 0) return fail(res, 'Curso no encontrado', 404);
+    if (mRes.rows.length === 0) return fail(res, 'Materia no encontrada', 404);
+
+    const curso = cRes.rows[0];
+    const materia = mRes.rows[0];
+
+    // 2. Obtener alumnos del curso con sus calificaciones en esta materia
+    const query = `
+      SELECT 
+        a.id_alumno,
+        a.legajo,
+        a.dni,
+        a.nombre,
+        a.apellido,
+        u.edad,
+        u.genero,
+        MAX(CASE WHEN cal.trimestre = 1 THEN cal.nota END) as t1,
+        MAX(CASE WHEN cal.trimestre = 2 THEN cal.nota END) as t2,
+        MAX(CASE WHEN cal.trimestre = 3 THEN cal.nota END) as t3,
+        MAX(CASE WHEN cal.trimestre = 1 THEN cal.observacion END) as obs1,
+        MAX(CASE WHEN cal.trimestre = 2 THEN cal.observacion END) as obs2,
+        MAX(CASE WHEN cal.trimestre = 3 THEN cal.observacion END) as obs3
+      FROM alumnos a
+      LEFT JOIN usuarios u ON u.id_usuario = a.id_usuario
+      JOIN curso_materia cm ON cm.id_curso = a.id_curso AND cm.id_materia = $2
+      LEFT JOIN calificaciones cal ON cal.id_alumno = a.id_alumno AND cal.id_materia = $2
+      WHERE a.id_curso = $1
+      GROUP BY a.id_alumno, a.legajo, a.dni, a.nombre, a.apellido, u.edad, u.genero
+      ORDER BY a.apellido, a.nombre;
+    `;
+
+    const result = await db.query(query, [cId, mId]);
+
+    const alumnos = result.rows.map(r => {
+      const n1 = r.t1 !== null ? parseFloat(r.t1) : null;
+      const n2 = r.t2 !== null ? parseFloat(r.t2) : null;
+      const n3 = r.t3 !== null ? parseFloat(r.t3) : null;
+      const notasValidas = [n1, n2, n3].filter(n => n !== null);
+
+      let promedio = null;
+      let estado = 'Cursando';
+
+      if (notasValidas.length > 0) {
+        promedio = +(notasValidas.reduce((acc, curr) => acc + curr, 0) / notasValidas.length).toFixed(2);
+        if (promedio >= 7.00) {
+          estado = 'Promocionado';
+        } else if (promedio >= 4.00) {
+          estado = 'Regular';
+        } else {
+          estado = 'En Riesgo';
+        }
+      }
+
+      return {
+        id_alumno: r.id_alumno,
+        legajo: r.legajo,
+        dni: r.dni,
+        nombre: r.nombre,
+        apellido: r.apellido,
+        edad: r.edad,
+        genero: r.genero,
+        trimestre_1: n1,
+        trimestre_2: n2,
+        trimestre_3: n3,
+        observacion_1: r.obs1,
+        observacion_2: r.obs2,
+        observacion_3: r.obs3,
+        promedio,
+        estado
+      };
+    });
+
+    ok(res, {
+      curso,
+      materia,
+      totalAlumnos: alumnos.length,
+      alumnos
+    });
+  } catch (error) {
+    console.error('[API /calificaciones/planilla] Error:', error);
+    fail(res, 'Error al obtener planilla de calificaciones', 500);
+  }
+});
+
+/**
+ * POST /api/calificaciones/lote
+ * Permite guardar o actualizar múltiples calificaciones en una sola transacción atómica.
+ */
+app.post('/api/calificaciones/lote', async (req, res) => {
+  const { calificaciones } = req.body;
+
+  if (!Array.isArray(calificaciones) || calificaciones.length === 0) {
+    return fail(res, 'El cuerpo debe incluir un arreglo "calificaciones" no vacío', 400);
+  }
+
+  const client = await db.getClient();
+  try {
+    await client.query('BEGIN');
+
+    const resultados = [];
+    for (const item of calificaciones) {
+      const { id_alumno, id_materia, trimestre, nota, observacion } = item;
+
+      if (!id_alumno || !id_materia || !trimestre || nota === undefined) {
+        throw new Error('Cada registro de calificación debe incluir id_alumno, id_materia, trimestre y nota');
+      }
+
+      const trimNum = parseInt(trimestre, 10);
+      const notaNum = parseFloat(nota);
+
+      if (isNaN(trimNum) || trimNum < 1 || trimNum > 3) {
+        throw new Error(`Trimestre inválido (${trimestre}) para alumno ${id_alumno}`);
+      }
+      if (isNaN(notaNum) || notaNum < 1 || notaNum > 10) {
+        throw new Error(`Nota inválida (${nota}) para alumno ${id_alumno}. Debe estar entre 1 y 10.`);
+      }
+
+      const upsertQuery = `
+        INSERT INTO calificaciones (id_alumno, id_materia, trimestre, nota, observacion)
+        VALUES ($1, $2, $3, $4, $5)
+        ON CONFLICT (id_alumno, id_materia, trimestre)
+        DO UPDATE SET
+          nota = EXCLUDED.nota,
+          observacion = EXCLUDED.observacion,
+          fecha = CURRENT_TIMESTAMP
+        RETURNING *;
+      `;
+
+      const r = await client.query(upsertQuery, [
+        id_alumno,
+        id_materia,
+        trimNum,
+        notaNum,
+        observacion || null
+      ]);
+      resultados.push(r.rows[0]);
+    }
+
+    await client.query('COMMIT');
+
+    ok(res, {
+      mensaje: `Se guardaron ${resultados.length} calificaciones exitosamente en PostgreSQL`,
+      guardadas: resultados.length,
+      calificaciones: resultados
+    }, 201);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('[API /calificaciones/lote] Error:', error);
+    fail(res, error.message || 'Error al guardar calificaciones en lote', 400);
+  } finally {
+    client.release();
+  }
+});
+
 // ─── 6. DEPORTES Y TRANSPORTE (HU-02 Y HU-03) ───────────────────────────────
 
 /**
@@ -1713,6 +1973,154 @@ app.delete('/api/transporte/:id_alumno', async (req, res) => {
   } catch (error) {
     console.error('[API DELETE /transporte] Error:', error);
     fail(res, 'Error al cancelar transporte', 500);
+  }
+});
+
+// ─── 7. PREINSCRIPCIONES (WEB PÚBLICA 2027) ─────────────────────────────────
+
+/**
+ * POST /api/preinscripciones
+ * Registra una solicitud de preinscripción desde el formulario público web.
+ */
+app.post('/api/preinscripciones', async (req, res) => {
+  const b = req.body || {};
+  const nombreAlumno = (b.nombreAlumno || b.nombre_alumno || `${b.nombre || ''} ${b.apellido || ''}`).trim();
+  const nivelIngresa = b.nivelIngresa || b.nivel || 'Primario';
+  const edadAlumno = b.edadAlumno || b.edad_alumno || null;
+  const dniAlumno = b.dniAlumno || b.dni_alumno || b.dni || '';
+  const tipoSangre = b.tipoSangre || b.tipo_sangre || null;
+  const domicilioAlumno = b.domicilioAlumno || b.domicilio_alumno || null;
+  const telefonoEmergencia = b.telefonoEmergencia || b.telefono_emergencia || null;
+
+  const nombreTutor = (b.nombreTutor || b.nombre_tutor || '').trim();
+  const vinculo = b.vinculo || 'Tutor Legal';
+  const edadTutor = b.edadTutor || b.edad_tutor || null;
+  const dniTutor = b.dniTutor || b.dni_tutor || 'S/D';
+  const domicilioTutor = b.domicilioTutor || b.domicilio_tutor || null;
+  const telefonoTutor = b.telefonoTutor || b.telefono_tutor || b.telefono || 'S/T';
+
+  if (!nombreAlumno || !dniAlumno || !nombreTutor) {
+    return fail(res, 'Faltan datos obligatorios para la preinscripción (Nombre del alumno, DNI y Tutor responsable)', 400);
+  }
+
+  const codigo = `PRE-2027-${Math.floor(1000 + Math.random() * 9000)}`;
+
+  try {
+    const result = await db.query(`
+      INSERT INTO preinscripciones (
+        codigo_tramite, nombre_alumno, nivel, edad_alumno, dni_alumno, tipo_sangre,
+        domicilio_alumno, telefono_emergencia,
+        nombre_tutor, vinculo, edad_tutor, dni_tutor, domicilio_tutor, telefono_tutor, estado
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'Pendiente')
+      RETURNING *;
+    `, [
+      codigo, nombreAlumno, nivelIngresa,
+      parseInt(edadAlumno, 10) || null, dniAlumno, tipoSangre || null,
+      domicilioAlumno || null, telefonoEmergencia || null,
+      nombreTutor, vinculo, parseInt(edadTutor, 10) || null,
+      dniTutor, domicilioTutor || null, telefonoTutor
+    ]);
+
+    ok(res, {
+      mensaje: '¡Preinscripción enviada con éxito! Nos comunicaremos a la brevedad para coordinar la visita presencial.',
+      codigo_tramite: codigo,
+      preinscripcion: result.rows[0]
+    }, 201);
+  } catch (error) {
+    console.error('[API POST /preinscripciones] Error:', error);
+    fail(res, error.message || 'Error al registrar preinscripción en la base de datos', 500);
+  }
+});
+
+/**
+ * GET /api/preinscripciones
+ * Lista todas las solicitudes de preinscripción para administración.
+ */
+app.get('/api/preinscripciones', async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM preinscripciones ORDER BY fecha_registro DESC');
+    ok(res, result.rows);
+  } catch (error) {
+    console.error('[API GET /preinscripciones] Error:', error);
+    fail(res, 'Error al listar preinscripciones', 500);
+  }
+});
+
+// ─── 11. NOTICIAS Y NOVEDADES INSTITUCIONALES ───────────────────────────────
+
+/**
+ * GET /api/noticias
+ * Lista todas las noticias activas ordenadas por fecha descendente.
+ * Admite filtro opcional por categoría (?categoria=Deportes).
+ */
+app.get('/api/noticias', async (req, res) => {
+  try {
+    const { categoria } = req.query;
+    let query = "SELECT id_noticia, titulo, categoria, TO_CHAR(fecha, 'YYYY-MM-DD') as fecha, imagen_url, descripcion, cuerpo, activo, creado_en FROM noticias WHERE activo = TRUE";
+    const params = [];
+    if (categoria && categoria !== 'todas') {
+      params.push(categoria);
+      query += ` AND LOWER(categoria) = LOWER($${params.length})`;
+    }
+    query += ' ORDER BY fecha DESC, id_noticia DESC';
+    const result = await db.query(query, params);
+    ok(res, result.rows);
+  } catch (error) {
+    console.error('[API GET /noticias] Error:', error);
+    fail(res, 'Error al obtener noticias de la base de datos', 500);
+  }
+});
+
+/**
+ * POST /api/noticias
+ * Publica una nueva noticia institucional en PostgreSQL.
+ * Guarda únicamente la ruta o URL de la imagen.
+ */
+app.post('/api/noticias', async (req, res) => {
+  try {
+    const { titulo, categoria, fecha, imagen_url, descripcion, cuerpo } = req.body;
+    if (!titulo || !descripcion) {
+      return fail(res, 'El título y la descripción son obligatorios', 400);
+    }
+
+    const cat = categoria || 'Institucional';
+    const fec = fecha || new Date().toISOString().split('T')[0];
+    const img = imagen_url || '../img/portada1.jpg';
+    const crp = cuerpo || `<p>${descripcion}</p>`;
+
+    const query = `
+      INSERT INTO noticias (titulo, categoria, fecha, imagen_url, descripcion, cuerpo)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id_noticia, titulo, categoria, TO_CHAR(fecha, 'YYYY-MM-DD') as fecha, imagen_url, descripcion, cuerpo, activo, creado_en
+    `;
+    const result = await db.query(query, [titulo.trim(), cat, fec, img.trim(), descripcion.trim(), crp.trim()]);
+    ok(res, {
+      mensaje: '¡Noticia publicada con éxito en la base de datos!',
+      noticia: result.rows[0]
+    }, 201);
+  } catch (error) {
+    console.error('[API POST /noticias] Error:', error);
+    fail(res, 'Error al guardar la noticia en la base de datos: ' + error.message, 500);
+  }
+});
+
+/**
+ * DELETE /api/noticias/:id
+ * Elimina una noticia por su id_noticia.
+ */
+app.delete('/api/noticias/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!id) return fail(res, 'ID de noticia inválido', 400);
+
+    const result = await db.query('DELETE FROM noticias WHERE id_noticia = $1 RETURNING id_noticia', [id]);
+    if (result.rowCount === 0) {
+      return fail(res, 'Noticia no encontrada', 404);
+    }
+    ok(res, { mensaje: 'Noticia eliminada correctamente de la base de datos' });
+  } catch (error) {
+    console.error('[API DELETE /noticias/:id] Error:', error);
+    fail(res, 'Error al eliminar noticia: ' + error.message, 500);
   }
 });
 

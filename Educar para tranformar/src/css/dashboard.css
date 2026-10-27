@@ -1,30 +1,90 @@
 /* Dashboard Layout */
+:root {
+    --dash-bg: #f1f5f9;
+    --dash-card-bg: #ffffff;
+    --dash-border: #e2e8f0;
+    --dash-border-subtle: #cbd5e1;
+    --dash-text-main: #0f172a;
+    --dash-text-muted: #64748b;
+}
+
+body.bg-light {
+    background-color: var(--dash-bg) !important;
+}
+
 .sidebar {
     min-height: 100vh;
     background: var(--logo-primario);
     color: white;
+    box-shadow: 2px 0 12px rgba(11, 37, 69, 0.12);
+    z-index: 100;
 }
 .sidebar .nav-link {
-    color: rgba(255,255,255,0.7);
-    padding: 1rem 1.5rem;
+    color: rgba(255,255,255,0.72);
+    padding: 0.85rem 1.4rem;
     transition: var(--transition);
+    font-size: 0.92rem;
+    font-weight: 500;
 }
 .sidebar .nav-link:hover, .sidebar .nav-link.active {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.12);
     color: white;
     border-left: 4px solid var(--logo-acento);
 }
 .main-content {
-    background: #f8fafc;
+    background: var(--dash-bg) !important;
     min-height: 100vh;
 }
-.card-dash {
-    border-radius: 1.5rem !important; /* Esquinas gorditas */
-    border: none;
-    box-shadow: var(--shadow-sm);
-    transition: var(--transition);
+.navbar-dashboard {
+    background: #ffffff !important;
+    border-bottom: 1px solid var(--dash-border) !important;
 }
-.card-dash:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+
+.card-dash {
+    background: #ffffff !important;
+    border-radius: 1.25rem !important;
+    border: 1px solid var(--dash-border) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -2px rgba(0, 0, 0, 0.04) !important;
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.card-dash:hover { 
+    transform: translateY(-3px); 
+    box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.08) !important; 
+    border-color: #cbd5e1 !important;
+}
+
+/* Tarjetas y paneles estáticos en páginas de administración */
+.card-panel {
+    background: #ffffff;
+    border: 1px solid var(--dash-border);
+    border-radius: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+/* Tablas modernas en administración */
+.table-modern {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+.table-modern thead th {
+    background-color: #f8fafc;
+    color: #475569;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--dash-border);
+}
+.table-modern tbody td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+.table-modern tbody tr:hover {
+    background-color: #f8fafc;
+}
 
 /* =========================================
    ESTILOS PARA EL PORTAL DE FAMILIAS
